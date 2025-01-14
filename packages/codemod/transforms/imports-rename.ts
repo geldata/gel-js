@@ -21,3 +21,5 @@ export default function transform(
 
   return root.toSource();
 }
+
+export const parser = 'ts';

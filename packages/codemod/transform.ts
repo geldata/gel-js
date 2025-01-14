@@ -1,5 +1,5 @@
 import { API, FileInfo, Options } from 'jscodeshift';
-import importsRename from './transforms/imports-rename'
+import importsRename from './transforms/imports-rename.js'
 
 export default function transform(
   file: FileInfo,
@@ -20,3 +20,5 @@ export default function transform(
 
   return src;
 }
+
+export const parser = 'tsx';

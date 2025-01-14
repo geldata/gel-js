@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "target": "es2022" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-    "module": "node16" /* Specify what module code is generated. */,
     "outDir": "dist" /* Specify an output folder for all emitted files. */,
     "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
     "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
@@ -10,7 +8,8 @@
   },
   "include": [
     "transforms/**/*",
-    "transform.ts"
+    "transform.ts",
+    "cli.ts"
   ],
   "exclude": [
     "transforms/recipes/**/template/**/*",

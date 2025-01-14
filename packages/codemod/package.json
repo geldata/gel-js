@@ -16,7 +16,7 @@
   "files": [
     "/dist"
   ],
-  "bin": "dist/index.js",
+  "bin": "dist/cli.js",
   "peerDependencies": {},
   "devDependencies": {
     "@types/debug": "^4.1.12",
