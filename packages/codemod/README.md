@@ -1,17 +1,16 @@
 # Codemod
 
-- Main codemod script is `transform.ts`
-- `transforms` contains different codemod scripts (imported and used in `transform.ts`)
+- CLI entry point is `cli.ts`
+- `scripts` has custom scripts like changing file names, etc.
+- `transforms` contains different codemod scripts (imported and used in `transforms/index.ts`)
 - `__tests__` contains tests for the codemod
 - `__testfixtures__` contains test fixtures
 
 ## Usage
 
 ```
-yarn jscodeshift -t transform.ts <path>
+yarn codemod <path-to-directory>
 ```
-
-TODO: We can wrap this in a CLI and pass options to the transforms.
 
 ## Tests
 

@@ -38,7 +38,7 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "codemod": "tsx src/index.ts",
+    "codemod": "node ./dist/cli.js",
     "jscodeshift": "jscodeshift",
     "build": "tsc",
     "test": "jest",
