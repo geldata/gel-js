@@ -3,6 +3,7 @@ import type { API, FileInfo, Options } from 'jscodeshift';
 const importsMap: Record<string, string> = {
   edgedb: 'gel',
   '@edgedb/auth': '@gel/auth',
+  '@edgedb/auth-nextjs/app': '@gel/auth-nextjs/app',
 };
 
 export default function transform(

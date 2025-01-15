@@ -8,8 +8,10 @@
   },
   "include": [
     "transforms/**/*",
-    "transform.ts",
-    "cli.ts"
+    "cli.ts",
+    "scripts/edgeql-to-gel-file-extensions-update.ts",
+    "scripts/edgedb-generate-to-gel-generate.ts",
+    "scripts/package-json-update.ts"
   ],
   "exclude": [
     "transforms/recipes/**/template/**/*",

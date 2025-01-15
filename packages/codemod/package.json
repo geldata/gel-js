@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",
+    "@types/glob": "^8.1.0",
     "@types/globby": "^9.1.0",
     "@types/jscodeshift": "^0.12.0",
     "debug": "^4.3.4",

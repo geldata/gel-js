@@ -1,12 +1,12 @@
 import { API, FileInfo, Options } from 'jscodeshift';
-import importsRename from './transforms/imports-rename.js'
+import importsRename from './imports-rename.js'
 
 export default function transform(
   file: FileInfo,
   api: API,
   options: Options
 ) {
-  const transforms = [importsRename, /* TODO: add more */];
+  const transforms = [importsRename, /* add more */];
   let src = file.source;
 
   transforms.forEach(fix => {
