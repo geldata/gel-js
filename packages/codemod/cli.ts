@@ -5,8 +5,9 @@ import pc from "picocolors";
 import * as glob from "glob";
 import path from "node:path";
 import { run } from "jscodeshift/src/Runner.js";
-import { findAndUpdateToml } from "./scripts/edgeql-to-gel-file-extensions-update.js";
+import { findAndUpdateFileExtensions } from "./scripts/esdl-to-gel-file-extensions-update.js";
 import { findAndUpdatePackageJson } from "./scripts/package-json-update.js";
+import { findAndUpdateToml } from "./scripts/edgeql-to-gel-toml-file-update.js";
 
 const mainTransform = path.resolve(__dirname, "transforms/index.js");
 
@@ -31,6 +32,7 @@ async function main() {
   // Custom scripts
   await findAndUpdateToml(path.resolve(projectDirectory));
   await findAndUpdatePackageJson(path.resolve(projectDirectory));
+  await findAndUpdateFileExtensions(path.resolve(projectDirectory));
 
   p.outro(`\
 Codemod completed!

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
 import path from 'path';
-import { findAndUpdateToml } from '../scripts/edgeql-to-gel-file-extensions-update';
+import { findAndUpdateToml } from '../scripts/edgeql-to-gel-toml-file-update';
 
 const FIXTURES_DIR = path.resolve('__testfixtures__');
 

@@ -9,9 +9,7 @@
   "include": [
     "transforms/**/*",
     "cli.ts",
-    "scripts/edgeql-to-gel-file-extensions-update.ts",
-    "scripts/edgedb-generate-to-gel-generate.ts",
-    "scripts/package-json-update.ts"
+    "scripts/**/*",
   ],
   "exclude": [
     "transforms/recipes/**/template/**/*",
