@@ -5,6 +5,12 @@ const dependenciesMap = {
   'edgedb': 'gel',
   '@edgedb/generate': '@gel/generate',
   '@edgedb/auth': '@gel/auth',
+  '@edgedb/auth-core': '@gel/auth-core',
+  '@edgedb/auth-nextjs': '@gel/auth-nextjs',
+  '@edgedb/ai': '@gel/ai',
+  '@edgedb/auth-express': '@gel/auth-express',
+  '@edgedb/auth-sveltekit': '@gel/auth-sveltekit',
+  '@edgedb/auth-remix': '@gel/auth-remix',
 };
 
 async function updatePackageJson(filePath: string): Promise<string[]> {

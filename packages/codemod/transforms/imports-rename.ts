@@ -4,6 +4,12 @@ const importsMap: Record<string, string> = {
   edgedb: 'gel',
   '@edgedb/auth': '@gel/auth',
   '@edgedb/auth-nextjs/app': '@gel/auth-nextjs/app',
+  '@edgedb/auth-core': '@gel/auth-core',
+  '@edgedb/auth-nextjs': '@gel/auth-nextjs',
+  '@edgedb/ai': '@gel/ai',
+  '@edgedb/auth-express': '@gel/auth-express',
+  '@edgedb/auth-sveltekit': '@gel/auth-sveltekit',
+  '@edgedb/auth-remix': '@gel/auth-remix',
 };
 
 export default function transform(
