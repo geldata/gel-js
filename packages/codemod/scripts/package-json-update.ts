@@ -52,7 +52,7 @@ async function updatePackageJson(filePath: string): Promise<string[]> {
         }
       }
 
-      if (Object.keys(updatedScripts).length > 0) {
+      if (Object.keys(updatedScripts).length > 0 && Object.keys(updatedScripts).length === Object.keys(pkg.scripts).length) {
         pkg.scripts = updatedScripts;
       }
     }

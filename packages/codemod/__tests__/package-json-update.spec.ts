@@ -25,7 +25,8 @@ describe('Package JSON Update Script', () => {
         '@edgedb/auth': '^1.0.0'
       },
       scripts: {
-        generate: 'npx @edgedb/generate edgeql'
+        generate: 'npx @edgedb/generate edgeql',
+        other: 'npx do-something'
       }
     };
 
@@ -53,7 +54,8 @@ describe('Package JSON Update Script', () => {
         '@gel/auth': '^1.0.0'
       },
       scripts: {
-        generate: 'npx @gel/generate edgeql'
+        generate: 'npx @gel/generate edgeql',
+        other: 'npx do-something'
       }
     };
 
