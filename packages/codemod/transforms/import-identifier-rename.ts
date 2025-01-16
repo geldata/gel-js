@@ -30,16 +30,15 @@ export default function transform(
     hasImportEdgeDBNamespaceSpecifier = true;
   });
 
-  if (!hasImportEdgeDBNamespaceSpecifier) {
-    return root.toSource();
-  }
+  if (hasImportEdgeDBNamespaceSpecifier) {
 
-  root.find(j.Identifier).forEach((path) => {
-    const name = path.node.name
-    if (name === importIdentifier) {
-      path.node.name = 'gel';
-    }
-  });
+    root.find(j.Identifier).forEach((path) => {
+      const name = path.node.name
+      if (name === importIdentifier) {
+        path.node.name = 'gel';
+      }
+    });
+  }
 
   return root.toSource();
 }
