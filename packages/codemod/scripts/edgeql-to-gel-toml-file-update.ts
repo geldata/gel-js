@@ -36,7 +36,7 @@ export async function findAndUpdateToml(rootDir: string) {
       absolute: true
     });
 
-    console.log(`Found ${files.length} edgedb.toml files`);
+    console.log(`Found ${files.length} edgedb.toml ${files.length === 1 ? 'file' : 'files'}`);
 
     for (const file of files) {
       console.log(`Processing ${file}...`);

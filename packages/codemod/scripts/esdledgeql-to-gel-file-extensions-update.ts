@@ -24,7 +24,8 @@ export async function findAndUpdateFileExtensions(rootDir: string) {
       absolute: true
     });
 
-    console.log(`Found ${files.length} files with .esdl extension`);
+    console.log(`Found ${files.length} ${files.length === 1 ? 'file' : 'files'
+      } with .esdl extension`);
 
     for (const file of files) {
       console.log(`Processing ${file}...`);

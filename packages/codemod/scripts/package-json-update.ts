@@ -75,7 +75,7 @@ export async function findAndUpdatePackageJson(rootDir: string) {
       absolute: true
     });
 
-    console.log(`Found ${files.length} package.json files`);
+    console.log(`Found ${files.length} package.json ${files.length === 1 ? 'file' : 'files'}`);
 
     for (const file of files) {
       console.log(`Processing ${file}...`);

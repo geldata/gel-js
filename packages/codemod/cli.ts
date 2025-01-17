@@ -22,6 +22,10 @@ async function main() {
     ignore: ['**/node_modules/**'],
   });
 
+  // Log that we're starting the codemod to update imports
+  console.log(
+    pc.magenta("🔄 Starting the codemod process to update imports...")
+  );
   // JSCodeshift runner
   await run(
     mainTransform,
@@ -30,13 +34,24 @@ async function main() {
   );
 
   // Custom scripts
+  console.log(
+    pc.magenta("\n🔍 Looking for and updating edgedb.toml to gel.toml files...")
+  );
   await findAndUpdateToml(path.resolve(projectDirectory));
+
+  console.log(
+    pc.magenta("\n🔍 Looking for and updating package.json files...")
+  );
   await findAndUpdatePackageJson(path.resolve(projectDirectory));
+
+  console.log(
+    pc.magenta("\n🔍 Looking for and updating file extensions...")
+  );
   await findAndUpdateFileExtensions(path.resolve(projectDirectory));
 
   console.log(`\
 
-${pc.magenta('Codemod completed!')}
+${pc.magenta('✅ Codemod completed!')}
 
 Need help? Join our Discord: ${pc.green("https://discord.gg/edgedb")}`);
 }
