@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as p from "@clack/prompts";
+// import * as p from "@clack/prompts";
 import pc from "picocolors";
 import * as glob from "glob";
 import path from "node:path";
@@ -12,7 +12,7 @@ import { findAndUpdateToml } from "./scripts/edgeql-to-gel-toml-file-update.js";
 const mainTransform = path.resolve(__dirname, "transforms/index.js");
 
 async function main() {
-  p.intro("Running EdgeDB -> Gel codemod...");
+  console.log(pc.magenta("⏳ Running EdgeDB -> Gel codemod... \n"));
 
   const projectDirectory = process.argv[2] || '.';
 
@@ -34,8 +34,9 @@ async function main() {
   await findAndUpdatePackageJson(path.resolve(projectDirectory));
   await findAndUpdateFileExtensions(path.resolve(projectDirectory));
 
-  p.outro(`\
-Codemod completed!
+  console.log(`\
+
+${pc.magenta('Codemod completed!')}
 
 Need help? Join our Discord: ${pc.green("https://discord.gg/edgedb")}`);
 }

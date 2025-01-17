@@ -7,12 +7,12 @@ export default function transform(
   api: API,
   options: Options
 ) {
-  const transforms = [importsRename, importIdentifierRename];
+  const transforms = [importIdentifierRename, importsRename];
   let src = file.source;
 
   transforms.forEach(fix => {
     if (typeof (src) === "undefined") { return; }
-    const nextSrc = fix({ ...file }, api, options);
+    const nextSrc = fix({ ...file, source: src }, api, options);
 
     if (nextSrc) {
       src = nextSrc;
