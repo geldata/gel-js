@@ -3,16 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "gel": "1.x"
+    "gel": "^2.0.0"
   },
   "devDependencies": {
-    "@gel/generate": "0.x",
-    "@typescript-eslint/eslint-plugin": "6.x",
-    "@typescript-eslint/parser": "6.x",
-    "@eslint/eslintrc": "2.x",
-    "eslint": "8.x",
-    "eslint-config-prettier": "9.x",
-    "prettier": "3.x",
-    "typescript": "5.x"
+    "@gel/generate": "^0.6.0",
+    "@eslint/js": "^9.19.0",
+    "@types/node": "^22.12.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.22.0"
   }
 }
