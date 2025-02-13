@@ -4,4 +4,7 @@ module.exports = {
   transform: {
     "\\.ts$": ['ts-jest', { isolatedModules: true }],
   },
+  moduleNameMapper: {
+    "^(.+)\\.js$": "$1",
+  },
 };

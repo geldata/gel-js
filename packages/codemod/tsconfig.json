@@ -4,7 +4,8 @@
     "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "isolatedModules": false
   },
   "include": [
     "transforms/**/*",
@@ -13,6 +14,7 @@
   ],
   "exclude": [
     "transforms/recipes/**/template/**/*",
-    "__testfixtures__/**/*"
+    "__testfixtures__/**/*",
+    "node_modules"
   ]
 }
