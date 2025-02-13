@@ -25,7 +25,7 @@ export async function findAndUpdateFileExtensions(rootDir: string) {
     });
 
     console.log(`Found ${files.length} ${files.length === 1 ? 'file' : 'files'
-      } with .esdl extension`);
+      } with .esdl/.edgeql extension`);
 
     for (const file of files) {
       console.log(`Processing ${file}...`);

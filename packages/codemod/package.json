@@ -30,6 +30,7 @@
     "@types/globby": "^9.1.0",
     "@types/jscodeshift": "^0.12.0",
     "debug": "^4.3.4",
+    "glob": "^11.0.1",
     "globby": "^14.0.2",
     "jscodeshift": "^17.1.1",
     "picocolors": "^1.0.1",
