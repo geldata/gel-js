@@ -1,15 +1,24 @@
 import {
-  GelMessage,
-  GelSystemMessage,
-  GelUserMessage,
-  GelAssistantMessage,
-  GelToolMessage,
+  createRAGClient,
+  RAGClient,
+  Message,
+  SystemMessage,
+  UserMessage,
+  AssistantMessage,
+  ToolMessage,
+  RAGOptions,
 } from "@gel/ai";
 
 export * from "@gel/ai";
 
-export type EdgeDBSystemMessage = GelSystemMessage;
-export type EdgeDBUserMessage = GelUserMessage;
-export type EdgeDBAssistantMessage = GelAssistantMessage;
-export type EdgeDBToolMessage = GelToolMessage;
-export type EdgeDBMessage = GelMessage;
+export type EdgeDBAI = RAGClient;
+export const EdgeDBAI = RAGClient;
+
+export const createAI = createRAGClient;
+
+export type EdgeDBSystemMessage = SystemMessage;
+export type EdgeDBUserMessage = UserMessage;
+export type EdgeDBAssistantMessage = AssistantMessage;
+export type EdgeDBToolMessage = ToolMessage;
+export type EdgeDBMessage = Message;
+export type AIOptions = RAGOptions;
