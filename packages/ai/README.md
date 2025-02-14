@@ -16,26 +16,26 @@ See the AI documentation for detailed guidance on setting up the AI extension an
 
 ## API Reference
 
-### `createAI(client: Client, options: Partial<AIOptions> = {}): GelAI`
+### `createRAGClient(client: Client, options: Partial<AIOptions> = {}): RAGClient`
 
-Creates an instance of `GelAI` with the specified client and options.
+Creates an instance of `RAGClient` with the specified client and options.
 
-- `client`: An Gel client instance.
+- `client`: A Gel client instance.
 - `options`: Configuration options for the AI model.
   - `model`: Required. Specifies the AI model to use. This could be some of the OpenAI, Mistral or Anthropic models supported by Gel AI.
   - `prompt`: Optional. Defines the input messages for the AI model. The prompt can have an `ID` or a `name` referencing a stored prompt. The referenced prompt will supply predefined messages. Optionally, include a custom list of messages using the `custom` field. These custom messages will be concatenated with messages from the stored prompt referenced by `id` or `name`. If no `id` or `name` is specified, only the `custom` messages will be used. If no `id`, `name`, or `custom` messages are provided, the built-in system prompt will be used by default.
 
-### `GelAI`
+### `RAGClient`
 
 #### Public Methods
 
-- `withConfig(options: Partial<AIOptions>): GelAI`
+- `withConfig(options: Partial<AIOptions>): RAGClient`
 
-  Returns a new `GelAI` instance with updated configuration options.
+  Returns a new `RAGClient` instance with updated configuration options.
 
-- `withContext(context: Partial<QueryContext>): GelAI`
+- `withContext(context: Partial<QueryContext>): RAGClient`
 
-  Returns a new `GelAI` instance with an updated query context.
+  Returns a new `RAGClient` instance with an updated query context.
 
 - `async queryRag(message: string, context?: QueryContext): Promise<string>`
 
@@ -62,46 +62,46 @@ The following example demonstrates how to use the `@gel/ai` package to query an 
 
 ```typescript
 import { createClient } from "gel";
-import { createAI } from "./src/index.js";
+import { createRAGClient } from "@gel/ai";
 
-const client = createClient({
+const client = createRAGClient({
   instanceName: "_localdev",
   database: "main",
   tlsSecurity: "insecure",
 });
 
-const gpt4Ai = createAI(client, {
-  model: "gpt-4-turbo-preview",
+const gpt4Rag = createRAGClient(client, {
+  model: "gpt-4-turbo",
 });
 
-const astronomyAi = gpt4Ai.withContext({ query: "Astronomy" });
+const astronomyRag = gpt4Rag.withContext({ query: "Astronomy" });
 
 console.time("gpt-4 Time");
-console.log(await astronomyAi.queryRag("What color is the sky on Mars?"));
+console.log(await astronomyRag.queryRag("What color is the sky on Mars?"));
 console.timeEnd("gpt-4 Time");
 
-const fastAstronomyAi = astronomyAi.withConfig({
-  model: "gpt-3.5-turbo",
+const fastAstronomyRag = astronomyRag.withConfig({
+  model: "gpt-4o",
 });
 
-console.time("gpt-3.5 Time");
-console.log(await fastAstronomyAi.queryRag("What color is the sky on Mars?"));
-console.timeEnd("gpt-3.5 Time");
+console.time("gpt-4o Time");
+console.log(await fastAstronomyRag.queryRag("What color is the sky on Mars?"));
+console.timeEnd("gpt-4o Time");
 
-const fastChemistryAi = fastAstronomyAi.withContext({ query: "Chemistry" });
+const fastChemistryRag = fastAstronomyRag.withContext({ query: "Chemistry" });
 
 console.log(
-  await fastChemistryAi.queryRag("What is the atomic number of gold?"),
+  await fastChemistryRag.queryRag("What is the atomic number of gold?"),
 );
 
 // handle the Response object
-const response = await fastChemistryAi.streamRag(
+const response = await fastChemistryRag.streamRag(
   "What is the atomic number of gold?",
 );
 handleReadableStream(response); // custom function that reads the stream
 
 // handle individual chunks as they arrive
-for await (const chunk of fastChemistryAi.streamRag(
+for await (const chunk of fastChemistryRag.streamRag(
   "What is the atomic number of gold?",
 )) {
   console.log("chunk", chunk);
@@ -109,7 +109,7 @@ for await (const chunk of fastChemistryAi.streamRag(
 
 // embeddings
 console.log(
-  await fastChemistryAi.generateEmbeddings(
+  await fastChemistryRag.generateEmbeddings(
     ["What is the atomic number of gold?"],
     "text-embedding-ada-002",
   ),
