@@ -12,7 +12,7 @@ import Debug from "debug";
 import which from "which";
 import { quote } from "shell-quote";
 
-const debug = Debug("edgedb:cli");
+const debug = Debug("gel:cli");
 
 const IS_TTY = process.stdout.isTTY;
 const SCRIPT_LOCATION = await fs.realpath(fileURLToPath(import.meta.url));
@@ -67,7 +67,7 @@ async function main(args: string[]) {
   }
 
   try {
-    runEdgeDbCli(args, cliLocation);
+    runCli(args, cliLocation);
     if (cliLocation !== maybeCachedCliLocation) {
       debug("CLI location not cached.");
       debug(`  - Cached location: ${maybeCachedCliLocation}`);
@@ -129,7 +129,7 @@ async function whichGelCli() {
     }
 
     try {
-      runEdgeDbCli(["--succeed-if-cli-bin-wrapper"], actualLocation, {
+      runCli(["--succeed-if-cli-bin-wrapper"], actualLocation, {
         stdio: "ignore",
       });
       debug("  - CLI found in PATH is wrapper script. Ignoring.");
@@ -222,7 +222,7 @@ async function selfInstallFromTempCli(): Promise<string | null> {
   if (!IS_TTY) {
     cmd.push("--quiet");
   }
-  runEdgeDbCli(cmd, TEMPORARY_CLI_PATH);
+  runCli(cmd, TEMPORARY_CLI_PATH);
   debug("  - CLI self-installed successfully.");
   return getCliLocationFromCache();
 }
@@ -247,7 +247,7 @@ async function downloadCliPackage() {
   await fd.close();
 }
 
-function runEdgeDbCli(
+function runCli(
   args: string[],
   pathToCli: string,
   execOptions: ExecSyncOptions = { stdio: "inherit" },
@@ -389,7 +389,7 @@ function getBaseDist(arch: string, platform: string, libc = ""): string {
 
 function getInstallDir(cliPath: string): string {
   debug("Getting install directory for CLI path:", cliPath);
-  const installDir = runEdgeDbCli(["info", "--get", "install-dir"], cliPath, {
+  const installDir = runCli(["info", "--get", "install-dir"], cliPath, {
     stdio: "pipe",
   })
     .toString()
