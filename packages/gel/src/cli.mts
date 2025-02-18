@@ -54,8 +54,8 @@ async function main(args: string[]) {
 
   const maybeCachedCliLocation = await getCliLocationFromCache();
   const cliLocation =
-    maybeCachedCliLocation ??
     (await whichGelCli()) ??
+    maybeCachedCliLocation ??
     (await getCliLocationFromTempCli()) ??
     (await selfInstallFromTempCli()) ??
     null;
