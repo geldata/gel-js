@@ -28,11 +28,13 @@ interface Package {
   installref: string;
 }
 
+const SCRIPT_NAME = import.meta.url.split("/").pop() || "gel";
+
 debug("Process argv:", process.argv);
 // n.b. Using `npx`, the 3rd argument is the script name, unlike
 // `node` where the 2nd argument is the script name.
 let args = process.argv.slice(2);
-if (args[0] === "edgedb") {
+if (args[0] === SCRIPT_NAME) {
   args = args.slice(1);
 }
 await main(args);
@@ -95,9 +97,7 @@ async function main(args: string[]) {
 async function whichGelCli() {
   debug("Checking if CLI is in PATH...");
   const locations =
-    (await which("gel", { nothrow: true, all: true })) ||
-    (await which("edgedb", { nothrow: true, all: true })) ||
-    [];
+    (await which(SCRIPT_NAME, { nothrow: true, all: true })) || [];
 
   for (const location of locations) {
     const actualLocation = await fs.realpath(location);
