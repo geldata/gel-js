@@ -17,9 +17,8 @@ const debug = Debug("gel:cli");
 const IS_TTY = process.stdout.isTTY;
 const SCRIPT_LOCATION = await fs.realpath(fileURLToPath(import.meta.url));
 const EDGEDB_PKG_ROOT = "https://packages.edgedb.com";
-const CACHE_DIR = envPaths("edgedb").cache;
-const TEMPORARY_CLI_PATH = path.join(CACHE_DIR, "/edgedb-cli");
-const CLI_LOCATION_CACHE_FILE_PATH = path.join(CACHE_DIR, "/cli-location");
+const CACHE_DIR = envPaths("gel", { suffix: "" }).cache;
+const CACHED_CLI_PATH = path.join(CACHE_DIR, "/bin/gel");
 
 interface Package {
   name: string;
@@ -46,20 +45,17 @@ async function main(args: string[]) {
   debug(`  - SCRIPT_LOCATION: ${SCRIPT_LOCATION}`);
   debug(`  - EDGEDB_PKG_ROOT: ${EDGEDB_PKG_ROOT}`);
   debug(`  - CACHE_DIR: ${CACHE_DIR}`);
-  debug(`  - TEMPORARY_CLI_PATH: ${TEMPORARY_CLI_PATH}`);
-  debug(`  - CLI_LOCATION_CACHE_FILE_PATH: ${CLI_LOCATION_CACHE_FILE_PATH}`);
+  debug(`  - CACHED_CLI_PATH: ${CACHED_CLI_PATH}`);
 
   // check to see if we are being tested as a CLI binary wrapper
   if (args.length === 1 && args[0] === "--succeed-if-cli-bin-wrapper") {
     process.exit(0);
   }
 
-  const maybeCachedCliLocation = await getCliLocationFromCache();
-  const cliLocation =
+  const cliLocation: string | null =
     (await whichGelCli()) ??
-    maybeCachedCliLocation ??
-    (await getCliLocationFromTempCli()) ??
-    (await selfInstallFromTempCli()) ??
+    (await getCliLocationFromCachedCli()) ??
+    (await getCachedCliLocation()) ??
     null;
 
   if (cliLocation === null) {
@@ -68,14 +64,6 @@ async function main(args: string[]) {
 
   try {
     runCli(args, cliLocation);
-    if (cliLocation !== maybeCachedCliLocation) {
-      debug("CLI location not cached.");
-      debug(`  - Cached location: ${maybeCachedCliLocation}`);
-      debug(`  - CLI location: ${cliLocation}`);
-      debug(`Updating cache with new CLI location: ${cliLocation}`);
-      await writeCliLocationToCache(cliLocation);
-      debug("Cache updated.");
-    }
   } catch (err) {
     if (
       typeof err === "object" &&
@@ -144,55 +132,22 @@ async function whichGelCli() {
   return null;
 }
 
-async function getCliLocationFromCache(): Promise<string | null> {
-  debug("Checking CLI cache...");
-  try {
-    let cachedBinaryPath: string | null = null;
-    try {
-      cachedBinaryPath = (
-        await fs.readFile(CLI_LOCATION_CACHE_FILE_PATH, { encoding: "utf8" })
-      ).trim();
-    } catch (err: unknown) {
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "code" in err &&
-        err.code === "ENOENT"
-      ) {
-        debug("  - Cache file does not exist.");
-      } else if (
-        typeof err === "object" &&
-        err !== null &&
-        "code" in err &&
-        err.code === "EACCES"
-      ) {
-        debug("  - No permission to read cache file.");
-      }
-      return null;
-    }
-    debug("  - CLI path in cache at:", cachedBinaryPath);
-
-    try {
-      await fs.access(cachedBinaryPath, fs.constants.F_OK);
-      debug("  - CLI binary found in path:", cachedBinaryPath);
-      return cachedBinaryPath;
-    } catch (err) {
-      debug("  - No CLI found in cache.", err);
-      return null;
-    }
-  } catch (err) {
-    debug("  - Cache file cannot be read.", err);
-    return null;
+async function getCachedCliLocation(): Promise<string> {
+  const stats = await fs.lstat(CACHED_CLI_PATH);
+  if (!stats.isFile()) {
+    await downloadCliPackage();
   }
+
+  await fs.access(CACHED_CLI_PATH, fs.constants.F_OK);
+  return CACHED_CLI_PATH;
 }
 
-async function getCliLocationFromTempCli(): Promise<string | null> {
+async function getCliLocationFromCachedCli(): Promise<string | null> {
   debug("Installing temporary CLI to get install directory...");
-  await downloadCliPackage();
+  const cachedCliLocation = await getCachedCliLocation();
 
-  const installDir = getInstallDir(TEMPORARY_CLI_PATH);
-  const binaryPath = path.join(installDir, "edgedb");
-  await writeCliLocationToCache(binaryPath);
+  const installDir = getInstallDir(cachedCliLocation);
+  const binaryPath = path.join(installDir, "gel");
   debug("  - CLI installed at:", binaryPath);
 
   try {
@@ -205,43 +160,18 @@ async function getCliLocationFromTempCli(): Promise<string | null> {
   }
 }
 
-async function writeCliLocationToCache(cliLocation: string) {
-  debug("Writing CLI location to cache:", cliLocation);
-  const dir = path.dirname(CLI_LOCATION_CACHE_FILE_PATH);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(CLI_LOCATION_CACHE_FILE_PATH, cliLocation, {
-    encoding: "utf8",
-  });
-}
-
-async function selfInstallFromTempCli(): Promise<string | null> {
-  debug("Self-installing Gel CLI...");
-  // n.b. need -y because in the Vercel build container, $HOME and euid-obtained
-  // home are different, and the CLI installation requires this as confirmation
-  const cmd = ["_self_install", "-y"];
-  if (!IS_TTY) {
-    cmd.push("--quiet");
-  }
-  runCli(cmd, TEMPORARY_CLI_PATH);
-  debug("  - CLI self-installed successfully.");
-  return getCliLocationFromCache();
-}
-
 async function downloadCliPackage() {
-  if (IS_TTY) {
-    console.log("No Gel CLI found, downloading CLI package...");
-  }
   debug("Downloading CLI package...");
   const cliPkg = await findPackage();
-  const downloadDir = path.dirname(TEMPORARY_CLI_PATH);
+  const downloadDir = path.dirname(CACHED_CLI_PATH);
   await fs.mkdir(downloadDir, { recursive: true }).catch((error) => {
     if (error.code !== "EEXIST") throw error;
   });
   const downloadUrl = new URL(cliPkg.installref, EDGEDB_PKG_ROOT);
-  await downloadFile(downloadUrl, TEMPORARY_CLI_PATH);
-  debug("  - CLI package downloaded to:", TEMPORARY_CLI_PATH);
+  await downloadFile(downloadUrl, CACHED_CLI_PATH);
+  debug("  - CLI package downloaded to:", CACHED_CLI_PATH);
 
-  const fd = await fs.open(TEMPORARY_CLI_PATH, "r+");
+  const fd = await fs.open(CACHED_CLI_PATH, "r+");
   await fd.chmod(0o755);
   await fd.datasync();
   await fd.close();

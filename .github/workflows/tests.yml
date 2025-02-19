@@ -139,11 +139,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
       - name: Install dev deps
         run: |
           yarn --frozen-lockfile
@@ -162,6 +157,12 @@ jobs:
           npm exec gel -- project init --non-interactive
           npm exec gel -- --version
           npm exec gel -- query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of npm exec"
+            exit 1
+          else
+            echo "gel command is not available outside of npm exec, as expected"
+          fi
 
       - name: Test CLI wrapper with yarn
         run: |
@@ -172,6 +173,12 @@ jobs:
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of yarn"
+            exit 1
+          else
+            echo "gel command is not available outside of yarn, as expected"
+          fi
 
       - uses: threeal/setup-yarn-action@ec8c075e62bc497968de40011c2b766f5e8f1ac5
         with:
@@ -188,6 +195,12 @@ jobs:
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of yarn"
+            exit 1
+          else
+            echo "gel command is not available outside of yarn, as expected"
+          fi
 
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
         with:
@@ -202,6 +215,12 @@ jobs:
           pnpm exec gel project init --non-interactive
           pnpm exec gel --version
           pnpm exec gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of pnpm"
+            exit 1
+          else
+            echo "gel command is not available outside of pnpm, as expected"
+          fi
 
       - uses: oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135
       - name: Test CLI wrapper with bun
@@ -213,3 +232,9 @@ jobs:
           bun gel project init --non-interactive
           bun gel --version
           bun gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of bun"
+            exit 1
+          else
+            echo "gel command is not available outside of bun, as expected"
+          fi
