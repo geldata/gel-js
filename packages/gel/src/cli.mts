@@ -136,7 +136,9 @@ async function getCachedCliLocation(): Promise<string> {
   try {
     const stats = await fs.stat(CACHED_CLI_PATH);
     if (!stats.isFile()) {
-      debug("  - Object found at cached CLI path is not a file. Downloading...");
+      debug(
+        "  - Object found at cached CLI path is not a file. Downloading...",
+      );
       await downloadCliPackage();
     }
   } catch (_err) {
