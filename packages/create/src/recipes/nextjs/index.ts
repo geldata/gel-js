@@ -98,10 +98,10 @@ const recipe: Recipe<NextjsOptions> = {
       },
       dependencies: {
         ...(useGelAuth ? { "@gel/auth-nextjs": "^0.1.0" } : {}),
-        gel: "^1.4.1",
-        react: "^18",
-        "react-dom": "^18",
-        next: "14.0.4",
+        gel: "^2.0.0",
+        react: "^19.0.0",
+        "react-dom": "^19.0.0",
+        next: "^15.1.0",
       },
       devDependencies: {
         ...(useTS
@@ -113,7 +113,11 @@ const recipe: Recipe<NextjsOptions> = {
             }
           : {}),
         ...(useTailwind
-          ? { autoprefixer: "^10.0.1", postcss: "^8", tailwindcss: "^3.3.0" }
+          ? {
+              postcss: "^8.5.0",
+              tailwindcss: "^4.0.0",
+              "@tailwindcss/postcss": "^4.0.0",
+            }
           : {}),
       },
     });

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { type Dirent } from "node:fs";
 import path from "node:path";
 import { spawn, type SpawnOptionsWithoutStdio } from "node:child_process";
+import { quote } from "shell-quote";
 
 type PkgManager = "npm" | "yarn" | "pnpm" | "bun";
 
@@ -177,7 +178,7 @@ export class PackageManager {
     args: string[] = [],
     options?: SpawnOptionsWithoutStdio,
   ): Promise<{ stdout: string; stderr: string }> {
-    const command = `${this.runner} ${binName} ${args.join(" ")}`;
+    const command = quote([this.runner, binName, ...args]);
     return execInLoginShell(command, options);
   }
 }
