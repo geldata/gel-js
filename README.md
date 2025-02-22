@@ -15,24 +15,24 @@
   </a>
   <br />
   <br />
-  <a href="https://www.geldata.com/docs/guides/quickstart">Quickstart</a>
+  <a href="https://docs.geldata.com/get-started/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://www.geldata.com">Website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://www.geldata.com/docs/clients/js/index">Docs</a>
+  <a href="https://docs.geldata.com/libraries/js">Docs</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://discord.gg/umUueND6ag">Discord</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://twitter.com/usegel">Twitter</a>
+  <a href="https://twitter.com/geldata">Twitter</a>
   <br />
 
 </div>
 
-This is the official [Gel](https://github.com/geldata/gel) client library
+This is the official [Gel](https://www.geldata.com) client library
 for JavaScript and TypeScript.
 
 If you're just getting started with Gel, we recommend going through the
-[Gel Quickstart](https://www.geldata.com/docs/quickstart) first. This walks
+[Gel Quickstart](https://docs.geldata.com/get-started/quickstart) first. This walks
 you through the process of installing Gel, creating a simple schema, and
 writing some simple queries.
 
@@ -41,39 +41,19 @@ writing some simple queries.
 - Node.js 18+
 - For TypeScript users:
   - TypeScript 4.4+ is required
-  - `yarn add @types/node --dev`
-
-### Installation
-
-```bash
-npm install gel      # npm users
-yarn add gel         # yarn users
-```
-
-> Gel 2.x requires `v0.21.0` or later
 
 ## Basic usage
 
 > The examples below demonstrate only the most fundamental use cases for this
-> library. **[Go to the complete documentation site. >](https://www.geldata.com/docs/clients/js/index)**
+> library. **[Go to the complete documentation site. >](https://docs.geldata.com/libraries/js)**
 
 ### Create a client
 
 A _client_ is an instance of the `Client` class, which maintains a pool of
 connections to your database and provides methods for executing queries.
 
-_For TypeScript (and Node.js+ESM)_
-
 ```ts
 import * as gel from "gel";
-
-const client = gel.createClient();
-```
-
-_For Node.js (CommonJS)_
-
-```js
-const gel = require("gel");
 
 const client = gel.createClient();
 ```
@@ -87,7 +67,7 @@ can determine how to connect to your database using the following mechanisms.
    command. As long as the file is within a project directory, `createClient`
    will be able to auto-discover the connection information of the project's
    associated instance. For more information on projects, follow the
-   [Using projects](https://www.geldata.com/docs/guides/projects) guide.
+   [Using projects](https://docs.geldata.com/get-started/projects) guide.
 
 2. _In production_: configure the connection using **environment variables**.
    (This can also be used during local development if you prefer.) The easiest
@@ -96,13 +76,10 @@ can determine how to connect to your database using the following mechanisms.
    `gel://USERNAME:PASSWORD@HOSTNAME:PORT/DATABASE`.
 
 For advanced cases, see the
-[DSN specification](https://www.geldata.com/docs/reference/dsn) and
-[Reference > Connection Parameters](https://www.geldata.com/docs/reference/connection).
+[DSN specification](https://docs.geldata.com/database/reference/dsn) and
+[Reference > Connection Parameters](https://docs.geldata.com/database/reference/connection).
 
 ### Run a query
-
-> The remainder of the documentation assumes you are using ES module (`import`)
-> syntax.
 
 ```ts
 import * as gel from "gel";
@@ -112,21 +89,30 @@ await client.query("select 2 + 2"); // => [4]
 ```
 
 Note that the result is an _array_. The `.query()` method always returns an
-array, regardless of the result cardinality of your query. If your query
-returns _zero or one elements_, use the `.querySingle()` instead.
+array, regardless of the result cardinality of your query. If your query returns
+_zero or one elements_, use the `.querySingle()` method instead. If your query
+is guaranteed to return exactly one element, use the `.queryRequiredSingle()`
+method.
 
 ```ts
 // empty set, zero elements
-await client.querySingle("select <str>{}"); // => null
+const q1 = await client.querySingle<string>("select <str>{}");
+//    ^? string | null
 
 // one element
-await client.querySingle("select 2 + 2"); // => 4
+const q2 = await client.querySingle<number>("select 2 + 2");
+//    ^? number | null
 
 // one element
-await client.querySingle(
+const q3 = await client.querySingle<{ title: string }>(
+//    ^? { title: string } | null
   `select Movie { title }
   filter .id = <uuid>'2eb3bc76-a014-45dc-af66-2e6e8cc23e7e';`,
-); // => { title: "Dune" }
+);
+
+// exactly one element
+const q4 = await client.queryRequiredSingle<number>("select 42;");
+//    ^? number
 ```
 
 ## Generators
@@ -134,8 +120,7 @@ await client.querySingle(
 Install the `@gel/generate` package as a dev dependency to take advantage of Gel's built-in code generators.
 
 ```bash
-npm install @gel/generate  --save-dev      # npm users
-yarn add @gel/generate --dev               # yarn users
+npm install @gel/generate  --save-dev
 ```
 
 Then run a generator with the following command:
@@ -221,7 +206,7 @@ For details on using the query builder, refer to the full [query builder docs](h
 
 Contributing to this library requires a local installation of Gel. Install
 Gel from [here](https://www.geldata.com/download) or
-[build it from source](https://www.geldata.com/docs/reference/dev).
+[build it from source](https://docs.geldata.com/guides/contributing/code).
 
 ```bash
 $ git clone git@github.com:gel/gel-js.git
