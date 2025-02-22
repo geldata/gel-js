@@ -1,7 +1,7 @@
 import type { LanguageModelV1FinishReason } from "@ai-sdk/provider";
 import type { LanguageModelV1LogProbs } from "@ai-sdk/provider";
 
-export function mapEdgedbStopReason(
+export function mapGelStopReason(
   finishReason: string | null | undefined,
 ): LanguageModelV1FinishReason {
   switch (finishReason) {

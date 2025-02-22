@@ -1,6 +1,6 @@
 import { redirect, json, type TypedResponse } from "@remix-run/server-runtime";
 import * as cookie from "cookie";
-import type { Client } from "edgedb";
+import type { Client } from "gel";
 import {
   Auth,
   builtinOAuthProviderNames,
@@ -12,14 +12,14 @@ import {
   PKCEError,
   BackendError,
   OAuthProviderFailureError,
-  EdgeDBAuthError,
+  GelAuthError,
   MagicLinkFailureError,
   type AuthenticationResponseJSON,
   type RegistrationResponseJSON,
-} from "@edgedb/auth-core";
+} from "@gel/auth-core";
 import { type RemixAuthOptions, RemixClientAuth } from "./client.js";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export type { TokenData, RemixAuthOptions };
 
 export type BuiltinProviderNames =
@@ -118,7 +118,7 @@ export class RemixServerAuth extends RemixClientAuth {
   getSession(req: Request) {
     return new RemixAuthSession(
       this.client,
-      parseCookies(req)[this.options.authCookieName],
+      parseCookies(req, this.options).authCookie,
     );
   }
 
@@ -218,8 +218,7 @@ export class RemixServerAuth extends RemixClientAuth {
             }
             const code = searchParams.get("code");
             const isSignUp = searchParams.get("isSignUp") === "true";
-            const verifier =
-              parseCookies(req)[this.options.pkceVerifierCookieName];
+            const verifier = parseCookies(req, this.options).pkceVerifierCookie;
             if (!code) {
               return cbCall(onOAuthCallback, {
                 error: new PKCEError("no pkce code in response"),
@@ -238,18 +237,10 @@ export class RemixServerAuth extends RemixClientAuth {
                 error: err instanceof Error ? err : new Error(String(err)),
               });
             }
-            const headers = new Headers();
-            headers.append(
-              "Set-Cookie",
-              this.createAuthCookie(tokenData.auth_token),
-            );
-            headers.append(
-              "Set-Cookie",
-              cookie.serialize(this.options.pkceVerifierCookieName, "", {
-                maxAge: 0,
-                path: "/",
-              }),
-            );
+            const headers = new Headers({
+              "Set-Cookie": this.createAuthCookie(tokenData.auth_token),
+            });
+            deleteVerifierCookie(headers, this.options.pkceVerifierCookieName);
             return cbCall(
               onOAuthCallback,
               {
@@ -281,8 +272,7 @@ export class RemixServerAuth extends RemixClientAuth {
             }
             const code = searchParams.get("code");
             const isSignUp = searchParams.get("isSignUp") === "true";
-            const verifier =
-              parseCookies(req)[this.options.pkceVerifierCookieName];
+            const verifier = parseCookies(req, this.options).pkceVerifierCookie;
             if (!code) {
               return cbCall(onMagicLinkCallback, {
                 error: new PKCEError("no pkce code in response"),
@@ -301,18 +291,10 @@ export class RemixServerAuth extends RemixClientAuth {
                 error: err instanceof Error ? err : new Error(String(err)),
               });
             }
-            const headers = new Headers();
-            headers.append(
-              "Set-Cookie",
-              this.createAuthCookie(tokenData.auth_token),
-            );
-            headers.append(
-              "Set-Cookie",
-              cookie.serialize(this.options.pkceVerifierCookieName, "", {
-                maxAge: 0,
-                path: "/",
-              }),
-            );
+            const headers = new Headers({
+              "Set-Cookie": this.createAuthCookie(tokenData.auth_token),
+            });
+            deleteVerifierCookie(headers, this.options.pkceVerifierCookieName);
             return cbCall(
               onMagicLinkCallback,
               {
@@ -334,7 +316,7 @@ export class RemixServerAuth extends RemixClientAuth {
             if (error) {
               const desc = searchParams.get("error_description");
               return cbCall(onBuiltinUICallback, {
-                error: new EdgeDBAuthError(error + (desc ? `: ${desc}` : "")),
+                error: new GelAuthError(error + (desc ? `: ${desc}` : "")),
               });
             }
             const code = searchParams.get("code");
@@ -354,8 +336,7 @@ export class RemixServerAuth extends RemixClientAuth {
                 error: new PKCEError("no pkce code in response"),
               });
             }
-            const verifier =
-              parseCookies(req)[this.options.pkceVerifierCookieName];
+            const verifier = parseCookies(req, this.options).pkceVerifierCookie;
 
             if (!verifier) {
               return cbCall(onBuiltinUICallback, {
@@ -414,8 +395,7 @@ export class RemixServerAuth extends RemixClientAuth {
               );
             }
             const verificationToken = searchParams.get("verification_token");
-            const verifier =
-              parseCookies(req)[this.options.pkceVerifierCookieName];
+            const verifier = parseCookies(req, this.options).pkceVerifierCookie;
             if (!verificationToken) {
               return cbCall(onEmailVerify, {
                 error: new PKCEError("no verification_token in response"),
@@ -441,6 +421,7 @@ export class RemixServerAuth extends RemixClientAuth {
             const headers = new Headers({
               "Set-Cookie": this.createAuthCookie(tokenData.auth_token),
             });
+            deleteVerifierCookie(headers, this.options.pkceVerifierCookieName);
             return cbCall(
               onEmailVerify,
               {
@@ -478,8 +459,7 @@ export class RemixServerAuth extends RemixClientAuth {
               );
             }
             const verificationToken = searchParams.get("verification_token");
-            const verifier =
-              parseCookies(req)[this.options.pkceVerifierCookieName];
+            const verifier = parseCookies(req, this.options).pkceVerifierCookie;
             if (!verificationToken) {
               return cbCall(onEmailVerify, {
                 error: new PKCEError("no verification_token in response"),
@@ -505,6 +485,7 @@ export class RemixServerAuth extends RemixClientAuth {
             const headers = new Headers({
               "Set-Cookie": this.createAuthCookie(tokenData.auth_token),
             });
+            deleteVerifierCookie(headers, this.options.pkceVerifierCookieName);
             return cbCall(
               onEmailVerify,
               {
@@ -521,14 +502,9 @@ export class RemixServerAuth extends RemixClientAuth {
                 `'onSignout' auth route handler not configured`,
               );
             }
-            const headers = new Headers({
-              "Set-Cookie": cookie.serialize(this.options.authCookieName, "", {
-                httpOnly: true,
-                sameSite: "strict",
-                path: "/",
-                maxAge: 0,
-              }),
-            });
+
+            const headers = deleteAuthCookie(this.options.authCookieName);
+
             return cbCall(onSignout, undefined, headers);
           }
 
@@ -957,7 +933,7 @@ export class RemixServerAuth extends RemixClientAuth {
   > {
     return handleAction(
       async (data, headers, req) => {
-        const verifier = parseCookies(req)[this.options.pkceVerifierCookieName];
+        const verifier = parseCookies(req, this.options).pkceVerifierCookie;
 
         if (!verifier) {
           throw new PKCEError("no pkce verifier cookie found");
@@ -978,13 +954,7 @@ export class RemixServerAuth extends RemixClientAuth {
           this.createAuthCookie(tokenData.auth_token),
         );
 
-        headers.append(
-          "Set-Cookie",
-          cookie.serialize(this.options.pkceVerifierCookieName, "", {
-            maxAge: 0,
-            path: "/",
-          }),
-        );
+        deleteVerifierCookie(headers, this.options.pkceVerifierCookieName);
 
         return { tokenData };
       },
@@ -1116,14 +1086,7 @@ export class RemixServerAuth extends RemixClientAuth {
       }
     | (Res extends Response ? Res : TypedResponse<Res>)
   > {
-    const headers = new Headers({
-      "Set-Cookie": cookie.serialize(this.options.authCookieName, "", {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 0,
-        path: "/",
-      }),
-    });
+    const headers = deleteAuthCookie(this.options.authCookieName);
 
     if (cb) return actionCbCall(cb, headers);
 
@@ -1131,9 +1094,35 @@ export class RemixServerAuth extends RemixClientAuth {
   }
 }
 
-function parseCookies(req: Request) {
-  const cookies = req.headers.get("Cookie");
-  return cookie.parse(cookies || "");
+function deleteVerifierCookie(headers: Headers, verifierCookieName: string) {
+  const cookies = [verifierCookieName, "edgedb-pkce-verifier"];
+  cookies.forEach((c) =>
+    headers.append(
+      "Set-Cookie",
+      cookie.serialize(c, "", {
+        maxAge: 0,
+        path: "/",
+      }),
+    ),
+  );
+}
+
+function deleteAuthCookie(authCookieName: string) {
+  const headers = new Headers();
+  const cookies = [authCookieName, "edgedb-session"];
+  cookies.forEach((c) =>
+    headers.append(
+      "Set-Cookie",
+      cookie.serialize(c, "", {
+        httpOnly: true,
+        sameSite: "strict" as const,
+        maxAge: 0,
+        path: "/",
+      }),
+    ),
+  );
+
+  return headers;
 }
 
 function _extractParams(
@@ -1167,6 +1156,23 @@ function _extractParams(
   }
 
   return params;
+}
+
+function parseCookies(
+  req: Request,
+  options: {
+    authCookieName: string;
+    pkceVerifierCookieName: string;
+  },
+) {
+  const cookies = req.headers.get("Cookie") || "";
+  const parsed = cookie.parse(cookies);
+
+  return {
+    authCookie: parsed[options.authCookieName] || parsed["edgedb-session"],
+    pkceVerifierCookie:
+      parsed[options.pkceVerifierCookieName] || parsed["edgedb-pkce-verifier"],
+  };
 }
 
 async function handleAction<DataT extends Record<string, any> | FormData>(

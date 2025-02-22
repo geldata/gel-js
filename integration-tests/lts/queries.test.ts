@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 import * as tc from "conditional-type-checks";
 
 import {
@@ -16,7 +16,7 @@ import {
 import { type TestData, setupTests, teardownTests } from "./setupTeardown";
 
 describe("queries", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   beforeAll(async () => {
@@ -55,8 +55,8 @@ describe("queries", () => {
             stage_no: number;
             local: string[];
           };
-          range: edgedb.Range<number>;
-          local_date: edgedb.LocalDate;
+          range: gel.Range<number>;
+          local_date: gel.LocalDate;
         }[]
       >
     >(true);

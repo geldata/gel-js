@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
-import { $, type Client } from "edgedb";
+import { $, type Client } from "gel";
 import { DirBuilder } from "./builders";
 import { generateInterfaces } from "./edgeql-js/generateInterfaces";
 
@@ -24,8 +24,8 @@ export async function runInterfacesGenerator(params: {
     outFile = path.join(root, schemaDir, "interfaces.ts");
   } else {
     throw new Error(
-      "No project config file found. Initialize an EdgeDB project with\n" +
-        "'edgedb project init' or specify an output file with '--file'",
+      "No project config file found. Initialize an Gel project with\n" +
+        "'gel project init' or specify an output file with '--file'",
     );
   }
 

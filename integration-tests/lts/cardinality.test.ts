@@ -1,4 +1,4 @@
-import type { $ } from "edgedb";
+import type { $ } from "gel";
 import type { cardutil } from "../../packages/generate/src/syntax/cardinality";
 import { tc } from "./setupTeardown";
 

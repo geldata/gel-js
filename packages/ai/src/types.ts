@@ -1,16 +1,16 @@
 export type ChatParticipantRole = "system" | "user" | "assistant" | "tool";
 
-export interface EdgeDBSystemMessage {
+export interface GelSystemMessage {
   role: "system";
   content: string;
 }
 
-export interface EdgeDBUserMessage {
+export interface GelUserMessage {
   role: "user";
   content: { type: "text"; text: string }[];
 }
 
-export interface EdgeDBAssistantMessage {
+export interface GelAssistantMessage {
   role: "assistant";
   content: string;
   tool_calls?: {
@@ -20,22 +20,22 @@ export interface EdgeDBAssistantMessage {
   }[];
 }
 
-export interface EdgeDBToolMessage {
+export interface GelToolMessage {
   role: "tool";
   content: string;
   tool_call_id: string;
 }
 
-export type EdgeDBMessage =
-  | EdgeDBSystemMessage
-  | EdgeDBUserMessage
-  | EdgeDBAssistantMessage
-  | EdgeDBToolMessage;
+export type GelMessage =
+  | GelSystemMessage
+  | GelUserMessage
+  | GelAssistantMessage
+  | GelToolMessage;
 
 export type Prompt =
-  | { name: string; custom?: EdgeDBMessage[] }
-  | { id: string; custom?: EdgeDBMessage[] }
-  | { custom: EdgeDBMessage[] };
+  | { name: string; custom?: GelMessage[] }
+  | { id: string; custom?: GelMessage[] }
+  | { custom: GelMessage[] };
 
 export interface AIOptions {
   model: string;
@@ -55,7 +55,7 @@ export interface RagRequestPrompt {
 }
 
 export interface RagRequestMessages {
-  messages: EdgeDBMessage[];
+  messages: GelMessage[];
   [key: string]: unknown;
 }
 

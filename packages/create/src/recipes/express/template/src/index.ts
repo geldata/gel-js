@@ -1,6 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import { type AuthRequest } from "@edgedb/auth-express";
+import { type AuthRequest } from "@gel/auth-express";
 
 import { styles } from "./styles.js";
 import { auth, requireAuth, signoutRoute, builtinUIRouter } from "./auth.js";
@@ -14,7 +14,7 @@ app.use(cookieParser());
 app.use(auth.createSessionMiddleware());
 
 app.get("/api/deep-thought", requireAuth, async (req: AuthRequest, res) => {
-  // See more examples of making queries here: https://github.com/edgedb/edgedb-examples/blob/main/express-auth/todos.ts
+  // See more examples of making queries here: https://github.com/gel/gel-examples/blob/main/express-auth/todos.ts
   const answer = await req.session!.client.query<number>("select 42;");
   res.json(answer);
 });

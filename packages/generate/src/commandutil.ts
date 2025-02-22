@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import process from "node:process";
-import { systemUtils } from "edgedb";
+import { systemUtils } from "gel";
 import { type Target, exitWithError } from "./genutil";
 import type { defaultFutureFlags } from "./edgeql-js";
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { auth } from "@/edgedb";
+import { auth } from "@/gel";
 
 export default async function Home() {
   const session = auth.getSession();

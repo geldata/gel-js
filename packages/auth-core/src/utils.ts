@@ -87,11 +87,11 @@ export const errorMapping = new Map(
     )
     .filter((entry) => entry != null) as unknown as [
     string,
-    errors.EdgeDBAuthError,
+    errors.GelAuthError,
   ][],
 );
 
-export function decodeError(errorBody: string): errors.EdgeDBAuthError {
+export function decodeError(errorBody: string): errors.GelAuthError {
   try {
     const errorJson = JSON.parse(errorBody);
     if (

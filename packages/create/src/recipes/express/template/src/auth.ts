@@ -2,7 +2,7 @@ import { type NextFunction, type Response, Router } from "express";
 import createExpressAuth, {
   type AuthRequest,
   type CallbackRequest,
-} from "@edgedb/auth-express";
+} from "@gel/auth-express";
 import { client } from "./db.js";
 import { PORT } from "./env.js";
 

@@ -1,14 +1,14 @@
 // tslint:disable:no-console
-const {createClient} = require("edgedb");
+const { createClient } = require("gel");
 const e = require("./edgeql-js").default;
-const {freeShape, scalarQuery} = require("./queries");
+const { freeShape, scalarQuery } = require("./queries");
 
 async function run() {
   try {
     const client = createClient();
     const query = e.select({
       num: e.int64(35),
-      msg: e.str("Hello world")
+      msg: e.str("Hello world"),
     });
 
     const result = await query.run(client);
@@ -16,7 +16,7 @@ async function run() {
       throw new Error();
     }
     await scalarQuery(client);
-    const movies = await freeShape(client, {data: "hello world"});
+    const movies = await freeShape(client, { data: "hello world" });
 
     if (movies.data !== "hello world") {
       throw new Error("Failure: --cjs");

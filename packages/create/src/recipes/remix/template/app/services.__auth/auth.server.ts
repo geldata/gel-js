@@ -1,5 +1,5 @@
-import createServerAuth from "@edgedb/auth-remix/server";
-import { createClient } from "edgedb";
+import createServerAuth from "@gel/auth-remix/server";
+import { createClient } from "gel";
 import { options } from "./auth";
 
 export const client = createClient({

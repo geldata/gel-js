@@ -1,4 +1,4 @@
-import { ExpressionKind } from "edgedb/dist/reflection/index";
+import { ExpressionKind } from "gel/dist/reflection/index";
 import type { Expression, TypeSet } from "./typesystem";
 import { $expressionify } from "./path";
 

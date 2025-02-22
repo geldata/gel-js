@@ -6,7 +6,7 @@ import { updatePackage } from "write-package";
 import type { BaseOptions, Recipe } from "../types.js";
 import { copyTemplateFiles } from "../../utils.js";
 
-const logger = debug("@edgedb/create:recipe:nextjs");
+const logger = debug("@gel/create:recipe:nextjs");
 
 interface NextjsOptions {
   useTS: boolean;
@@ -49,7 +49,7 @@ const recipe: Recipe<NextjsOptions> = {
     });
   },
   async apply(
-    { projectDir, useEdgeDBAuth }: BaseOptions,
+    { projectDir, useGelAuth }: BaseOptions,
     { useTS, router, useTailwind, useSrcDir }: NextjsOptions,
   ) {
     logger("Running nextjs recipe");
@@ -58,7 +58,7 @@ const recipe: Recipe<NextjsOptions> = {
 
     const tags = new Set<string>([router, useTailwind ? "tw" : "no-tw"]);
 
-    if (useEdgeDBAuth) {
+    if (useGelAuth) {
       tags.add("auth");
     }
 
@@ -97,11 +97,11 @@ const recipe: Recipe<NextjsOptions> = {
         lint: "next lint",
       },
       dependencies: {
-        ...(useEdgeDBAuth ? { "@edgedb/auth-nextjs": "^0.1.0" } : {}),
-        edgedb: "^1.4.1",
-        react: "^18",
-        "react-dom": "^18",
-        next: "14.0.4",
+        ...(useGelAuth ? { "@gel/auth-nextjs": "^0.1.0" } : {}),
+        gel: "^2.0.0",
+        react: "^19.0.0",
+        "react-dom": "^19.0.0",
+        next: "^15.1.0",
       },
       devDependencies: {
         ...(useTS
@@ -113,7 +113,11 @@ const recipe: Recipe<NextjsOptions> = {
             }
           : {}),
         ...(useTailwind
-          ? { autoprefixer: "^10.0.1", postcss: "^8", tailwindcss: "^3.3.0" }
+          ? {
+              postcss: "^8.5.0",
+              tailwindcss: "^4.0.0",
+              "@tailwindcss/postcss": "^4.0.0",
+            }
           : {}),
       },
     });

@@ -1,4 +1,4 @@
-import type { Cardinality } from "edgedb/dist/reflection/index";
+import type { Cardinality } from "gel/dist/reflection/index";
 import type {
   ArrayType,
   BaseType,
@@ -99,7 +99,7 @@ export type setToAssignmentExpression<
         >,
         cardutil.assignable<
           // Allow expressions with AtMostOne or Many cardinality in
-          // insert/update shape even when link is required since EdgeDB will
+          // insert/update shape even when link is required since Gel will
           // assert cardinality at runtime
           cardutil.overrideLowerBound<Set["__cardinality__"], "Zero">
         >

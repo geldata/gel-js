@@ -1,4 +1,4 @@
-import type { Executor } from "edgedb/dist/ifaces";
+import type { Executor } from "gel/dist/ifaces";
 import type { $expr_PathNode, $expr_TypeIntersection, $pathify } from "./path";
 import type { $expr_Literal } from "./literal";
 import type { $expr_Operator } from "./funcops";
@@ -6,10 +6,10 @@ import type {
   typeutil,
   Cardinality,
   ExpressionKind,
-} from "edgedb/dist/reflection/index";
-import { TypeKind } from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
+import { TypeKind } from "gel/dist/reflection/index";
 import type { cardutil } from "./cardinality";
-import type { Range, MultiRange } from "edgedb";
+import type { Range, MultiRange } from "gel";
 import type { $Shape, normaliseShape } from "./select";
 import type { future } from "./future";
 

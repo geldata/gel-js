@@ -1,6 +1,6 @@
 import createClientAuth, {
   type RemixAuthOptions,
-} from "@edgedb/auth-remix/client";
+} from "@gel/auth-remix/client";
 
 export const options: RemixAuthOptions = {
   baseUrl: "http://localhost:3000",

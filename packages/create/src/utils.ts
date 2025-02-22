@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import { type Dirent } from "node:fs";
 import path from "node:path";
 import { spawn, type SpawnOptionsWithoutStdio } from "node:child_process";
+import { quote } from "shell-quote";
 
-export type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+type PkgManager = "npm" | "yarn" | "pnpm" | "bun";
 
-export function getPackageManager(): PackageManager {
+export function getPackageManager(): PkgManager {
   const userAgent = process.env.npm_config_user_agent;
   switch (true) {
     case userAgent?.startsWith("yarn"):
@@ -19,6 +20,13 @@ export function getPackageManager(): PackageManager {
       return "npm";
   }
 }
+
+const PM_TO_RUNNER_MAP = {
+  npm: "npx",
+  yarn: "yarn dlx",
+  pnpm: "pnpm dlx",
+  bun: "bunx",
+} as const;
 
 interface CopyTemplateFilesOpts {
   tags?: Set<string>;
@@ -152,4 +160,25 @@ stdout: ${stdout}`,
       }
     });
   });
+}
+
+export class PackageManager {
+  readonly runner: string;
+
+  constructor(readonly packageManager = getPackageManager()) {
+    this.runner = PM_TO_RUNNER_MAP[packageManager];
+  }
+
+  toString() {
+    return this.packageManager;
+  }
+
+  async runPackageBin(
+    binName: string,
+    args: string[] = [],
+    options?: SpawnOptionsWithoutStdio,
+  ): Promise<{ stdout: string; stderr: string }> {
+    const command = quote([this.runner, binName, ...args]);
+    return execInLoginShell(command, options);
+  }
 }

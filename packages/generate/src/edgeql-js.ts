@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { $, systemUtils, type Client } from "edgedb";
+import { $, systemUtils, type Client } from "gel";
 import { type CommandOptions, isTTY, promptBoolean } from "./commandutil";
 import { headerComment } from "./genutil";
 import { DirBuilder } from "./builders";
@@ -18,7 +18,7 @@ import { generateSetImpl } from "./edgeql-js/generateSetImpl";
 
 const { readFileUtf8, exists, walk } = systemUtils;
 
-export const configFileHeader = `// EdgeDB query builder`;
+export const configFileHeader = `// Gel query builder`;
 
 export type GeneratorParams = {
   dir: DirBuilder;
@@ -29,7 +29,7 @@ export type GeneratorParams = {
   functions: $.introspect.FunctionTypes;
   globals: $.introspect.Globals;
   operators: $.introspect.OperatorTypes;
-  edgedbVersion: Version;
+  gelVersion: Version;
 };
 
 export type Target = "ts" | "esm" | "cjs" | "mts" | "deno";
@@ -60,8 +60,8 @@ export async function generateQueryBuilder(params: {
     outputDir = path.join(root, schemaDir, "edgeql-js");
   } else {
     throw new Error(
-      "No project config file found. Initialize an EdgeDB project with\n" +
-        "'edgedb project init' or specify an output directory with '--output-dir'",
+      "No project config file found. Initialize an Gel project with\n" +
+        "'gel project init' or specify an output directory with '--output-dir'",
     );
   }
 
@@ -124,7 +124,7 @@ export async function generateQueryBuilder(params: {
     functions,
     globals,
     operators,
-    edgedbVersion: version,
+    gelVersion: version,
   };
   console.log("Generating runtime spec...");
   generateRuntimeSpec(generatorParams);
@@ -155,7 +155,7 @@ export async function generateQueryBuilder(params: {
 
   const importsFile = dir.getPath("imports");
 
-  importsFile.addExportStar("edgedb", { as: "edgedb" });
+  importsFile.addExportStar("gel", { as: "gel" });
   importsFile.addExportFrom({ spec: true }, "./__spec__", {
     allowFileExt: true,
   });

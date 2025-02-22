@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import * as edgedb from "edgedb";
+import * as gel from "gel";
 
 import e from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, tc } from "./setupTeardown";
 
 describe("json", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
 
   beforeAll(async () => {
     const setup = await setupTests();
@@ -92,12 +92,12 @@ describe("json", () => {
   test("serialize data classes", async () => {
     const datum = [
       new Date("2022-07-18T21:42:46.569Z"),
-      new edgedb.LocalDate(2020, 1, 1),
-      new edgedb.LocalDateTime(2020, 1, 1),
-      new edgedb.LocalTime(2, 22),
-      new edgedb.Duration(3),
-      new edgedb.RelativeDuration(3),
-      new edgedb.DateDuration(1),
+      new gel.LocalDate(2020, 1, 1),
+      new gel.LocalDateTime(2020, 1, 1),
+      new gel.LocalTime(2, 22),
+      new gel.Duration(3),
+      new gel.RelativeDuration(3),
+      new gel.DateDuration(1),
     ];
     assert.deepEqual(await e.json(datum).run(client), [
       "2022-07-18T21:42:46.569Z",

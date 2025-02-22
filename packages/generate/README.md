@@ -1,25 +1,25 @@
-# `@edgedb/generate`: Code generation tools for EdgeDB
+# `@gel/generate`: Code generation tools for Gel
 
-The `@edgedb/generate` package implements a set of code generation tools that are useful when developing an EdgeDB-backed applications with TypeScript/JavaScript.
+The `@gel/generate` package implements a set of code generation tools that are useful when developing an Gel-backed applications with TypeScript/JavaScript.
 
-✨ [View Documentation >>](https://www.edgedb.com/docs/clients/js/generation)
+✨ [View Documentation >>](https://www.geldata.com/docs/clients/js/generation)
 
 ## Installation
 
 > If you're using Deno, you can skip this step.
 
-Install the `edgedb` package.
+Install the `gel` package.
 
 ```bash
-$ npm install edgedb       # npm users
-$ yarn add edgedb          # yarn users
+$ npm install gel       # npm users
+$ yarn add gel          # yarn users
 ```
 
-Then install `@edgedb/generate` as a dev dependency.
+Then install `@gel/generate` as a dev dependency.
 
 ```bash
-$ npm install @edgedb/generate --save-dev      # npm users
-$ yarn add @edgedb/generate --dev              # yarn users
+$ npm install @gel/generate --save-dev      # npm users
+$ yarn add @gel/generate --dev              # yarn users
 ```
 
 ## Run a generator
@@ -29,13 +29,13 @@ Run a generator with the following command.
 **Node.js**
 
 ```bash
-$ npx @edgedb/generate <generator> [options]
+$ npx @gel/generate <generator> [options]
 ```
 
 **Deno**
 
 ```bash
-$ deno run --allow-all npm:@edgedb/generate <generator> [options]
+$ deno run --allow-all npm:@gel/generate <generator> [options]
 ```
 
 The value of `<generator>` should be one of the following.
@@ -46,12 +46,12 @@ The value of `<generator>` should be one of the following.
 
 ## Third-party generators
 
-✨ If you build a code generator for EdgeDB, ping us or open a PR and we'll list it here! ✨
+✨ If you build a code generator for Gel, ping us or open a PR and we'll list it here! ✨
 
-The `edgedb` package exports a set of utilities to introspect the schema and analyze queries. We use this same set of tools to implement the first-party generators.
+The `gel` package exports a set of utilities to introspect the schema and analyze queries. We use this same set of tools to implement the first-party generators.
 
 ```ts
-import { createClient, $ } from "edgedb";
+import { createClient, $ } from "gel";
 
 const client = createClient();
 
@@ -73,7 +73,7 @@ yarn workspaces run build  # build all packages
 
 Navigate into `packages/generate`:
 
-Build `@edgedb/generate`
+Build `@gel/generate`
 
 ```
 yarn build
@@ -88,8 +88,8 @@ yarn build:fast
 Run a generator:
 
 ```
-npx @edgedb/generate edgeql-js    # query builder
-npx @edgedb/generate queries      # query files
+npx @gel/generate edgeql-js    # query builder
+npx @gel/generate queries      # query files
 ```
 
 Execute `playground.ts` (uses `tsx`). Useful for testing things quickly in development:
@@ -98,7 +98,7 @@ Execute `playground.ts` (uses `tsx`). Useful for testing things quickly in devel
 yarn play
 ```
 
-> ⚠️ All imports from `"edgedb"` resolve to the local build version of the driver in `packages/driver/dist`. This imports the _built_ library, not the so you need to re-run `yarn workspace edgedb build` for changes to be reflected in your playground code. Run `yarn dev` watcher inside `packages/driver` to rebuild the project anytime you make a change.
+> ⚠️ All imports from `"gel"` resolve to the local build version of the driver in `packages/gel/dist`. This imports the _built_ library, not the so you need to re-run `yarn workspace gel build` for changes to be reflected in your playground code. Run `yarn dev` watcher inside `packages/gel` to rebuild the project anytime you make a change.
 
 Run commands in watch mode. Useful when in development. The following command rebuilds the package and executes the playground whenever a file change is detected.
 

@@ -1,6 +1,6 @@
-import type { LocalDate, LocalDateTime, Duration } from "edgedb";
-import { Range } from "edgedb";
-import { TypeKind, ExpressionKind } from "edgedb/dist/reflection/index";
+import type { LocalDate, LocalDateTime, Duration } from "gel";
+import { Range } from "gel";
+import { TypeKind, ExpressionKind } from "gel/dist/reflection/index";
 
 import type { cardutil } from "./cardinality";
 import type {

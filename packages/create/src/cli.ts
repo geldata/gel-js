@@ -6,7 +6,7 @@ import pc from "picocolors";
 import { baseRecipe, recipes as _recipes } from "./recipes/index.js";
 
 async function main() {
-  p.intro("Welcome to the EdgeDB Create CLI 🚀");
+  p.intro("Welcome to the Gel Create CLI 🚀");
 
   const baseOptions = await baseRecipe.getOptions();
   const recipeOptions: any[] = [];
@@ -25,14 +25,14 @@ async function main() {
   }
 
   p.outro(`\
-Your EdgeDB project has been initialized! 🚀
+Your Gel project has been initialized! 🚀
 
 Enter your project directory using: ${pc.green(
     `cd ${baseOptions.projectName}`,
   )} 
 Follow the instructions in the ${pc.green("README.md")} file to get started.
 
-Need help? Join our community at ${pc.green("https://edgedb.com/community")}`);
+Need help? Join our community at ${pc.green("https://geldata.com/community")}`);
 }
 
 await main();

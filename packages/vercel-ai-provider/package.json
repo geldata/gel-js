@@ -1,12 +1,27 @@
 {
-  "name": "@edgedb/vercel-ai-provider",
+  "name": "@gel/vercel-ai-provider",
   "description": "Provider for the Vercel AI SDK",
-  "version": "0.0.1",
+  "version": "0.1.0-rc.1",
   "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geldata/gel-js.git",
+    "directory": "packages/vercel-ai-provider"
+  },
   "sideEffects": false,
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "files": [
     "/dist"
   ],
@@ -18,14 +33,6 @@
     "lint": "eslint --quiet",
     "lint:fix": "eslint --fix"
   },
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
-  },
   "dependencies": {
     "@ai-sdk/provider": "^1.0.0",
     "@ai-sdk/provider-utils": "^2.0.0"
@@ -36,11 +43,11 @@
     "tsup": "^8",
     "typescript": "5.5.4",
     "zod": "3.23.8",
-    "edgedb": "*"
+    "gel": "^2.0.0-rc"
   },
   "peerDependencies": {
     "zod": "^3.0.0",
-    "edgedb": "^1.5.0"
+    "gel": "^2.0.0-rc"
   },
   "engines": {
     "node": ">=18"

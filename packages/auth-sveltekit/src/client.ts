@@ -1,5 +1,5 @@
-import type { BuiltinOAuthProviderNames } from "@edgedb/auth-core";
-import { WebAuthnClient } from "@edgedb/auth-core/webauthn";
+import type { BuiltinOAuthProviderNames } from "@gel/auth-core";
+import { WebAuthnClient } from "@gel/auth-core/webauthn";
 
 export interface AuthOptions {
   baseUrl: string;
@@ -23,9 +23,9 @@ export function getConfig(options: AuthOptions) {
   return {
     baseUrl,
     authRoutesPath,
-    authCookieName: options.authCookieName ?? "edgedb-session",
+    authCookieName: options.authCookieName ?? "gel-session",
     pkceVerifierCookieName:
-      options.pkceVerifierCookieName ?? "edgedb-pkce-verifier",
+      options.pkceVerifierCookieName ?? "gel-pkce-verifier",
     passwordResetPath: options.passwordResetPath,
     magicLinkFailurePath: options.magicLinkFailurePath,
     authRoute: `${baseUrl}/${authRoutesPath}`,

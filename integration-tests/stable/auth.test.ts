@@ -1,4 +1,4 @@
-import type { Client } from "edgedb";
+import type { Client } from "gel";
 import e, { type $infer } from "./dbschema/edgeql-js";
 import { setupTests, tc, teardownTests } from "./setupTeardown";
 

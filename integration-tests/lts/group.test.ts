@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 import * as tc from "conditional-type-checks";
 
 import e, { type $infer } from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, type TestData } from "./setupTeardown";
 
 describe("group", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   beforeAll(async () => {

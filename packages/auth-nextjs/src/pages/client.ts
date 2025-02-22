@@ -4,9 +4,9 @@ import {
   NextAuthHelpers,
   type NextAuthOptions,
 } from "../shared.client";
-import { errorMapping } from "@edgedb/auth-core/utils";
+import { errorMapping } from "@gel/auth-core/utils";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export { type NextAuthOptions, type BuiltinProviderNames };
 
 export default function createNextPagesClientAuth(options: NextAuthOptions) {

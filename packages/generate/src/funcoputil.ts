@@ -1,4 +1,4 @@
-import { $ } from "edgedb";
+import { $ } from "gel";
 import type { CodeFragment } from "./builders";
 import type { FuncopDef } from "./edgeql-js/generateFunctionTypes";
 import { getStringRepresentation } from "./edgeql-js/generateObjectTypes";

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@edgedb/integration-nightly",
+  "name": "@gel/integration-nightly",
   "version": "0.0.0",
   "scripts": {
     "typecheck": "echo 'Integration tests - nightly, skipping typecheck...'",
@@ -10,12 +10,12 @@
     "ci:integration-test": "tsx ./testRunner.ts"
   },
   "devDependencies": {
-    "@edgedb/generate": "*",
+    "@gel/generate": "^0.6.0-rc",
     "@tsconfig/node-lts": "^20.1.3",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
     "conditional-type-checks": "^1.0.6",
-    "edgedb": "*",
+    "gel": "^2.0.0-rc",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.4",
     "typescript": "^5.5.2"

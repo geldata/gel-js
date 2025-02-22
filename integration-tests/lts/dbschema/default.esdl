@@ -153,7 +153,7 @@ module default {
   }
 
   # Unicode handling
-  # https://github.com/edgedb/edgedb/blob/master/tests/schemas/dump02_default.esdl
+  # https://github.com/geldata/gel/blob/master/tests/schemas/dump02_default.esdl
 
   abstract annotation `🍿`;
 

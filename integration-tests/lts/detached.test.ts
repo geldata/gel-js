@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 import e from "./dbschema/edgeql-js";
 import { setupTests, tc, teardownTests, type TestData } from "./setupTeardown";
 
 describe("detached", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   beforeAll(async () => {

@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
-import * as edgedb from "edgedb";
-import { type ResolvedConnectConfig } from "edgedb/dist/conUtils";
+import * as gel from "gel";
+import { type ResolvedConnectConfig } from "gel/dist/conUtils";
 
 import * as pkce from "./pkce";
 import {
@@ -24,13 +24,13 @@ export class Auth {
   public readonly baseUrl: string;
 
   protected constructor(
-    public readonly client: edgedb.Client,
+    public readonly client: gel.Client,
     baseUrl: string,
   ) {
     this.baseUrl = baseUrl;
   }
 
-  static async create(client: edgedb.Client) {
+  static async create(client: gel.Client) {
     const connectConfig: ResolvedConnectConfig = (
       await (client as any).pool._getNormalizedConnectConfig()
     ).connectionParams;
@@ -363,7 +363,7 @@ export class Auth {
         emailPassword := exists providers[is EmailPasswordProviderConfig]
       }`);
     } catch (err) {
-      if (err instanceof edgedb.InvalidReferenceError) {
+      if (err instanceof gel.InvalidReferenceError) {
         throw new errors.ConfigurationError("auth extension is not enabled");
       }
       throw err;

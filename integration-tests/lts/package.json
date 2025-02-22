@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@edgedb/integration-lts",
+  "name": "@gel/integration-lts",
   "version": "0.0.0",
   "scripts": {
     "typecheck": "echo 'Integration tests - lts, skipping typecheck...'",
@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@arktype/attest": "^0.7.8",
-    "@edgedb/generate": "*",
+    "@gel/generate": "^0.6.0-rc",
     "@tsconfig/node-lts": "^20.1.3",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
@@ -29,7 +29,7 @@
     "typescript": "^5.5.2"
   },
   "dependencies": {
-    "edgedb": "*",
+    "gel": "^2.0.0-rc",
     "fast-check": "^3.19.0"
   }
 }

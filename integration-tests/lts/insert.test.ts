@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { type Client, $ } from "edgedb";
+import { type Client, $ } from "gel";
 import type { Villain } from "./dbschema/edgeql-js/modules/default";
 import type { InsertShape } from "./dbschema/edgeql-js/insert";
 import e from "./dbschema/edgeql-js";
@@ -431,5 +431,85 @@ describe("insert", () => {
     });
 
     await query.run(client);
+  });
+
+  test("insert many-to-one and select one", async () => {
+    const edgeql = e
+      .params(
+        {
+          name: e.str,
+          nemeses: e.array(e.tuple({ name: e.str })),
+        },
+        (params) => {
+          const hero = e.insert(e.Hero, {
+            name: params.name,
+          });
+          const villains = e.for(e.array_unpack(params.nemeses), (nemesis) => {
+            return e.insert(e.Villain, {
+              name: nemesis.name,
+              nemesis: hero,
+            });
+          });
+
+          return e.with([villains], e.select(hero));
+        },
+      )
+      .toEdgeQL();
+
+    // Also test including `hero` in the `with` refs
+    assert.equal(
+      edgeql,
+      e
+        .params(
+          {
+            name: e.str,
+            nemeses: e.array(e.tuple({ name: e.str })),
+          },
+          (params) => {
+            const hero = e.insert(e.Hero, {
+              name: params.name,
+            });
+            const villains = e.for(
+              e.array_unpack(params.nemeses),
+              (nemesis) => {
+                return e.insert(e.Villain, {
+                  name: nemesis.name,
+                  nemesis: hero,
+                });
+              },
+            );
+
+            return e.with([hero, villains], e.select(hero));
+          },
+        )
+        .toEdgeQL(),
+    );
+    assert.equal(
+      edgeql,
+      e
+        .params(
+          {
+            name: e.str,
+            nemeses: e.array(e.tuple({ name: e.str })),
+          },
+          (params) => {
+            const hero = e.insert(e.Hero, {
+              name: params.name,
+            });
+            const villains = e.for(
+              e.array_unpack(params.nemeses),
+              (nemesis) => {
+                return e.insert(e.Villain, {
+                  name: nemesis.name,
+                  nemesis: hero,
+                });
+              },
+            );
+
+            return e.with([villains, hero], e.select(hero));
+          },
+        )
+        .toEdgeQL(),
+    );
   });
 });

@@ -13,13 +13,13 @@ import { getStringRepresentation } from "./generateObjectTypes";
 const getRuntimeRef = (name: string) => getRef(name, { prefix: "" });
 
 export const generateCastMaps = (params: GeneratorParams) => {
-  const { dir, types, casts, typesByName, edgedbVersion } = params;
+  const { dir, types, casts, typesByName, gelVersion } = params;
   const { implicitCastMap } = casts;
 
-  const literalToScalarMapping = getLiteralToScalarMapping(edgedbVersion);
+  const literalToScalarMapping = getLiteralToScalarMapping(gelVersion);
 
   const f = dir.getPath("castMaps");
-  f.addImportStar("edgedb", "edgedb");
+  f.addImportStar("gel", "gel");
   f.addImportStar("$", "./reflection", {
     modes: ["ts", "dts"],
     allowFileExt: true,
@@ -269,7 +269,7 @@ export const generateCastMaps = (params: GeneratorParams) => {
     dts`declare `,
     t`type scalarLiterals =\n  | ${Object.keys(literalToScalarMapping).join(
       "\n  | ",
-    )}\n  | edgedb.Range<any> | edgedb.MultiRange<any>;\n\n`,
+    )}\n  | gel.Range<any> | gel.MultiRange<any>;\n\n`,
   ]);
 
   f.writeln([
@@ -297,9 +297,9 @@ export const generateCastMaps = (params: GeneratorParams) => {
   f.writeln([t`    ? never`]);
   f.writeln([t`    : T["__tstype__"]`]);
   f.writeln([t`  : T extends $.RangeType`]);
-  f.writeln([t`  ? edgedb.Range<T['__element__']['__tstype__']>`]);
+  f.writeln([t`  ? gel.Range<T['__element__']['__tstype__']>`]);
   f.writeln([t`  : T extends $.MultiRangeType`]);
-  f.writeln([t`  ? edgedb.MultiRange<T['__element__']['__tstype__']>`]);
+  f.writeln([t`  ? gel.MultiRange<T['__element__']['__tstype__']>`]);
   f.writeln([t`  : never;`]);
   f.writeln([
     t`export `,
@@ -346,10 +346,10 @@ export const generateCastMaps = (params: GeneratorParams) => {
     ]);
   }
   f.writeln([
-    t`  T extends edgedb.Range<infer E> ? $.RangeType<literalToScalarType<E>> :`,
+    t`  T extends gel.Range<infer E> ? $.RangeType<literalToScalarType<E>> :`,
   ]);
   f.writeln([
-    t`  T extends edgedb.MultiRange<infer E> ? $.MultiRangeType<literalToScalarType<E>> :`,
+    t`  T extends gel.MultiRange<infer E> ? $.MultiRangeType<literalToScalarType<E>> :`,
   ]);
   // todo probably should be ScalarType or never
   f.writeln([t`  $.BaseType;\n\n`]);

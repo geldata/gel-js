@@ -1,5 +1,5 @@
-import type { BuiltinOAuthProviderNames } from "@edgedb/auth-core";
-import { WebAuthnClient } from "@edgedb/auth-core/webauthn";
+import type { BuiltinOAuthProviderNames } from "@gel/auth-core";
+import { WebAuthnClient } from "@gel/auth-core/webauthn";
 
 export interface RemixAuthOptions {
   baseUrl: string;
@@ -27,8 +27,8 @@ export class RemixClientAuth {
   /** @internal */
   constructor(options: RemixAuthOptions) {
     this.options = {
-      authCookieName: "edgedb-session",
-      pkceVerifierCookieName: "edgedb-pkce-verifier",
+      authCookieName: "gel-session",
+      pkceVerifierCookieName: "gel-pkce-verifier",
       ...options,
       baseUrl: options.baseUrl.replace(/\/$/, ""),
       authRoutesPath: options.authRoutesPath?.replace(/^\/|\/$/g, "") ?? "auth",

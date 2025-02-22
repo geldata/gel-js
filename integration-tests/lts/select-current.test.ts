@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 
 import * as $ from "./dbschema/edgeql-js/reflection";
 import e, { type $infer } from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, tc, type TestData } from "./setupTeardown";
 
-let client: edgedb.Client;
+let client: gel.Client;
 let data: TestData;
 
 describe("select", () => {

@@ -1,4 +1,4 @@
-# @edgedb/auth-sveltekit
+# @gel/auth-sveltekit
 
 This library provides a set of utilities to help you integrate authentication into your [SvelteKit](https://kit.svelte.dev/) application.
 It supports authentication with various OAuth providers, as well as email/password authentication.
@@ -8,15 +8,16 @@ It supports authentication with various OAuth providers, as well as email/passwo
 This package is published on npm and can be installed with your package manager of choice.
 
 ```bash
-npm install @edgedb/auth-sveltekit
+npm install @gel/auth-sveltekit
 ```
 
 ## Setup
 
 **Prerequisites**:
+
 - Node v18+
   - **Note**: Due to using the `crypto` global, you will need to start Node with `--experimental-global-webcrypto`. You can add this option to your `NODE_OPTIONS` environment variable, like `NODE_OPTIONS='--experimental-global-webcrypto'` in the appropriate `.env` file.
-- Before adding EdgeDB auth to your SvelteKit app, you will first need to enable the `auth` extension in your EdgeDB schema, and have configured the extension with some providers (you can do this in CLI or EdgeDB UI). Refer to the auth extension docs for details on how to do this.
+- Before adding Gel auth to your SvelteKit app, you will first need to enable the `auth` extension in your Gel schema, and have configured the extension with some providers (you can do this in CLI or Gel UI). Refer to the auth extension docs for details on how to do this.
 
 ### Client auth helper
 
@@ -25,9 +26,7 @@ Initialize the client auth helper by passing configuration options to `createCli
 ```ts
 // src/lib/auth.ts
 
-import createClientAuth, {
-  type AuthOptions,
-} from "@edgedb/auth-sveltekit/client";
+import createClientAuth, { type AuthOptions } from "@gel/auth-sveltekit/client";
 
 export const options: AuthOptions = {
   baseUrl: "http://localhost:5173",
@@ -43,18 +42,18 @@ The available auth config options are as follows:
 
 - `baseUrl: string`, _required_, The url of your application; needed for various auth flows (eg. OAuth) to redirect back to.
 - `authRoutesPath?: string`, The path to the auth route handlers, defaults to `'auth'`, see below for more details.
-- `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to `'edgedb-session'`.
-- `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to `'edgedb-pkce-verifier'`
+- `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to `'gel-session'`.
+- `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to `'gel-pkce-verifier'`
 - `passwordResetUrl?: string`: The url of the the password reset page; needed if you want to enable password reset emails in your app.
   &nbsp;
 
-### EdgeDB client
+### Gel client
 
-Lets create an EdgeDB client that you will need for creating server auth client.
+Lets create an Gel client that you will need for creating server auth client.
 
 ```ts
 // src/lib/server/auth.ts
-import { createClient } from "edgedb";
+import { createClient } from "gel";
 
 export const client = createClient({
   //Note: when developing locally you will need to set tls  security to insecure, because the dev server uses  self-signed certificates which will cause api calls with the fetch api to fail.
@@ -64,13 +63,11 @@ export const client = createClient({
 
 ### Server auth client
 
-Create the server auth client in a handle hook. Firstly call `serverAuth` passing to it EdgeDB client you created in the previous step, along with configuration options from step 1. This will give you back the `createServerRequestAuth` and `createAuthRouteHook`. You should call `createServerRequestAuth` inside a handle to attach the server client to `event.locals`. Calling `createAuthRouteHook` will give you back a hook so you should just invoke it inside `sequence` and pass your auth route handlers to it.
+Create the server auth client in a handle hook. Firstly call `serverAuth` passing to it Gel client you created in the previous step, along with configuration options from step 1. This will give you back the `createServerRequestAuth` and `createAuthRouteHook`. You should call `createServerRequestAuth` inside a handle to attach the server client to `event.locals`. Calling `createAuthRouteHook` will give you back a hook so you should just invoke it inside `sequence` and pass your auth route handlers to it.
 You can now access the server auth in all actions and load functions through `event.locals`.
 
 ```ts
-import serverAuth, {
-  type AuthRouteHandlers,
-} from "@edgedb/auth-sveltekit/server";
+import serverAuth, { type AuthRouteHandlers } from "@gel/auth-sveltekit/server";
 import { redirect, type Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { client } from "$lib/server/auth";
@@ -79,7 +76,7 @@ import { options } from "$lib/auth";
 
 const { createServerRequestAuth, createAuthRouteHook } = serverAuth(
   client,
-  options
+  options,
 );
 
 const createServerAuthClient: Handle = ({ event, resolve }) => {
@@ -100,14 +97,14 @@ const authRouteHandlers: AuthRouteHandlers = {
 
 export const handle = sequence(
   createServerAuthClient,
-  createAuthRouteHook(authRouteHandlers)
+  createAuthRouteHook(authRouteHandlers),
 );
 ```
 
 \* If you use typescript you need to update `Locals` type with `auth` so that auth is correctly recognized throughout the project:
 
 ```ts
-import type { ServerRequestAuth } from "@edgedb/auth-sveltekit/server";
+import type { ServerRequestAuth } from "@gel/auth-sveltekit/server";
 
 declare global {
   namespace App {
@@ -135,7 +132,7 @@ In any of them you can define what to do in case of success or error. Every hand
 
 ### UI
 
-Now we just need to setup the UI to allow your users to sign in/up, etc. The easiest way to get started is to use the EdgeDB Auth's builtin UI. Or alternatively you can implement your own custom UI.
+Now we just need to setup the UI to allow your users to sign in/up, etc. The easiest way to get started is to use the Gel Auth's builtin UI. Or alternatively you can implement your own custom UI.
 
 **Builtin UI**
 
@@ -154,7 +151,7 @@ To help with implementing your own custom auth UI, the `auth` object has a numbe
 - `emailPasswordResetPassword(data: { reset_token: string; password: string } | FormData)`
 - `signout()`
 - `isPasswordResetTokenValid(resetToken: string)`: Checks if a password reset token is still valid.
-- `getOAuthUrl(providerName: string)`: This method takes the name of an OAuth provider (make sure you configure providers you need in the auth ext config first using CLI or EdgeDB UI) and returns a link that will initiate the OAuth sign in flow for that provider. You will also need to configure the `onOAuthCallback` auth route handler.
+- `getOAuthUrl(providerName: string)`: This method takes the name of an OAuth provider (make sure you configure providers you need in the auth ext config first using CLI or Gel UI) and returns a link that will initiate the OAuth sign in flow for that provider. You will also need to configure the `onOAuthCallback` auth route handler.
 
 ## Usage
 

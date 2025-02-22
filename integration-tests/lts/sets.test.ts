@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { $, type Client } from "edgedb";
+import { $, type Client } from "gel";
 import e, { type $infer } from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, tc } from "./setupTeardown";
 import { TypeKind } from "../../packages/generate/src/syntax/reflection";

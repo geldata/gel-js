@@ -1,4 +1,4 @@
-import createAuth from "@edgedb/auth-nextjs/pages/client";
+import createAuth from "@gel/auth-nextjs/pages/client";
 
 export const options = {
   baseUrl: "http://localhost:3000",

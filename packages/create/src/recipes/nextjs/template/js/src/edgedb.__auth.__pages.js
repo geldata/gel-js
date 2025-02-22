@@ -1,6 +1,6 @@
-import { createClient } from "edgedb";
-import createAuth from "@edgedb/auth-nextjs/pages/server";
-import { options } from "./edgedb.client";
+import { createClient } from "gel";
+import createAuth from "@gel/auth-nextjs/pages/server";
+import { options } from "./gel.client";
 
 export const client = createClient({
   // Note: when developing locally you will need to set tls security to

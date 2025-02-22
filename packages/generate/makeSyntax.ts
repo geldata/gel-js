@@ -14,7 +14,7 @@ const srcSyntax = path.join(__dirname, "src", "syntax");
 const distSyntax = path.join(__dirname, "dist", "syntax");
 const esmSyntax = path.join(__dirname, "dist", "__esm", "syntax");
 
-const reDriver = /"edgedb\/dist([a-zA-Z0-9\_\/]*)"/g;
+const reDriver = /"gel\/dist([a-zA-Z0-9\_\/]*)"/g;
 const reRelativeImports = /"(\.?\.\/.+)"/g;
 const reTsExpectErrorComment = /\/\/ @ts-expect-error GENERATED/g;
 
@@ -63,7 +63,7 @@ async function run() {
     ...(await readGlob({
       pattern: "*.js",
       cwd: distSyntax,
-      contentTx: (content) => content.replace(reDriver, `"edgedb/dist$1.js"`),
+      contentTx: (content) => content.replace(reDriver, `"gel/dist$1.js"`),
     })),
     ...dtsFiles,
   ];
@@ -77,7 +77,7 @@ async function run() {
       pathTx: (p) => p.replace(/\.js/g, ".mjs"),
       contentTx: (content) =>
         content
-          .replace(reDriver, `"edgedb/dist$1.js"`)
+          .replace(reDriver, `"gel/dist$1.js"`)
           .replace(reRelativeImports, `"$1.mjs"`),
     })),
     ...dtsFiles,
@@ -91,7 +91,7 @@ async function run() {
     pathTx: (p) => p.replace(/\.ts/g, ".mts"),
     contentTx: (content) =>
       content
-        .replace(reDriver, `"edgedb/dist$1.js"`)
+        .replace(reDriver, `"gel/dist$1.js"`)
         .replace(reRelativeImports, `"$1.mjs"`)
         .replace(reTsExpectErrorComment, ""),
   });
@@ -102,8 +102,8 @@ async function run() {
     cwd: srcSyntax,
     contentTx: (content) => {
       return content
-        .replace(/"edgedb"/g, `"npm:edgedb"`)
-        .replace(reDriver, `"npm:edgedb/dist$1.js"`)
+        .replace(/"gel"/g, `"npm:gel"`)
+        .replace(reDriver, `"npm:gel/dist$1.js"`)
         .replace(reRelativeImports, `"$1.ts"`)
         .replace(reTsExpectErrorComment, "");
     },

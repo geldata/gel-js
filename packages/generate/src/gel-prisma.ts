@@ -1,5 +1,5 @@
 import type { CommandOptions } from "./commandutil";
-import type { Client } from "edgedb";
+import type { Client } from "gel";
 import * as fs from "node:fs";
 
 const INTRO_QUERY = `

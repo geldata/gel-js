@@ -3,7 +3,7 @@ import {
   ExpressionKind,
   type typeutil,
   TypeKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import type {
   Expression,
   LinkDesc,

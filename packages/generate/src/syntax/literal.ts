@@ -7,7 +7,7 @@ import type {
 
 import { $expressionify } from "./path";
 import { spec } from "./__spec__";
-import { Cardinality, ExpressionKind } from "edgedb/dist/reflection/index";
+import { Cardinality, ExpressionKind } from "gel/dist/reflection/index";
 import { makeType } from "./hydrate";
 
 export type $expr_Literal<Type extends BaseType = BaseType> = Expression<{

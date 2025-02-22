@@ -1,26 +1,26 @@
-# `@edgedb/create`: Project scaffolding for EdgeDB-backed applications
+# `@gel/create`: Project scaffolding for Gel-backed applications
 
-The `@edgedb/create` package provides a starting point for various frameworks with everything you need to start building an EdgeDB-backed application. We aim to follow the same conventions as the original "create-app" templates, but with EdgeDB as the database. There are a few different templates to choose from, including: Next.js, Remix, Express, Node HTTP Server.
+The `@gel/create` package provides a starting point for various frameworks with everything you need to start building an Gel-backed application. We aim to follow the same conventions as the original "create-app" templates, but with Gel as the database. There are a few different templates to choose from, including: Next.js, Remix, Express, Node HTTP Server.
 
 Important points to note:
 
 - **Upstream changes:** We try to actively monitor and incorporate significant changes from the original "create-app" templates to to ensure developers have access to the latest features and best practices.
 - **Support for major options:** While we strive to support the major options offered by the upstream "create-apps", we might not cover every possible configuration or permutation due to the vast scope of possibilities.
-- **EdgeDB CLI installation:** For users who do not have the EdgeDB CLI installed, we automatically install it using our typical installation procedure.
+- **Gel CLI installation:** For users who do not have the Gel CLI installed, we automatically install it using our typical installation procedure.
 
 ## Usage
 
 ```bash
-$ npm create @edgedb
+$ npm create @gel
 # or
-yarn create @edgedb
+yarn create @gel
 # or
-pnpm create @edgedb
+pnpm create @gel
 # or
-bun create @edgedb
+bun create @gel
 ```
 
-After running the command, you will be prompted to provide a project name and choose a template. You can also specify whether to use EdgeDB Auth, initialize a git repository, and install dependencies.
+After running the command, you will be prompted to provide a project name and choose a template. You can also specify whether to use Gel Auth, initialize a git repository, and install dependencies.
 
 The tool will then create a new directory with the specified name and set up the project.
 
@@ -42,7 +42,7 @@ Navigate into `packages/create`:
 $ cd packages/create
 ```
 
-Build `@edgedb/generate`
+Build `@gel/generate`
 
 ```bash
 $ yarn build

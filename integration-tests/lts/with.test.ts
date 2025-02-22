@@ -371,11 +371,11 @@ SELECT {
       `WITH
   __withVar_0 := (
     WITH
-      __withVar_1 := { <std::int64>1, <std::int64>2, <std::int64>3 },
-      __withVar_2 := __withVar_1
+      __withVar_2 := { <std::int64>1, <std::int64>2, <std::int64>3 },
+      __withVar_3 := __withVar_2
     SELECT {
-      multi numbers := assert_exists(__withVar_1),
-      multi numbersAlias := assert_exists(__withVar_2)
+      multi numbers := assert_exists(__withVar_2),
+      multi numbersAlias := assert_exists(__withVar_3)
     }
   )
 SELECT {

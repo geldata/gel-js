@@ -1,4 +1,4 @@
-import type { $ } from "edgedb";
+import type { $ } from "gel";
 
 import type {
   BaseType,
@@ -9,8 +9,8 @@ import type {
   TupleType,
 } from "./typesystem";
 
-import { util, TypeKind } from "edgedb/dist/reflection/index";
-import type { typeutil } from "edgedb/dist/reflection/index";
+import { util, TypeKind } from "gel/dist/reflection/index";
+import type { typeutil } from "gel/dist/reflection/index";
 
 const typeCache = new Map<string, BaseType>();
 
@@ -51,7 +51,7 @@ function applySpec(
             _linkProps
           ] = {});
           for (const linkProp of ptr.pointers ?? []) {
-            // We only support "link properties" in EdgeDB, currently.
+            // We only support "link properties" in Gel, currently.
             if (linkProp.kind !== "property") {
               return;
             }

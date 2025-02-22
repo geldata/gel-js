@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 
 import e from "./dbschema/edgeql-js";
 import type { UpdateShape } from "./dbschema/edgeql-js/syntax";
 import { setupTests, tc, teardownTests, type TestData } from "./setupTeardown";
 
 describe("update", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   const $Hero = e.Hero.__element__;
@@ -103,6 +103,38 @@ describe("update", () => {
 
       return e.with([updateChar, updateProfile], e.select(movie));
     }).toEdgeQL();
+  });
+
+  test("nested update and explicit with, unwrapped select should fail", async () => {
+    assert.throws(
+      () =>
+        e
+          .params({ movieId: e.uuid }, (params) => {
+            const movie = e.select(e.Movie, (m) => ({
+              filter: e.op(m.id, "=", params.movieId),
+            }));
+
+            const updateChar = e.update(movie.characters, (c) => ({
+              set: {
+                name: e.str_lower(c.name),
+              },
+            }));
+
+            const updateProfile = e.update(movie.profile, (p) => ({
+              set: {
+                a: e.str_upper(p.a),
+              },
+            }));
+
+            return e.with([updateChar, updateProfile], movie);
+          })
+          .toEdgeQL(),
+      {
+        message:
+          `Ref expressions in with() cannot reference the expression to which the ` +
+          `'WITH' block is being attached. Consider wrapping the expression in a select.`,
+      },
+    );
   });
 
   test("scoped update", async () => {

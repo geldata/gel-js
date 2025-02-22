@@ -1,6 +1,6 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { $, systemUtils, type Client, type Executor } from "edgedb";
+import { $, systemUtils, type Client, type Executor } from "gel";
 import { type CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
 import type { Target } from "./genutil";
@@ -224,10 +224,8 @@ ${params.types.query.trim().replace(/\\/g, "\\\\").replace(/`/g, "\\`")}\`${
 
   const tsImports =
     params.types.importMap ??
-    new ImportMap(
-      params.types.imports ? [["edgedb", params.types.imports]] : [],
-    );
-  tsImports.add("edgedb", "Executor");
+    new ImportMap(params.types.imports ? [["gel", params.types.imports]] : []);
+  tsImports.add("gel", "Executor");
 
   const tsImpl = `${queryDefs}
 

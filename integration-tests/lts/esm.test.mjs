@@ -1,6 +1,6 @@
 import path from "path";
-import {execSync} from "child_process";
-import {createClient} from "edgedb";
+import { execSync } from "child_process";
+import { createClient } from "gel";
 
 const QBDIR = "./dbschema/qbout";
 
@@ -10,7 +10,7 @@ const CMD = [
   `yarn generate edgeql-js`,
   `--output-dir ./dbschema/qbout`,
   `--force-overwrite`,
-  "--target esm"
+  "--target esm",
 ];
 
 async function run() {
@@ -22,7 +22,7 @@ async function run() {
     }
     execSync(CMD.join(" "));
     const indexFilePath = path.posix.join(QBDIR, "index.mjs");
-    const {default: e} = await import(indexFilePath);
+    const { default: e } = await import(indexFilePath);
     const result = await e.str("Hello world!").run(client);
     if (result !== "Hello world!") throw new Error();
     console.log(`ESM tests successful.`);

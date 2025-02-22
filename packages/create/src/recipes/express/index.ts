@@ -5,7 +5,7 @@ import { updatePackage } from "write-package";
 import type { BaseOptions, Recipe } from "../types.js";
 import { copyTemplateFiles } from "../../utils.js";
 
-const logger = debug("@edgedb/create:recipe:express");
+const logger = debug("@gel/create:recipe:express");
 
 const recipe: Recipe = {
   skip(opts: BaseOptions) {
@@ -24,15 +24,13 @@ const recipe: Recipe = {
       sideEffects: false,
       type: "module",
       scripts: {
-        dev: "DEBUG=* EDGEDB_CLIENT_SECURITY=insecure_dev_mode tsx watch --clear-screen=false src/index.ts",
+        dev: "DEBUG=* GEL_CLIENT_SECURITY=insecure_dev_mode tsx watch --clear-screen=false src/index.ts",
         build: "tsc",
         lint: "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         typecheck: "tsc --noEmit",
       },
       dependencies: {
-        ...(baseOptions.useEdgeDBAuth
-          ? { "@edgedb/auth-express": "^0.1.0" }
-          : {}),
+        ...(baseOptions.useGelAuth ? { "@gel/auth-express": "^0.1.0" } : {}),
         "cookie-parser": "^1.4.6",
         express: "^4.18.2",
       },

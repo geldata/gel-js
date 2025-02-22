@@ -13,52 +13,39 @@ jobs:
     # when the release PR gets merged by the bot.
     if: needs.prep.outputs.version == 0
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.edgedb-version == 'nightly' }}
+    continue-on-error: ${{ matrix.gel-version == 'nightly' }}
     strategy:
       matrix:
         node-version: ["18", "20", "22", "23"]
         os: [ubuntu-latest]
-        edgedb-version: ["stable"]
+        gel-version: ["stable"]
         include:
           # Nightly server
           - os: ubuntu-latest
             node-version: "22"
-            edgedb-version: "nightly"
+            gel-version: "nightly"
           # Upcoming server
           - os: ubuntu-latest
             node-version: "22"
-            edgedb-version: "6.0-beta.2"
+            gel-version: "6.0-beta.2"
           # LTS server
           - os: ubuntu-latest
             node-version: "22"
-            edgedb-version: "4"
+            gel-version: "4"
           # macOS
-          - os: macos-latest
-            node-version: "22"
-            edgedb-version: "stable"
+          # - os: macos-latest
+          #   node-version: "22"
+          #   gel-version: "stable"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 50
           submodules: true
 
-      - name: Setup WSL
-        if: ${{ matrix.os == 'windows-2019' }}
-        uses: vampire/setup-wsl@v1
-        with:
-          wsl-shell-user: edgedb
-          additional-packages: ca-certificates
-            curl
-
       - name: Set up Node ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Set up Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
 
       - name: Install Turbo globally
         run: |
@@ -76,41 +63,41 @@ jobs:
         run: |
           yarn format
 
-      - name: Install EdgeDB
-        uses: edgedb/setup-edgedb@6763b6de72782d9c2e5ecc1095986a1c707da68f
+      - name: Install Gel
+        uses: geldata/setup-gel@6763b6de72782d9c2e5ecc1095986a1c707da68f
         with:
           instance-name: test
-          server-version: ${{ matrix.edgedb-version }}
-          cli-version: ${{ matrix.edgedb-version == 'nightly' && 'nightly' || 'stable' }}
-
-      - name: Show actual EdgeDB server version
+          server-version: ${{ matrix.gel-version }}
+          cli-version: ${{ matrix.gel-version == 'nightly' && 'nightly' || 'stable' }}
+      # should be updated to use gel cli
+      - name: Show actual Gel server version
         run: |
-          echo ACTIVE_EDGEDB_VERSION=$(edgedb query 'select sys::get_version_as_str()' -I test) >> $GITHUB_ENV
-
+          echo ACTIVE_GEL_VERSION=$(edgedb query 'select sys::get_version_as_str()' -I test) >> $GITHUB_ENV
+      # should be updated to use gel cli
       - name: Install postgis extension
-        if: ${{ matrix.edgedb-version == 'nightly' }}
+        if: ${{ matrix.gel-version == 'nightly' }}
         run: |
-          edgedb extension install -E postgis -I test --slot 6-alpha-3
+          edgedb extension install postgis -I test --slot 6-alpha-3
 
       - name: Run package tests
         run: |
           yarn ci:test
 
       - name: Run query builder integration tests lts
-        if: ${{ matrix.edgedb-version == '3' || matrix.edgedb-version == '4' || matrix.edgedb-version == 'stable' || matrix.edgedb-version == 'nightly' }}
+        if: ${{ matrix.gel-version == '3' || matrix.gel-version == '4' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
-          turbo run ci:integration-test --filter=@edgedb/integration-lts
-          turbo run bench:types --filter=@edgedb/integration-lts || echo "Benchmark types script failed, proceeding anyway."
+          turbo run ci:integration-test --filter=@gel/integration-lts
+          turbo run bench:types --filter=@gel/integration-lts || echo "Benchmark types script failed, proceeding anyway."
 
       - name: Run query builder integration tests stable
-        if: ${{ matrix.edgedb-version == 'stable' || matrix.edgedb-version == 'nightly' }}
+        if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
-          turbo run ci:integration-test --filter=@edgedb/integration-stable
+          turbo run ci:integration-test --filter=@gel/integration-stable
 
       - name: Run query builder integration tests nightly
-        if: ${{ matrix.edgedb-version == 'nightly' }}
+        if: ${{ matrix.gel-version == 'nightly' }}
         run: |
-          turbo run ci:integration-test --filter=@edgedb/integration-nightly
+          turbo run ci:integration-test --filter=@gel/integration-nightly
 
       - name: Typecheck other packages
         run: |
@@ -138,19 +125,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
       - name: Install dev deps
         run: |
           yarn --frozen-lockfile
 
       - name: Build and pack CLI wrapper
         run: |
-          yarn workspace edgedb run build
-          yarn workspace edgedb pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
+          yarn workspace gel run build
+          yarn workspace gel pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
 
       - name: Test CLI wrapper with npm
         run: |
@@ -158,9 +140,15 @@ jobs:
           cd ${{ runner.temp }}/temp-npm
           npm init -y
           npm install ${{ github.workspace }}/edgedb-cli.tar.gz
-          npm exec edgedb -- project init --non-interactive
-          npm exec edgedb -- --version
-          npm exec edgedb -- query 'select sys::get_version_as_str()'
+          npm exec gel -- project init --non-interactive
+          npm exec gel -- --version
+          npm exec gel -- query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of npm exec"
+            exit 1
+          else
+            echo "gel command is not available outside of npm exec, as expected"
+          fi
 
       - name: Test CLI wrapper with yarn
         run: |
@@ -168,9 +156,15 @@ jobs:
           cd ${{ runner.temp }}/temp-yarn
           yarn init -y
           yarn add ${{ github.workspace}}/edgedb-cli.tar.gz
-          yarn edgedb project init --non-interactive
-          yarn edgedb --version
-          yarn edgedb query 'select sys::get_version_as_str()'
+          yarn gel project init --non-interactive
+          yarn gel --version
+          yarn gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of yarn"
+            exit 1
+          else
+            echo "gel command is not available outside of yarn, as expected"
+          fi
 
       - uses: threeal/setup-yarn-action@ec8c075e62bc497968de40011c2b766f5e8f1ac5
         with:
@@ -184,9 +178,15 @@ jobs:
           yarn init -y
           touch yarn.lock
           yarn add ${{ github.workspace }}/edgedb-cli.tar.gz
-          yarn edgedb project init --non-interactive
-          yarn edgedb --version
-          yarn edgedb query 'select sys::get_version_as_str()'
+          yarn gel project init --non-interactive
+          yarn gel --version
+          yarn gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of yarn"
+            exit 1
+          else
+            echo "gel command is not available outside of yarn, as expected"
+          fi
 
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
         with:
@@ -198,9 +198,15 @@ jobs:
           cd ${{ runner.temp}}/temp-pnpm
           pnpm init
           pnpm add ${{ github.workspace }}/edgedb-cli.tar.gz
-          pnpm exec edgedb project init --non-interactive
-          pnpm exec edgedb --version
-          pnpm exec edgedb query 'select sys::get_version_as_str()'
+          pnpm exec gel project init --non-interactive
+          pnpm exec gel --version
+          pnpm exec gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of pnpm"
+            exit 1
+          else
+            echo "gel command is not available outside of pnpm, as expected"
+          fi
 
       - uses: oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135
       - name: Test CLI wrapper with bun
@@ -209,6 +215,12 @@ jobs:
           cd temp-bun
           bun init
           bun add ${{ github.workspace }}/edgedb-cli.tar.gz
-          bun edgedb project init --non-interactive
-          bun edgedb --version
-          bun edgedb query 'select sys::get_version_as_str()'
+          bun gel project init --non-interactive
+          bun gel --version
+          bun gel query 'select sys::get_version_as_str()'
+          if gel --version; then
+            echo "Error: gel command should not be available outside of bun"
+            exit 1
+          else
+            echo "gel command is not available outside of bun, as expected"
+          fi

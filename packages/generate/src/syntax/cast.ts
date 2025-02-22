@@ -1,4 +1,4 @@
-import { ExpressionKind, Cardinality } from "edgedb/dist/reflection/index";
+import { ExpressionKind, Cardinality } from "gel/dist/reflection/index";
 import type {
   Expression,
   BaseType,

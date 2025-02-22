@@ -1,5 +1,5 @@
-import type { ExpressionKind, Cardinality } from "edgedb/dist/reflection/index";
-import { TypeKind } from "edgedb/dist/reflection/index";
+import type { ExpressionKind, Cardinality } from "gel/dist/reflection/index";
+import { TypeKind } from "gel/dist/reflection/index";
 import type {
   ArrayType,
   BaseTypeTuple,

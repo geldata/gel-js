@@ -1,4 +1,4 @@
-import type { Duration } from "edgedb";
+import type { Duration } from "gel";
 import type {
   BaseType,
   TypeSet,
@@ -8,7 +8,7 @@ import type {
 } from "../typesystem";
 
 import type { $expr_PathNode } from "../path";
-import type { Cardinality } from "edgedb/dist/reflection/index";
+import type { Cardinality } from "gel/dist/reflection/index";
 declare function assert_single(input: TypeSet<BaseType>): any;
 
 declare const number: scalarTypeWithConstructor<

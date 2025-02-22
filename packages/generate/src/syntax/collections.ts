@@ -3,7 +3,7 @@ import {
   ExpressionKind,
   TypeKind,
   type typeutil,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import { cardutil } from "./cardinality";
 import type {
   $expr_Array,

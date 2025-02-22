@@ -1,0 +1,28 @@
+{
+  "name": "@edgedb/generate",
+  "version": "0.6.0",
+  "description": "This package has been renamed to @gel/generate. Please update your dependencies.",
+  "author": "Gel <info@geldata.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geldata/gel-js.git",
+    "directory": "edgedb/generate"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "bin": "./dist/cli.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc && chmod +x dist/cli.js"
+  },
+  "dependencies": {
+    "@gel/generate": "1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "deprecated": "This package has been renamed to @gel/generate"
+}

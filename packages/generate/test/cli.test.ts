@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import path from "path";
-import { systemUtils } from "edgedb";
+import { systemUtils } from "gel";
 import { execSync } from "child_process";
 
 const QBDIR = path.resolve(__dirname, "..");

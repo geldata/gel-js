@@ -6,7 +6,7 @@ import {
   RelativeDuration,
   ConfigMemory,
   DateDuration,
-} from "edgedb";
+} from "gel";
 import type { $bool, $number } from "./modules/std";
 
 import {
@@ -14,7 +14,7 @@ import {
   ExpressionKind,
   TypeKind,
   OperatorKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import { makeType } from "./hydrate";
 
 import { cardutil } from "./cardinality";

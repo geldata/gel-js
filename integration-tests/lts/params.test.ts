@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import * as edgedb from "edgedb";
+import * as gel from "gel";
 import e from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, tc, versionGTE } from "./setupTeardown";
 
-let client: edgedb.Client;
+let client: gel.Client;
 
 describe("params", () => {
   beforeAll(async () => {
@@ -225,13 +225,13 @@ SELECT (SELECT __param__test)`,
       datetime: new Date(),
       genre: "Action" as const,
 
-      duration: new edgedb.Duration(0, 0, 0, 0, 1),
-      local_date: new edgedb.LocalDate(2021, 11, 25),
-      local_time: new edgedb.LocalTime(12, 34),
-      local_datetime: new edgedb.LocalDateTime(2021, 11, 25, 1, 2, 3),
-      relative_duration: new edgedb.RelativeDuration(1, 2, 3),
-      date_duration: new edgedb.DateDuration(1, 2, 3, 4),
-      memory: new edgedb.ConfigMemory(BigInt(125952)),
+      duration: new gel.Duration(0, 0, 0, 0, 1),
+      local_date: new gel.LocalDate(2021, 11, 25),
+      local_time: new gel.LocalTime(12, 34),
+      local_datetime: new gel.LocalDateTime(2021, 11, 25, 1, 2, 3),
+      relative_duration: new gel.RelativeDuration(1, 2, 3),
+      date_duration: new gel.DateDuration(1, 2, 3, 4),
+      memory: new gel.ConfigMemory(BigInt(125952)),
     };
 
     const result = await query.run(client, args);
@@ -254,13 +254,13 @@ SELECT (SELECT __param__test)`,
           uuid: string;
           datetime: Date;
           genre: "Horror" | "Action" | "RomCom" | "Science Fiction" | "Select";
-          duration: edgedb.Duration;
-          local_date: edgedb.LocalDate;
-          local_time: edgedb.LocalTime;
-          local_datetime: edgedb.LocalDateTime;
-          relative_duration: edgedb.RelativeDuration;
-          date_duration: edgedb.DateDuration;
-          memory: edgedb.ConfigMemory;
+          duration: gel.Duration;
+          local_date: gel.LocalDate;
+          local_time: gel.LocalTime;
+          local_datetime: gel.LocalDateTime;
+          relative_duration: gel.RelativeDuration;
+          date_duration: gel.DateDuration;
+          memory: gel.ConfigMemory;
         }
       >
     >(true);
@@ -289,7 +289,7 @@ SELECT (SELECT __param__test)`,
     const query = e.params(params, (p) => e.select(p));
 
     const args = {
-      date_duration: new edgedb.DateDuration(1, 2, 3, 4),
+      date_duration: new gel.DateDuration(1, 2, 3, 4),
     };
 
     const result = await query.run(client, args);
@@ -298,7 +298,7 @@ SELECT (SELECT __param__test)`,
       tc.IsExact<
         typeof result,
         {
-          date_duration: edgedb.DateDuration;
+          date_duration: gel.DateDuration;
         }
       >
     >(true);

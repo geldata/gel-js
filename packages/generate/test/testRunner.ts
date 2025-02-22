@@ -1,4 +1,4 @@
-import createClient from "../../driver/src/index.node";
+import createClient from "../../gel/src/index.node";
 
 import {
   shutdown,
@@ -9,10 +9,10 @@ import {
   startServer,
   runCommand,
   configToEnv,
-} from "../../driver/test/testUtil";
+} from "../../gel/test/testUtil";
 
 (async function main() {
-  console.log("\nStarting EdgeDB test cluster...");
+  console.log("\nStarting Gel test cluster...");
 
   const statusFile = generateStatusFileName("node");
   console.log("Node status file:", statusFile);
@@ -21,7 +21,7 @@ import {
 
   const { proc, config } = await startServer(args, statusFile);
 
-  console.log(`EdgeDB test cluster is up [port: ${config.port}]...`);
+  console.log(`Gel test cluster is up [port: ${config.port}]...`);
 
   const managementConn = await createClient(config).ensureConnected();
 
@@ -33,8 +33,8 @@ import {
     console.error(err);
     process.exit(1);
   } finally {
-    console.log("Shutting down EdgeDB test cluster...");
+    console.log("Shutting down Gel test cluster...");
     await shutdown(proc, managementConn);
-    console.log("EdgeDB test cluster is down...");
+    console.log("Gel test cluster is down...");
   }
 })();

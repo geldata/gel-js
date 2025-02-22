@@ -1,11 +1,11 @@
-import type { Client } from "edgedb";
+import type { Client } from "gel";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
-import type { ResolvedConnectConfig } from "edgedb/dist/conUtils.js";
+import type { ResolvedConnectConfig } from "gel/dist/conUtils.js";
 import {
   getAuthenticatedFetch,
   type AuthenticatedFetch,
-} from "edgedb/dist/utils.js";
+} from "gel/dist/utils.js";
 import {
   type AIOptions,
   type QueryContext,
@@ -14,17 +14,17 @@ import {
   type EmbeddingRequest,
   isPromptRequest,
 } from "./types.js";
-import { getHTTPSCRAMAuth } from "edgedb/dist/httpScram.js";
-import { cryptoUtils } from "edgedb/dist/browserCrypto.js";
+import { getHTTPSCRAMAuth } from "gel/dist/httpScram.js";
+import { cryptoUtils } from "gel/dist/browserCrypto.js";
 import { extractMessageFromParsedEvent, handleResponseError } from "./utils.js";
 
 export function createAI(client: Client, options: AIOptions) {
-  return new EdgeDBAI(client, options);
+  return new GelAI(client, options);
 }
 
 const httpSCRAMAuth = getHTTPSCRAMAuth(cryptoUtils);
 
-export class EdgeDBAI {
+export class GelAI {
   /** @internal */
   private readonly authenticatedFetch: Promise<AuthenticatedFetch>;
   private readonly options: AIOptions;
@@ -36,7 +36,7 @@ export class EdgeDBAI {
     options: AIOptions,
     context: Partial<QueryContext> = {},
   ) {
-    this.authenticatedFetch = EdgeDBAI.getAuthenticatedFetch(client);
+    this.authenticatedFetch = GelAI.getAuthenticatedFetch(client);
     this.options = options;
     this.context = {
       query: context.query ?? "",
@@ -54,7 +54,7 @@ export class EdgeDBAI {
   }
 
   withConfig(options: Partial<AIOptions>) {
-    return new EdgeDBAI(
+    return new GelAI(
       this.client,
       { ...this.options, ...options },
       this.context,
@@ -62,7 +62,7 @@ export class EdgeDBAI {
   }
 
   withContext(context: Partial<QueryContext>) {
-    return new EdgeDBAI(this.client, this.options, {
+    return new GelAI(this.client, this.options, {
       ...this.context,
       ...context,
     });

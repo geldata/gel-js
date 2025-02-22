@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { auth } from "@/edgedb";
+import { auth } from "@/gel";
 
 interface Data {
   name: string;

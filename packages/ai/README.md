@@ -1,41 +1,41 @@
-# @edgedb/ai
+# @gel/ai
 
 ## Installation
 
-You can install the `@edgedb/ai` package using npm, yarn, or pnpm. Choose the command corresponding to your package manager:
+You can install the `@gel/ai` package using npm, yarn, or pnpm. Choose the command corresponding to your package manager:
 
 ```bash
-npm install @edgedb/ai
-yarn add @edgedb/ai
-pnpm add @edgedb/ai
+npm install @gel/ai
+yarn add @gel/ai
+pnpm add @gel/ai
 ```
 
-## EdgeDB Configuration
+## Gel Configuration
 
 See the AI documentation for detailed guidance on setting up the AI extension and creating a schema for use with the specialized indexes it includes.
 
 ## API Reference
 
-### `createAI(client: Client, options: Partial<AIOptions> = {}): EdgeDBAI`
+### `createAI(client: Client, options: Partial<AIOptions> = {}): GelAI`
 
-Creates an instance of `EdgeDBAI` with the specified client and options.
+Creates an instance of `GelAI` with the specified client and options.
 
-- `client`: An EdgeDB client instance.
+- `client`: An Gel client instance.
 - `options`: Configuration options for the AI model.
-  - `model`: Required. Specifies the AI model to use. This could be some of the OpenAI, Mistral or Anthropic models supported by EdgeDB AI.
+  - `model`: Required. Specifies the AI model to use. This could be some of the OpenAI, Mistral or Anthropic models supported by Gel AI.
   - `prompt`: Optional. Defines the input messages for the AI model. The prompt can have an `ID` or a `name` referencing a stored prompt. The referenced prompt will supply predefined messages. Optionally, include a custom list of messages using the `custom` field. These custom messages will be concatenated with messages from the stored prompt referenced by `id` or `name`. If no `id` or `name` is specified, only the `custom` messages will be used. If no `id`, `name`, or `custom` messages are provided, the built-in system prompt will be used by default.
 
-### `EdgeDBAI`
+### `GelAI`
 
 #### Public Methods
 
-- `withConfig(options: Partial<AIOptions>): EdgeDBAI`
+- `withConfig(options: Partial<AIOptions>): GelAI`
 
-  Returns a new `EdgeDBAI` instance with updated configuration options.
+  Returns a new `GelAI` instance with updated configuration options.
 
-- `withContext(context: Partial<QueryContext>): EdgeDBAI`
+- `withContext(context: Partial<QueryContext>): GelAI`
 
-  Returns a new `EdgeDBAI` instance with an updated query context.
+  Returns a new `GelAI` instance with an updated query context.
 
 - `async queryRag(message: string, context?: QueryContext): Promise<string>`
 
@@ -54,14 +54,14 @@ Creates an instance of `EdgeDBAI` with the specified client and options.
 
 ## Tool Calls
 
-Tool calls are supported by the AI extension. They should be executed on the client side and tool call results should be provided back to the EdgeDB AI.
+Tool calls are supported by the AI extension. They should be executed on the client side and tool call results should be provided back to the Gel AI.
 
 ## Example
 
-The following example demonstrates how to use the `@edgedb/ai` package to query an AI model about astronomy and chemistry.
+The following example demonstrates how to use the `@gel/ai` package to query an AI model about astronomy and chemistry.
 
 ```typescript
-import { createClient } from "edgedb";
+import { createClient } from "gel";
 import { createAI } from "./src/index.js";
 
 const client = createClient({

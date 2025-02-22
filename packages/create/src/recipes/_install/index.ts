@@ -4,7 +4,7 @@ import * as p from "@clack/prompts";
 import type { BaseOptions, Recipe } from "../types.js";
 import { execInLoginShell } from "../../utils.js";
 
-const logger = debug("@edgedb/create:recipe:install");
+const logger = debug("@gel/create:recipe:install");
 
 interface InstallOptions {
   shouldGitInit: boolean;

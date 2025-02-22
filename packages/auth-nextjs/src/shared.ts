@@ -1,4 +1,4 @@
-import { type Client } from "edgedb";
+import { type Client } from "gel";
 import {
   Auth,
   type BuiltinOAuthProviderNames,
@@ -6,10 +6,10 @@ import {
   ConfigurationError,
   InvalidDataError,
   PKCEError,
-  EdgeDBAuthError,
+  GelAuthError,
   OAuthProviderFailureError,
   type SignupResponse,
-} from "@edgedb/auth-core";
+} from "@gel/auth-core";
 
 import {
   type BuiltinProviderNames,
@@ -125,11 +125,6 @@ export abstract class NextAuth extends NextAuthHelpers {
     });
   }
 
-  async deleteVerifierCookie() {
-    const cookieStore = await cookies();
-    cookieStore.delete(this.options.pkceVerifierCookieName);
-  }
-
   async setAuthCookie(token: string) {
     const cookieStore = await cookies();
     const expirationDate = Auth.getTokenExpiration(token);
@@ -142,6 +137,18 @@ export abstract class NextAuth extends NextAuthHelpers {
       secure: this.isSecure,
       expires: expirationDate ?? undefined,
     });
+  }
+
+  async deleteVerifierCookie() {
+    const cookieStore = await cookies();
+    cookieStore.delete(this.options.pkceVerifierCookieName);
+    cookieStore.delete("edgedb-pkce-verifier");
+  }
+
+  async deleteAuthCookie() {
+    const cookieStore = await cookies();
+    cookieStore.delete(this.options.authCookieName);
+    cookieStore.delete("edgedb-session");
   }
 
   public oAuth = {
@@ -261,6 +268,10 @@ export abstract class NextAuth extends NextAuthHelpers {
         req: NextRequest,
         ctx: { params: Promise<{ auth: string[] }> },
       ) => {
+        const verifier =
+          req.cookies.get(this.options.pkceVerifierCookieName)?.value ||
+          req.cookies.get("edgedb-pkce-verifier")?.value;
+
         const params = await ctx.params;
         switch (params.auth.join("/")) {
           case "oauth": {
@@ -292,9 +303,6 @@ export abstract class NextAuth extends NextAuthHelpers {
             const code = req.nextUrl.searchParams.get("code");
             const isSignUp =
               req.nextUrl.searchParams.get("isSignUp") === "true";
-            const verifier = req.cookies.get(
-              this.options.pkceVerifierCookieName,
-            )?.value;
             if (!code) {
               return onOAuthCallback(
                 {
@@ -345,9 +353,6 @@ export abstract class NextAuth extends NextAuthHelpers {
             }
             const verificationToken =
               req.nextUrl.searchParams.get("verification_token");
-            const verifier = req.cookies.get(
-              this.options.pkceVerifierCookieName,
-            )?.value;
             if (!verificationToken) {
               return onEmailVerify(
                 {
@@ -414,9 +419,6 @@ export abstract class NextAuth extends NextAuthHelpers {
             }
             const verificationToken =
               req.nextUrl.searchParams.get("verification_token");
-            const verifier = req.cookies.get(
-              this.options.pkceVerifierCookieName,
-            )?.value;
             if (!verificationToken) {
               return onEmailVerify(
                 {
@@ -474,9 +476,6 @@ export abstract class NextAuth extends NextAuthHelpers {
             const code = req.nextUrl.searchParams.get("code");
             const isSignUp =
               req.nextUrl.searchParams.get("isSignUp") === "true";
-            const verifier = req.cookies.get(
-              this.options.pkceVerifierCookieName,
-            )?.value;
             if (!code) {
               return onMagicLinkCallback(
                 {
@@ -527,7 +526,7 @@ export abstract class NextAuth extends NextAuthHelpers {
               const desc = req.nextUrl.searchParams.get("error_description");
               return onBuiltinUICallback(
                 {
-                  error: new EdgeDBAuthError(error + (desc ? `: ${desc}` : "")),
+                  error: new GelAuthError(error + (desc ? `: ${desc}` : "")),
                 },
                 req,
               );
@@ -556,9 +555,6 @@ export abstract class NextAuth extends NextAuthHelpers {
                 req,
               );
             }
-            const verifier = req.cookies.get(
-              this.options.pkceVerifierCookieName,
-            )?.value;
             if (!verifier) {
               return onBuiltinUICallback(
                 {
@@ -614,8 +610,7 @@ export abstract class NextAuth extends NextAuthHelpers {
                 `'onSignout' auth route handler not configured`,
               );
             }
-            const cookieStore = await cookies();
-            cookieStore.delete(this.options.authCookieName);
+            this.deleteAuthCookie();
             return onSignout(req);
           }
           default:
@@ -747,9 +742,9 @@ export abstract class NextAuth extends NextAuthHelpers {
             }
             let tokenData: TokenData;
             try {
-              const verifier = req.cookies.get(
-                this.options.pkceVerifierCookieName,
-              )?.value;
+              const verifier =
+                req.cookies.get(this.options.pkceVerifierCookieName)?.value ||
+                req.cookies.get("edgedb-pkce-verifier")?.value;
               if (!verifier) {
                 throw new PKCEError("no pkce verifier cookie found");
               }
@@ -1034,7 +1029,7 @@ function _wrapResponse(res: Promise<Response> | undefined, isAction: boolean) {
 function _wrapError(err: Error) {
   return {
     _error: {
-      type: err instanceof EdgeDBAuthError ? err.type : null,
+      type: err instanceof GelAuthError ? err.type : null,
       message: err instanceof Error ? err.message : String(err),
     },
   };

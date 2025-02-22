@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import * as edgedb from "edgedb";
+import * as gel from "gel";
 import e from "./dbschema/edgeql-js";
 import type { getSharedParentPrimitiveVariadic } from "./dbschema/edgeql-js/syntax";
 import { setupTests, tc, teardownTests } from "./setupTeardown";
 
 describe("primitives", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   beforeAll(async () => {
     const setup = await setupTests();
     ({ client } = setup);
@@ -48,10 +48,10 @@ describe("primitives", () => {
   });
 
   test("range primitives", async () => {
-    const range = new edgedb.Range(3, 8);
-    const lowerRange = new edgedb.Range(3, null);
-    const upperRange = new edgedb.Range(null, 8);
-    const dateRange = new edgedb.Range(
+    const range = new gel.Range(3, 8);
+    const lowerRange = new gel.Range(3, null);
+    const upperRange = new gel.Range(null, 8);
+    const dateRange = new gel.Range(
       new Date("2022-07-05T14:00:00Z"),
       new Date("2022-07-05T16:00:00Z"),
     );
@@ -80,8 +80,8 @@ describe("primitives", () => {
       `std::range(<std::float64>{}, 8)`,
     );
 
-    assert.throws(() => e.range(new edgedb.Range(null, null)));
-    assert.throws(() => e.range(edgedb.Range.empty()));
+    assert.throws(() => e.range(new gel.Range(null, null)));
+    assert.throws(() => e.range(gel.Range.empty()));
 
     const res = await e
       .select({
@@ -96,10 +96,10 @@ describe("primitives", () => {
       tc.IsExact<
         typeof res,
         {
-          range: edgedb.Range<number>;
-          lowerRange: edgedb.Range<number>;
-          upperRange: edgedb.Range<number>;
-          dateRange: edgedb.Range<Date>;
+          range: gel.Range<number>;
+          lowerRange: gel.Range<number>;
+          upperRange: gel.Range<number>;
+          dateRange: gel.Range<Date>;
         }
       >
     >(true);
@@ -107,7 +107,7 @@ describe("primitives", () => {
     assert.deepEqual(res, {
       range: range,
       lowerRange: lowerRange,
-      upperRange: new edgedb.Range(null, 8, false),
+      upperRange: new gel.Range(null, 8, false),
       dateRange: dateRange,
     });
 
@@ -135,7 +135,7 @@ describe("primitives", () => {
     tc.assert<
       tc.IsExact<
         typeof res2,
-        { range: edgedb.Range<number>; rangeArray: edgedb.Range<Date>[] }
+        { range: gel.Range<number>; rangeArray: gel.Range<Date>[] }
       >
     >(true);
 
@@ -158,7 +158,7 @@ describe("primitives", () => {
 
     const res3 = await e.select(e.Bag.rangeField).run(client);
 
-    tc.assert<tc.IsExact<typeof res3, edgedb.Range<number>[]>>(true);
+    tc.assert<tc.IsExact<typeof res3, gel.Range<number>[]>>(true);
 
     assert.deepEqual(res3, [lowerRange]);
 

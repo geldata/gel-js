@@ -1,7 +1,7 @@
 // tslint:disable:no-console
 
 // import {setupTests} from "./test/setupTeardown";
-import {createClient} from "edgedb";
+import { createClient } from "gel";
 import e from "./edgeql-js/index.js";
 
 const client = createClient();

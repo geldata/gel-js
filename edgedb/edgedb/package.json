@@ -1,0 +1,38 @@
+{
+  "name": "edgedb",
+  "version": "2.0.0",
+  "description": "This package has been renamed to gel. Please update your dependencies.",
+  "author": "Gel <info@geldata.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geldata/gel-js.git",
+    "directory": "edgedb/edgedb"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "main": "./dist/index.node.js",
+  "types": "./dist/index.node.d.ts",
+  "browser": {
+    "./dist/index.node.js": "./dist/index.browser.js"
+  },
+  "bin": "./dist/cli.mjs",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "echo 'Building edgedb driver...' && rm -rf dist && yarn build:cjs && yarn build:cli",
+    "build:cli": "tsc -p tsconfig.cli.json",
+    "build:cjs": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "gel": "^2.0.0-rc"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "deprecated": "This package has been renamed to gel"
+}

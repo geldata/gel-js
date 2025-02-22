@@ -3,7 +3,7 @@ import e from "./dbschema/edgeql-js";
 import type { $Movie } from "./dbschema/edgeql-js/modules/default";
 
 import { setupTests, tc, teardownTests } from "./setupTeardown";
-import type { Client, $ } from "edgedb";
+import type { Client, $ } from "gel";
 
 describe("casts", () => {
   let client: Client;

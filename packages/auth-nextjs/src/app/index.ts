@@ -3,8 +3,8 @@ import {
   ConfigurationError,
   PKCEError,
   InvalidDataError,
-} from "@edgedb/auth-core";
-import type { Client } from "edgedb";
+} from "@gel/auth-core";
+import type { Client } from "gel";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
@@ -17,7 +17,7 @@ import {
   _extractParams,
 } from "../shared";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export {
   NextAuthSession,
   type NextAuthOptions,
@@ -31,15 +31,16 @@ export class NextAppAuth extends NextAuth {
     const cookieStore = await cookies();
     return new NextAuthSession(
       this.client,
-      cookieStore.get(this.options.authCookieName)?.value.split(";")[0] ?? null,
+      cookieStore.get(this.options.authCookieName)?.value.split(";")[0] ||
+        cookieStore.get("edgedb-session")?.value.split(";")[0] ||
+        null,
     );
   });
 
   createServerActions() {
     return {
       signout: async () => {
-        const cookieStore = await cookies();
-        cookieStore.delete(this.options.authCookieName);
+        this.deleteAuthCookie();
       },
       emailPasswordSignIn: async (
         data: FormData | { email: string; password: string },
@@ -101,9 +102,9 @@ export class NextAppAuth extends NextAuth {
         data: FormData | { reset_token: string; password: string },
       ) => {
         const cookieStore = await cookies();
-        const verifier = cookieStore.get(
-          this.options.pkceVerifierCookieName,
-        )?.value;
+        const verifier =
+          cookieStore.get(this.options.pkceVerifierCookieName)?.value ||
+          cookieStore.get("edgedb-pkce-verifier")?.value;
         if (!verifier) {
           throw new PKCEError("no pkce verifier cookie found");
         }
@@ -116,7 +117,7 @@ export class NextAppAuth extends NextAuth {
           await this.core
         ).resetPasswordWithResetToken(resetToken, verifier, password);
         await this.setAuthCookie(tokenData.auth_token);
-        cookieStore.delete(this.options.pkceVerifierCookieName);
+        this.deleteVerifierCookie();
         return tokenData;
       },
       emailPasswordResendVerificationEmail: async (

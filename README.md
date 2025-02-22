@@ -1,39 +1,39 @@
 <div align="center">
-  <h1>The official Node.js client library for EdgeDB</h1>
+  <h1>The official Node.js client library for Gel</h1>
 
-  <a href="https://github.com/edgedb/edgedb-js/actions" rel="nofollow">
-    <img src="https://github.com/edgedb/edgedb-js/actions/workflows/tests.yml/badge.svg?event=push&branch=master" alt="Build status">
+  <a href="https://github.com/geldata/gel-js/actions" rel="nofollow">
+    <img src="https://github.com/geldata/gel-js/actions/workflows/tests.yml/badge.svg?event=push&branch=master" alt="Build status">
   </a>
-  <a href="https://www.npmjs.com/package/edgedb" rel="nofollow">
-    <img src="https://img.shields.io/npm/v/edgedb" alt="NPM version">
+  <a href="https://www.npmjs.com/package/gel" rel="nofollow">
+    <img src="https://img.shields.io/npm/v/gel" alt="NPM version">
   </a>
-  <a href="https://github.com/edgedb/edgedb" rel="nofollow">
-    <img src="https://img.shields.io/github/stars/edgedb/edgedb" alt="Stars">
+  <a href="https://github.com/geldata/gel" rel="nofollow">
+    <img src="https://img.shields.io/github/stars/geldata/gel" alt="Stars">
   </a>
-  <a href="https://github.com/edgedb/edgedb/blob/master/LICENSE">
+  <a href="https://github.com/geldata/gel/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue" />
   </a>
   <br />
   <br />
-  <a href="https://www.edgedb.com/docs/guides/quickstart">Quickstart</a>
+  <a href="https://www.geldata.com/docs/guides/quickstart">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://www.edgedb.com">Website</a>
+  <a href="https://www.geldata.com">Website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://www.edgedb.com/docs/clients/js/index">Docs</a>
+  <a href="https://www.geldata.com/docs/clients/js/index">Docs</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://discord.gg/umUueND6ag">Discord</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://twitter.com/edgedatabase">Twitter</a>
+  <a href="https://twitter.com/usegel">Twitter</a>
   <br />
 
 </div>
 
-This is the official [EdgeDB](https://github.com/edgedb/edgedb) client library
+This is the official [Gel](https://github.com/geldata/gel) client library
 for JavaScript and TypeScript.
 
-If you're just getting started with EdgeDB, we recommend going through the
-[EdgeDB Quickstart](https://www.edgedb.com/docs/quickstart) first. This walks
-you through the process of installing EdgeDB, creating a simple schema, and
+If you're just getting started with Gel, we recommend going through the
+[Gel Quickstart](https://www.geldata.com/docs/quickstart) first. This walks
+you through the process of installing Gel, creating a simple schema, and
 writing some simple queries.
 
 ### Requirements
@@ -46,16 +46,16 @@ writing some simple queries.
 ### Installation
 
 ```bash
-npm install edgedb      # npm users
-yarn add edgedb         # yarn users
+npm install gel      # npm users
+yarn add gel         # yarn users
 ```
 
-> EdgeDB 2.x requires `v0.21.0` or later
+> Gel 2.x requires `v0.21.0` or later
 
 ## Basic usage
 
 > The examples below demonstrate only the most fundamental use cases for this
-> library. **[Go to the complete documentation site. >](https://www.edgedb.com/docs/clients/js/index)**
+> library. **[Go to the complete documentation site. >](https://www.geldata.com/docs/clients/js/index)**
 
 ### Create a client
 
@@ -65,39 +65,39 @@ connections to your database and provides methods for executing queries.
 _For TypeScript (and Node.js+ESM)_
 
 ```ts
-import * as edgedb from "edgedb";
+import * as gel from "gel";
 
-const client = edgedb.createClient();
+const client = gel.createClient();
 ```
 
 _For Node.js (CommonJS)_
 
 ```js
-const edgedb = require("edgedb");
+const gel = require("gel");
 
-const client = edgedb.createClient();
+const client = gel.createClient();
 ```
 
 ### Configuring the connection
 
-The call to `edgedb.createClient()` doesn't require arguments, as the library
+The call to `gel.createClient()` doesn't require arguments, as the library
 can determine how to connect to your database using the following mechanisms.
 
-1. _For local development_: initialize a project with the `edgedb project init`
+1. _For local development_: initialize a project with the `gel project init`
    command. As long as the file is within a project directory, `createClient`
    will be able to auto-discover the connection information of the project's
    associated instance. For more information on projects, follow the
-   [Using projects](https://www.edgedb.com/docs/guides/projects) guide.
+   [Using projects](https://www.geldata.com/docs/guides/projects) guide.
 
 2. _In production_: configure the connection using **environment variables**.
    (This can also be used during local development if you prefer.) The easiest
-   way is to set the `EDGEDB_DSN` variable; a DSN (also known as a "connection
+   way is to set the `GEL_DSN` variable; a DSN (also known as a "connection
    string") is a string of the form
-   `edgedb://USERNAME:PASSWORD@HOSTNAME:PORT/DATABASE`.
+   `gel://USERNAME:PASSWORD@HOSTNAME:PORT/DATABASE`.
 
 For advanced cases, see the
-[DSN specification](https://www.edgedb.com/docs/reference/dsn) and
-[Reference > Connection Parameters](https://www.edgedb.com/docs/reference/connection).
+[DSN specification](https://www.geldata.com/docs/reference/dsn) and
+[Reference > Connection Parameters](https://www.geldata.com/docs/reference/connection).
 
 ### Run a query
 
@@ -105,9 +105,9 @@ For advanced cases, see the
 > syntax.
 
 ```ts
-import * as edgedb from "edgedb";
+import * as gel from "gel";
 
-const client = edgedb.createClient();
+const client = gel.createClient();
 await client.query("select 2 + 2"); // => [4]
 ```
 
@@ -131,17 +131,17 @@ await client.querySingle(
 
 ## Generators
 
-Install the `@edgedb/generate` package as a dev dependency to take advantage of EdgeDB's built-in code generators.
+Install the `@gel/generate` package as a dev dependency to take advantage of Gel's built-in code generators.
 
 ```bash
-npm install @edgedb/generate  --save-dev      # npm users
-yarn add @edgedb/generate --dev               # yarn users
+npm install @gel/generate  --save-dev      # npm users
+yarn add @gel/generate --dev               # yarn users
 ```
 
 Then run a generator with the following command:
 
 ```bash
-$ npx @edgedb/generate <generator> [FLAGS]
+$ npx @gel/generate <generator> [FLAGS]
 ```
 
 The following `<generator>`s are currently supported:
@@ -155,7 +155,7 @@ The following `<generator>`s are currently supported:
 Run the following command to generate a source file for each `*.edgeql` system in your project.
 
 ```bash
-$ npx @edgedb/generate queries
+$ npx @gel/generate queries
 ```
 
 Assume you have a file called `getUser.edgeql` in your project directory.
@@ -172,12 +172,12 @@ filter .email = <str>$email;
 This generator will generate a `getUser.query.ts` file alongside it that exports a function called `getUser`.
 
 ```ts
-import {createClient} from "edgedb";
-import {myQuery} from "./myQuery.query";
+import { createClient } from "gel";
+import { myQuery } from "./myQuery.query";
 
 const client = createClient();
 
-const user = await myQuery(client, {name: "Timmy"});
+const user = await myQuery(client, { name: "Timmy" });
 user; // {name: string; email: string}
 ```
 
@@ -187,19 +187,19 @@ The first argument is a `Client`, the second is the set of _parameters_. Both th
 
 The query builder lets you write queries in a code-first way. It automatically infers the return type of your queries.
 
-To generate the query builder, install the `edgedb` package, initialize a project (if you haven't already), then run the following command:
+To generate the query builder, install the `gel` package, initialize a project (if you haven't already), then run the following command:
 
 ```bash
-$ npx @edgedb/generate edgeql-js
+$ npx @gel/generate edgeql-js
 ```
 
 This will generate an EdgeQL query builder into the `./dbschema/edgeql-js`
 directory, as defined relative to your project root.
 
-For details on generating the query builder, refer to the [complete documentation](https://www.edgedb.com/docs/clients/js/generation). Below is a simple `select` query as an example.
+For details on generating the query builder, refer to the [complete documentation](https://www.geldata.com/docs/clients/js/generation). Below is a simple `select` query as an example.
 
 ```ts
-import { createClient } from "edgedb";
+import { createClient } from "gel";
 import e from "./dbschema/edgeql-js";
 
 const client = createClient();
@@ -215,30 +215,30 @@ const result = await query.run(client);
 result.actors[0].name; // => Timothee Chalamet
 ```
 
-For details on using the query builder, refer to the full [query builder docs](https://www.edgedb.com/docs/clients/js/querybuilder).
+For details on using the query builder, refer to the full [query builder docs](https://www.geldata.com/docs/clients/js/querybuilder).
 
 ## Contribute
 
-Contributing to this library requires a local installation of EdgeDB. Install
-EdgeDB from [here](https://www.edgedb.com/download) or
-[build it from source](https://www.edgedb.com/docs/reference/dev).
+Contributing to this library requires a local installation of Gel. Install
+Gel from [here](https://www.geldata.com/download) or
+[build it from source](https://www.geldata.com/docs/reference/dev).
 
 ```bash
-$ git clone git@github.com:edgedb/edgedb-js.git
-$ cd edgedb-js
+$ git clone git@github.com:gel/gel-js.git
+$ cd gel-js
 $ yarn                # install dependencies
 $ yarn run build      # build all packages
 $ yarn run test       # run tests for all packages
 ```
 
-> In order to be able to run all tests you need to have `edgedb-server` in your
+> In order to be able to run all tests you need to have `gel-server` in your
 > path. This can be done by either running tests from within a Python 3.12
-> virtual environment (you will have it if you built EdgeDB locally), or by
-> [installing](https://docs.edgedb.com/cli/edgedb_server/edgedb_server_install#ref-cli-edgedb-server-install)
-> specific EdgeDB version and then adding its binary path to the `EDGEDB_SERVER_BIN` environment variable.
-> Check [here](https://docs.edgedb.com/cli/edgedb_server/edgedb_server_info#ref-cli-edgedb-server-info)
+> virtual environment (you will have it if you built Gel locally), or by
+> [installing](https://docs.geldata.com/cli/gel_server/gel_server_install#ref-cli-gel-server-install)
+> specific Gel version and then adding its binary path to the `GEL_SERVER_BIN` environment variable.
+> Check [here](https://docs.geldata.com/cli/gel_server/gel_server_info#ref-cli-gel-server-info)
 > to find how to get the binary path.
 
 ## License
 
-`edgedb-js` is developed and distributed under the Apache 2.0 license.
+`gel-js` is developed and distributed under the Apache 2.0 license.

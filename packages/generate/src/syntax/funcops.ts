@@ -2,7 +2,7 @@ import {
   Cardinality,
   type introspect,
   TypeKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import { cardutil } from "./cardinality";
 import { makeType } from "./hydrate";
 import type {
@@ -19,10 +19,7 @@ import { cast } from "./cast";
 import { isImplicitlyCastableTo, literalToTypeSet } from "./castMaps";
 import { literal } from "./literal";
 
-import type {
-  ExpressionKind,
-  OperatorKind,
-} from "edgedb/dist/reflection/index";
+import type { ExpressionKind, OperatorKind } from "gel/dist/reflection/index";
 
 export type $expr_Function<
   // Name extends string = string,
