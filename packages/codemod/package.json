@@ -1,6 +1,6 @@
 {
-  "name": "@edgedb/codemod",
-  "version": "0.0.0",
+  "name": "@gel/codemod",
+  "version": "1.0.0-rc.1",
   "description": "Upgrade EdgeDB code to Gel",
   "homepage": "https://edgedb.com/docs",
   "author": "EdgeDB <info@edgedb.com>",
