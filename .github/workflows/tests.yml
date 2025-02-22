@@ -77,7 +77,7 @@ jobs:
           yarn format
 
       - name: Install Gel
-        uses: edgedb/setup-edgedb@6763b6de72782d9c2e5ecc1095986a1c707da68f
+        uses: geldata/setup-gel@6763b6de72782d9c2e5ecc1095986a1c707da68f
         with:
           instance-name: test
           server-version: ${{ matrix.gel-version }}
