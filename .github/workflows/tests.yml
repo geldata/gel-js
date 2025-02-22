@@ -27,7 +27,7 @@ jobs:
           # Upcoming server
           - os: ubuntu-latest
             node-version: "22"
-            gel-version: "6.0-beta.2"
+            gel-version: "6.0-rc.2"
           # LTS server
           - os: ubuntu-latest
             node-version: "22"
@@ -75,7 +75,7 @@ jobs:
           echo ACTIVE_GEL_VERSION=$(edgedb query 'select sys::get_version_as_str()' -I test) >> $GITHUB_ENV
       # should be updated to use gel cli
       - name: Install postgis extension
-        if: ${{ matrix.gel-version == 'nightly' }}
+        if: ${{ matrix.gel-version == 'nightly' || matrix.gel-versoin == '6.0-rc.2' }}
         run: |
           edgedb extension install postgis -I test --slot 6-alpha-3
 
@@ -84,13 +84,13 @@ jobs:
           yarn ci:test
 
       - name: Run query builder integration tests lts
-        if: ${{ matrix.gel-version == '3' || matrix.gel-version == '4' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
+        if: ${{ matrix.gel-version == '4' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' || matrix.gel-version == '6.0-rc.2' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-lts
           turbo run bench:types --filter=@gel/integration-lts || echo "Benchmark types script failed, proceeding anyway."
 
       - name: Run query builder integration tests stable
-        if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
+        if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' || matrix.gel-version == '6.0-rc.2' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-stable
 
