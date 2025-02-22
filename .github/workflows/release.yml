@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      - gel
 
 jobs:
   build_and_publish:
@@ -621,5 +620,62 @@ jobs:
         with:
           tag_name: vercel-ai-provider-v${{ steps.check_publish_vercel-ai-provider.outputs.version }}
           name: "@gel/vercel-ai-provider v${{ steps.check_publish_vercel-ai-provider.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @gel/codemod
+
+      - name: Build @gel/codemod
+        run: yarn workspace @gel/codemod run build
+
+      - id: check_publish_codemod
+        name: Dry-run publish '@gel/codemod' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/codemod/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@gel/codemod' version unchanged
+        if: steps.check_publish_codemod.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @gel/codemod version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./packages/codemod/package.json').version")
+          yarn workspace @gel/codemod version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Extract prerelease tag from version
+        id: get_tag_codemod
+        working-directory: packages/codemod
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/codemod'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/codemod/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.get_tag_codemod.outputs.tag }}
+
+      - name: Create '@gel/codemod' Release
+        if: steps.check_publish_codemod.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: codemod-v${{ steps.check_publish_codemod.outputs.version }}
+          name: "@gel/codemod v${{ steps.check_publish_codemod.outputs.version }}"
           draft: true
           prerelease: false
