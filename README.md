@@ -158,12 +158,12 @@ This generator will generate a `getUser.query.ts` file alongside it that exports
 
 ```ts
 import { createClient } from "gel";
-import { myQuery } from "./myQuery.query";
+import { getUser } from "./getUser.query";
 
 const client = createClient();
 
-const user = await myQuery(client, { name: "Timmy" });
-user; // {name: string; email: string}
+const user = await getUser(client, { name: "Timmy" });
+//    ^? { name: string; email: string }
 ```
 
 The first argument is a `Client`, the second is the set of _parameters_. Both the parameters and the returned value are fully typed.
