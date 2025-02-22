@@ -1,16 +1,16 @@
 export type ChatParticipantRole = "system" | "user" | "assistant" | "tool";
 
-export interface GelSystemMessage {
+export interface SystemMessage {
   role: "system";
   content: string;
 }
 
-export interface GelUserMessage {
+export interface UserMessage {
   role: "user";
   content: { type: "text"; text: string }[];
 }
 
-export interface GelAssistantMessage {
+export interface AssistantMessage {
   role: "assistant";
   content: string;
   tool_calls?: {
@@ -20,24 +20,24 @@ export interface GelAssistantMessage {
   }[];
 }
 
-export interface GelToolMessage {
+export interface ToolMessage {
   role: "tool";
   content: string;
   tool_call_id: string;
 }
 
-export type GelMessage =
-  | GelSystemMessage
-  | GelUserMessage
-  | GelAssistantMessage
-  | GelToolMessage;
+export type Message =
+  | SystemMessage
+  | UserMessage
+  | AssistantMessage
+  | ToolMessage;
 
 export type Prompt =
-  | { name: string; custom?: GelMessage[] }
-  | { id: string; custom?: GelMessage[] }
-  | { custom: GelMessage[] };
+  | { name: string; custom?: Message[] }
+  | { id: string; custom?: Message[] }
+  | { custom: Message[] };
 
-export interface AIOptions {
+export interface RAGOptions {
   model: string;
   prompt?: Prompt;
 }
@@ -55,7 +55,7 @@ export interface RagRequestPrompt {
 }
 
 export interface RagRequestMessages {
-  messages: GelMessage[];
+  messages: Message[];
   [key: string]: unknown;
 }
 

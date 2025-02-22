@@ -7,7 +7,7 @@ import {
   type AuthenticatedFetch,
 } from "gel/dist/utils.js";
 import {
-  type AIOptions,
+  type RAGOptions,
   type QueryContext,
   type StreamingMessage,
   type RagRequest,
@@ -18,25 +18,25 @@ import { getHTTPSCRAMAuth } from "gel/dist/httpScram.js";
 import { cryptoUtils } from "gel/dist/browserCrypto.js";
 import { extractMessageFromParsedEvent, handleResponseError } from "./utils.js";
 
-export function createAI(client: Client, options: AIOptions) {
-  return new GelAI(client, options);
+export function createRAGClient(client: Client, options: RAGOptions) {
+  return new RAGClient(client, options);
 }
 
 const httpSCRAMAuth = getHTTPSCRAMAuth(cryptoUtils);
 
-export class GelAI {
+export class RAGClient {
   /** @internal */
   private readonly authenticatedFetch: Promise<AuthenticatedFetch>;
-  private readonly options: AIOptions;
+  private readonly options: RAGOptions;
   private readonly context: QueryContext;
 
   /** @internal */
   constructor(
     public readonly client: Client,
-    options: AIOptions,
+    options: RAGOptions,
     context: Partial<QueryContext> = {},
   ) {
-    this.authenticatedFetch = GelAI.getAuthenticatedFetch(client);
+    this.authenticatedFetch = RAGClient.getAuthenticatedFetch(client);
     this.options = options;
     this.context = {
       query: context.query ?? "",
@@ -53,8 +53,8 @@ export class GelAI {
     return getAuthenticatedFetch(connectConfig, httpSCRAMAuth, "ext/ai/");
   }
 
-  withConfig(options: Partial<AIOptions>) {
-    return new GelAI(
+  withConfig(options: Partial<RAGOptions>) {
+    return new RAGClient(
       this.client,
       { ...this.options, ...options },
       this.context,
@@ -62,7 +62,7 @@ export class GelAI {
   }
 
   withContext(context: Partial<QueryContext>) {
-    return new GelAI(this.client, this.options, {
+    return new RAGClient(this.client, this.options, {
       ...this.context,
       ...context,
     });
