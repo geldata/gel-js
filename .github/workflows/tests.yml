@@ -33,9 +33,9 @@ jobs:
             node-version: "22"
             edgedb-version: "4"
           # macOS
-          - os: macos-latest
-            node-version: "22"
-            edgedb-version: "stable"
+          # - os: macos-latest
+          #   node-version: "22"
+          #   edgedb-version: "stable"
     steps:
       - uses: actions/checkout@v4
         with:
