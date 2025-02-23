@@ -9,14 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/edgedb/edgedb-js.git"
+    "url": "git+https://github.com/edgedb/edgedb-js.git"
   },
   "license": "Apache-2.0",
   "sideEffects": false,
   "files": [
     "/dist"
   ],
-  "bin": "dist/cli.js",
+  "bin": {
+    "codemod": "dist/cli.js"
+  },
   "peerDependencies": {},
   "devDependencies": {
     "@types/debug": "^4.1.12",
