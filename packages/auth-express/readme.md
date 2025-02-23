@@ -1,4 +1,4 @@
-# `@edgedb/auth-express`
+# `@gel/auth-express`
 
 This library provides a set of utilities to help you integrate authentication into your [Express](https://expressjs.com/) application. It supports various authentication methods including OAuth, email/password, and session-based authentication.
 
@@ -7,7 +7,7 @@ This library provides a set of utilities to help you integrate authentication in
 This package is published on npm and can be installed with your package manager of choice.
 
 ```bash
-npm install @edgedb/auth-express
+npm install @gel/auth-express
 ```
 
 **Note:** We have tested this library against the latest version of Express v4 with the types provided at DefinitelyTyped and have set up `peerDependencies` based on typical usage with npm.
@@ -15,9 +15,10 @@ npm install @edgedb/auth-express
 ## Setup
 
 **Prerequisites**:
+
 - Node v18+
   - **Note**: Due to using the `crypto` global, you will need to start Node with `--experimental-global-webcrypto`. You can add this option to your `NODE_OPTIONS` environment variable, like `NODE_OPTIONS='--experimental-global-webcrypto'` in the appropriate `.env` file.
-- Before adding EdgeDB auth to your Express app, you will first need to enable the `auth` extension in your EdgeDB schema, and have configured the extension with some providers (you can do this in CLI or EdgeDB UI). Refer to the auth extension docs for details on how to do this.
+- Before adding Gel auth to your Express app, you will first need to enable the `auth` extension in your Gel schema, and have configured the extension with some providers (you can do this in CLI or Gel UI). Refer to the auth extension docs for details on how to do this.
 - We depend on the following middleware being installed in your Express app:
   - `body-parser`: both JSON and urlencoded
   - `cookie-parser`
@@ -33,22 +34,22 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 ```
 
-This library provides a few affordances for adding EdgeDB Auth to your existing Express app:
+This library provides a few affordances for adding Gel Auth to your existing Express app:
 
-- Routers and route handlers to handle the authentication flow required by EdgeDB.
+- Routers and route handlers to handle the authentication flow required by Gel.
 - Middleware to attach sessions to requests.
 - Some additional utility functions for handling various auth related concerns.
 
 ## Configuring the `ExpressAuth` class
 
-After [configuring the EdgeDB Auth extension](https://www.edgedb.com/docs/guides/auth/index), you can set up the various auth routes with our route builders.
+After [configuring the Gel Auth extension](https://www.geldata.com/docs/guides/auth/index), you can set up the various auth routes with our route builders.
 
-Start by instantiating an `ExpressAuth` object by passing it a configured EdgeDB client and some options:
+Start by instantiating an `ExpressAuth` object by passing it a configured Gel client and some options:
 
 ```ts
-import { createClient } from "edgedb";
-import createExpressAuth from "@edgedb/auth-express";
-import * as expressAuth from "@edgedb/auth-express";
+import { createClient } from "gel";
+import createExpressAuth from "@gel/auth-express";
+import * as expressAuth from "@gel/auth-express";
 
 const client = createClient();
 const auth = createExpressAuth(client, {
@@ -73,10 +74,10 @@ app.get("/dashboard", (req: expressAuth.SessionRequest, res) => {
   }
 
   // Render a template using Pug or EJS
-  res.render(
-    "dashboard",
-    { title: "Dashboard", message: "Welcome to your dashboard!" }
-  );
+  res.render("dashboard", {
+    title: "Dashboard",
+    message: "Welcome to your dashboard!",
+  });
 });
 ```
 
@@ -88,7 +89,7 @@ You can centralize the logic to redirect unauthenticated routes into a custom mi
 function requireAuth(
   req: expressAuth.SessionRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   if (!(await req.session?.isSignedIn())) {
     return res.redirect("/auth/builtin/signin");
@@ -103,10 +104,10 @@ Then you can use this to protect your route like this:
 ```ts
 app.get("/dashboard", requireAuth, (req: expressAuth.SessionRequest, res) => {
   // Render a template using Pug or EJS
-  res.render(
-    "dashboard",
-    { title: "Dashboard", message: "Welcome to your dashboard!" }
-  );
+  res.render("dashboard", {
+    title: "Dashboard",
+    message: "Welcome to your dashboard!",
+  });
 });
 ```
 
@@ -162,7 +163,6 @@ app.use("/auth", builtinRouter);
 - `resetPassword: (express.RouteHandler | express.ErrorHandler)[]`, Attached middleware executes after the user successfully resets their password. Typically you will redirect the user to your application here.
 - `resendVerificationEmail: (express.RouteHandler | express.ErrorHandler)[]`, Attached middleware executes after the user resends their email verification email. Typically you will redirect the user to some success page, or if you do not _require_ verification to use your app, you can redirect to your app here.
 
-
 ```ts
 const emailPasswordRouter = auth.createEmailPasswordRouter(
   "/auth/email-password", // Path to mount router at
@@ -198,7 +198,7 @@ const emailPasswordRouter = auth.createEmailPasswordRouter(
         res.redirect("/");
       },
     ],
-  }
+  },
 );
 
 app.use(emailPasswordRouter);
@@ -257,9 +257,9 @@ const magicLinkRouter = auth.createMagicLinkRouter(
     signUp: [
       (req, res) => {
         res.redirect("/check-email.html");
-      }
-    ]
-  }
+      },
+    ],
+  },
 );
 
 app.use(magicLinkRouter);
@@ -271,12 +271,12 @@ app.use(magicLinkRouter);
 
 ### Custom UI: WebAuthn
 
-Unlike the other authentication methods, WebAuthn requires a client-side script that runs in the browser. This script requests JSON from the EdgeDB Auth server that gets options to pass to the Web Authentication API built into the browser, and then after successfully creating new credentials or retrieving existing credentials, it calls back to the endpoints you're configuring below.
+Unlike the other authentication methods, WebAuthn requires a client-side script that runs in the browser. This script requests JSON from the Gel Auth server that gets options to pass to the Web Authentication API built into the browser, and then after successfully creating new credentials or retrieving existing credentials, it calls back to the endpoints you're configuring below.
 
 In order to facilitate the sign in and sign up ceremonies, we export a helper class called `WebAuthnClient` that you must configure with some relevant paths based on how you set up your routing below.
 
 ```ts
-import { WebAuthnClient } from "@edgedb/auth-express";
+import { WebAuthnClient } from "@gel/auth-express";
 
 const webAuthnClient = new WebAuthnClient({
   signupOptionsUrl: "http://localhost:3000/auth/webauthn/signup/options",
@@ -291,32 +291,29 @@ const webAuthnClient = new WebAuthnClient({
 - `signIn: (express.RouteHandler | express.ErrorHandler)[]`, required, Attached middleware executes when sign-in attempt succeeds. Typically you will redirect the user to your application here.
 - `signUp: (express.RouteHandler | express.ErrorHandler)[]`, required, Attached middleware executes when sign-up attempt succeeds. Typically you will redirect the user to your application here.
 - `verify: (express.RouteHandler | express.ErrorHandler)[]`, Attached middleware executes after the user verifies their email successfully. Typically you will redirect the user to your application here.
-- `signInOptions: (express.RouteHandler | express.ErrorHandler)[]`, This redirects the user to the appropriate URL of the EdgeDB server to retrieve the WebAuthn sign in options.
-- `signUpOptions: (express.RouteHandler | express.ErrorHandler)[]`, This redirects the user to the appropriate URL of the EdgeDB server to retrieve the WebAuthn sign up options.
+- `signInOptions: (express.RouteHandler | express.ErrorHandler)[]`, This redirects the user to the appropriate URL of the Gel server to retrieve the WebAuthn sign in options.
+- `signUpOptions: (express.RouteHandler | express.ErrorHandler)[]`, This redirects the user to the appropriate URL of the Gel server to retrieve the WebAuthn sign up options.
 
 ```ts
-const webAuthnRouter = auth.createWebAuthnRouter(
-  "/auth/webauthn",
-  {
-    signInOptions: [],
-    signIn: [
-      (req: expressAuth.AuthRequest, res) => {
-        res.redirect("/");
-      },
-    ],
-    signUpOptions: [],
-    signUp: [
-      (req: expressAuth.AuthRequest, res) => {
-        res.redirect("/onboarding");
-      },
-    ],
-    verify: [
-      (req: expressAuth.AuthRequest, res) => {
-        res.redirect("/");
-      },
-    ],
-  }
-);
+const webAuthnRouter = auth.createWebAuthnRouter("/auth/webauthn", {
+  signInOptions: [],
+  signIn: [
+    (req: expressAuth.AuthRequest, res) => {
+      res.redirect("/");
+    },
+  ],
+  signUpOptions: [],
+  signUp: [
+    (req: expressAuth.AuthRequest, res) => {
+      res.redirect("/onboarding");
+    },
+  ],
+  verify: [
+    (req: expressAuth.AuthRequest, res) => {
+      res.redirect("/");
+    },
+  ],
+});
 
 app.use(webAuthnRouter);
 // This creates the following routes:
@@ -346,7 +343,7 @@ const builtinRouter = Router()
       }
 
       res.redirect("/");
-    }
+    },
   );
 
 app.use("/auth", builtinRouter);
@@ -361,48 +358,48 @@ const emailPasswordRouter = Router()
     auth.emailPassword.signIn,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/");
-    }
+    },
   )
   .post(
     "/signup",
     auth.emailPassword.signUp(
       // URL of the verify endpoint configured below
-      "http://localhost:3000/auth/email-password/verify"
+      "http://localhost:3000/auth/email-password/verify",
     ),
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/onboarding");
-    }
+    },
   )
   .get(
     "/verify",
     auth.emailPassword.verify,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/");
-    }
+    },
   )
   .post(
     "/send-password-reset-email",
     auth.emailPassword.sendPasswordResetEmail(
       // URL of the reset password endpoint configured below
-      "http://localhost:3000/auth/email-password/reset-password"
+      "http://localhost:3000/auth/email-password/reset-password",
     ),
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/email-success");
-    }
+    },
   )
   .post(
     "/reset-password",
     auth.emailPassword.resetPassword,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/email-success");
-    }
+    },
   )
   .post(
     "/resend-verification-email",
     auth.emailPassword.resendVerificationEmail,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/");
-    }
+    },
   );
 
 app.use("/auth/email-password", emailPasswordRouter);
@@ -416,15 +413,15 @@ const oAuthRouter = Router()
     "/",
     auth.oAuth.redirect(
       // URL of the callback endpoint configured below
-      "http://localhost:3000/auth/oauth/callback"
-    )
+      "http://localhost:3000/auth/oauth/callback",
+    ),
   )
   .get(
     "/callback",
     auth.oAuth.callback,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/");
-    }
+    },
   );
 
 app.use("/auth/oauth", oAuthRouter);
@@ -461,7 +458,6 @@ const magicLinkRoute = Router()
     },
   );
 
-
 app.use("/auth/magic-link", router);
 ```
 
@@ -469,35 +465,25 @@ app.use("/auth/magic-link", router);
 
 ```ts
 const webAuthnRouter = Router()
-  .get(
-    "/signin/options",
-    auth.webauthn.signInOptions
-  )
+  .get("/signin/options", auth.webauthn.signInOptions)
   .post(
     "/signin",
     auth.webauthn.signIn,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/");
-    }
+    },
   )
-  .get(
-    "/signup/options",
-    auth.webauthn.signUpOptions
-  )
+  .get("/signup/options", auth.webauthn.signUpOptions)
   .post(
     "/signup",
     auth.webauthn.signUp,
     (req: expressAuth.AuthRequest, res) => {
       res.redirect("/onboarding");
-    }
+    },
   )
-  .get(
-    "/verify",
-    auth.webauthn.verify,
-    (req: expressAuth.AuthRequest, res) => {
-      res.redirect("/");
-    }
-  );
+  .get("/verify", auth.webauthn.verify, (req: expressAuth.AuthRequest, res) => {
+    res.redirect("/");
+  });
 
 app.use("/auth/webauthn", webAuthnRouter);
 ```
@@ -528,8 +514,8 @@ const builtinRouter = auth.createBuiltinRouter({
 ### `createExpressAuth` (default package export)
 
 - `baseUrl: string`, required, The url of your application; needed for various auth flows (eg. OAuth) to redirect back to.
-- `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to 'edgedb-session'.
-- `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to 'edgedb-pkce-verifier'
+- `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to 'gel-session'.
+- `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to 'gel-pkce-verifier'
 - `passwordResetUrl?: string`: The url of the the password reset page; needed if you want to enable password reset emails in your app.
 
 Returns: `ExpressAuth`
@@ -572,4 +558,3 @@ This is an extension of the Express `Request` interface containing some optional
 
 - `session?: ExpressAuthSession`
 - `tokenData?: TokenData`
-

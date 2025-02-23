@@ -19,7 +19,7 @@ export const generateInterfaces = (params: GenerateInterfacesParams) => {
   const { dir, types } = params;
 
   const plainTypesCode = dir.getPath("interfaces");
-  plainTypesCode.addImportStar("edgedb", "edgedb", {
+  plainTypesCode.addImportStar("gel", "gel", {
     typeOnly: true,
   });
   const plainTypeModules = new Map<string, ModuleData>();
@@ -130,7 +130,7 @@ export const generateInterfaces = (params: GenerateInterfacesParams) => {
       } else {
         return toTSScalarType(targetType as $.introspect.PrimitiveType, types, {
           getEnumRef: (enumType) => getTypeName(enumType.name),
-          edgedbDatatypePrefix: "",
+          gelDatatypePrefix: "",
         }).join("");
       }
     };

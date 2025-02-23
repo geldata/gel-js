@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 
 import e from "./dbschema/edgeql-js";
 import { setupTests, teardownTests, tc, type TestData } from "./setupTeardown";
 
 describe("delete", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   beforeAll(async () => {
@@ -48,10 +48,7 @@ describe("delete", () => {
 
     const deleteAll = e.delete(e.Hero);
     tc.assert<
-      tc.IsExact<
-        (typeof deleteAll)["__cardinality__"],
-        edgedb.$.Cardinality.Many
-      >
+      tc.IsExact<(typeof deleteAll)["__cardinality__"], gel.$.Cardinality.Many>
     >(true);
   });
 

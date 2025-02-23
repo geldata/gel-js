@@ -1,6 +1,6 @@
-import { ExpressionKind, TypeKind } from "edgedb/dist/reflection/index";
+import { ExpressionKind, TypeKind } from "gel/dist/reflection/index";
 import type { ParamType } from "./typesystem";
-import { encodeB64 } from "edgedb/dist/primitives/buffer";
+import { encodeB64 } from "gel/dist/primitives/buffer";
 import type { $expr_WithParams } from "./params";
 
 function jsonStringify(type: ParamType, val: any): string {

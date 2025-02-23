@@ -1,5 +1,5 @@
 import baseRecipe from "./_base/index.js";
-import _edgedbInit from "./_edgedb/index.js";
+import _gelInit from "./_gel/index.js";
 import _install from "./_install/index.js";
 
 import express from "./express/index.js";
@@ -18,6 +18,6 @@ export const recipes: Recipe<any>[] = [
   remix,
   sveltekit,
   // init
-  _edgedbInit,
+  _gelInit,
   _install,
 ];

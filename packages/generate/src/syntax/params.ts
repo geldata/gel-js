@@ -1,9 +1,9 @@
-import type { Executor } from "edgedb";
+import type { Executor } from "gel";
 import {
   ExpressionKind,
   Cardinality,
   TypeKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import type {
   Expression,
   ParamType,

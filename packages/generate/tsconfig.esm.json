@@ -7,5 +7,5 @@
     "downlevelIteration": true
   },
   "include": ["src"],
-  "exclude": ["**/*.deno.ts", "test/deno/*", "dist", "qb"]
+  "exclude": ["dist", "qb"]
 }

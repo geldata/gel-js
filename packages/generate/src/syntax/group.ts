@@ -12,7 +12,7 @@ import {
   Cardinality,
   ExpressionKind,
   TypeKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import { makeType } from "./hydrate";
 
 import { $expressionify, $getScopedExpr } from "./path";

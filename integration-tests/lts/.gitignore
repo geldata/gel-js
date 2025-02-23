@@ -2,7 +2,6 @@ trace
 trace/*
 mts/edgeql-js
 esm/edgeql-js
-deno/edgeql-js
 cjs/edgeql-js
 dbschema/edgeql-js
 dbschema/queries.ts

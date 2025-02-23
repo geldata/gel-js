@@ -2,7 +2,7 @@ import { dts, t, r, ts } from "../builders";
 import type { GeneratorParams } from "../genutil";
 
 export const generateRuntimeSpec = (params: GeneratorParams) => {
-  const { dir, types, edgedbVersion } = params;
+  const { dir, types, gelVersion } = params;
 
   const spec = dir.getPath("__spec__");
 
@@ -30,7 +30,7 @@ export const generateRuntimeSpec = (params: GeneratorParams) => {
     `const complexParamKinds`,
     t`: Set<$.TypeKind>`,
     r` = new Set([${
-      edgedbVersion.major <= 2 ? `$.TypeKind.tuple, $.TypeKind.namedtuple` : ""
+      gelVersion.major <= 2 ? `$.TypeKind.tuple, $.TypeKind.namedtuple` : ""
     }])`,
     `;`,
   ]);

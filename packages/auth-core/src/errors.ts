@@ -1,14 +1,14 @@
 /** Base class for all exceptions raised by the auth extension. */
-export class EdgeDBAuthError extends Error {
+export class GelAuthError extends Error {
   get type() {
-    return "_EdgeDBAuth";
+    return "_GelAuth";
   }
 }
 
 /** Error returned by auth extension could not be decoded into a
  * known error class.
  */
-export class UnknownError extends EdgeDBAuthError {
+export class UnknownError extends GelAuthError {
   get type() {
     return "_Unknown";
   }
@@ -17,7 +17,7 @@ export class UnknownError extends EdgeDBAuthError {
 /** Base class for all backend auth extension errors. It is not recommended to
  * return these errors to the user.
  */
-export class BackendError extends EdgeDBAuthError {
+export class BackendError extends GelAuthError {
   get type() {
     return "_Backend";
   }
@@ -26,14 +26,14 @@ export class BackendError extends EdgeDBAuthError {
 /** Base class for all errors arising during normal use of the auth extension.
  * These errors are considered safe to return to the user.
  */
-export class UserError extends EdgeDBAuthError {
+export class UserError extends GelAuthError {
   get type() {
     return "_User";
   }
 }
 
 /** Required resource could not be found. */
-export class NotFoundError extends EdgeDBAuthError {
+export class NotFoundError extends GelAuthError {
   get type() {
     return "NotFound";
   }

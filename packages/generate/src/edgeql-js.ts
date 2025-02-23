@@ -1,4 +1,6 @@
-import { $, adapter, type Client } from "edgedb";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { $, systemUtils, type Client } from "gel";
 import { type CommandOptions, isTTY, promptBoolean } from "./commandutil";
 import { headerComment } from "./genutil";
 import { DirBuilder } from "./builders";
@@ -14,9 +16,9 @@ import { generateRuntimeSpec } from "./edgeql-js/generateRuntimeSpec";
 import { generateScalars } from "./edgeql-js/generateScalars";
 import { generateSetImpl } from "./edgeql-js/generateSetImpl";
 
-const { path, fs, readFileUtf8, exists, walk } = adapter;
+const { readFileUtf8, exists, walk } = systemUtils;
 
-export const configFileHeader = `// EdgeDB query builder`;
+export const configFileHeader = `// Gel query builder`;
 
 export type GeneratorParams = {
   dir: DirBuilder;
@@ -27,13 +29,18 @@ export type GeneratorParams = {
   functions: $.introspect.FunctionTypes;
   globals: $.introspect.Globals;
   operators: $.introspect.OperatorTypes;
-  edgedbVersion: Version;
+  gelVersion: Version;
 };
 
 export type Target = "ts" | "esm" | "cjs" | "mts" | "deno";
 export type Version = {
   major: number;
   minor: number;
+};
+
+export const defaultFutureFlags = {
+  polymorphismAsDiscriminatedUnions: false,
+  strictTypeNames: false,
 };
 
 export async function generateQueryBuilder(params: {
@@ -48,12 +55,13 @@ export async function generateQueryBuilder(params: {
   if (options.out) {
     outputDir = path.isAbsolute(options.out)
       ? options.out
-      : path.join(adapter.process.cwd(), options.out);
+      : path.join(process.cwd(), options.out);
   } else if (root) {
     outputDir = path.join(root, schemaDir, "edgeql-js");
   } else {
     throw new Error(
-      `No edgedb.toml found. Initialize an EdgeDB project with\n\`edgedb project init\` or specify an output directory with \`--output-dir\``,
+      "No project config file found. Initialize an Gel project with\n" +
+        "'gel project init' or specify an output directory with '--output-dir'",
     );
   }
 
@@ -116,7 +124,7 @@ export async function generateQueryBuilder(params: {
     functions,
     globals,
     operators,
-    edgedbVersion: version,
+    gelVersion: version,
   };
   console.log("Generating runtime spec...");
   generateRuntimeSpec(generatorParams);
@@ -147,7 +155,7 @@ export async function generateQueryBuilder(params: {
 
   const importsFile = dir.getPath("imports");
 
-  importsFile.addExportStar("edgedb", { as: "edgedb" });
+  importsFile.addExportStar("gel", { as: "gel" });
   importsFile.addExportFrom({ spec: true }, "./__spec__", {
     allowFileExt: true,
   });
@@ -174,6 +182,25 @@ export async function generateQueryBuilder(params: {
     throw new Error(`Error: no syntax files found for target "${target}"`);
   }
 
+  // libs that existed in modules/[lib] and in server v6 moved to modules/std/[lib]
+  const stdLibs = ["cal", "fts", "math", "pg"];
+
+  // instead of hardcoding we can check generated files inside modules/std
+  // if (version.major > 5) {
+  //   const stdPath = path.join(prettyOutputDir, "modules", "std");
+  //   const filenames = await fs.readdir(stdPath);
+
+  //   for (const fname of filenames) {
+  //     const fullPath = path.join(stdPath, fname);
+  //     const fileStat = await fs.stat(fullPath);
+
+  //     if (fileStat.isFile()) {
+  //       const libName = path.parse(fname).name;
+  //       stdLibs.push(libName);
+  //     }
+  //   }
+  // }
+
   for (const f of syntaxFiles) {
     const outputPath = path.join(syntaxOutDir, f.path);
     written.add(outputPath);
@@ -182,11 +209,36 @@ export async function generateQueryBuilder(params: {
       .then((content) => content)
       .catch(() => "");
 
-    const newContents = headerComment + f.content;
+    let newContents = headerComment + f.content;
+
+    // in server versions >=6 cal, fts, math and pg are moved inside std module
+    if (version.major > 5) {
+      stdLibs.forEach((lib) => {
+        newContents = newContents.replace(
+          `modules/${lib}`,
+          `modules/std/${lib}`,
+        );
+      });
+    }
+
     if (oldContents !== newContents) {
       await fs.writeFile(outputPath, newContents);
     }
   }
+
+  const future = {
+    ...defaultFutureFlags,
+    ...options.future,
+  };
+
+  const futureFilePath = path.join(syntaxOutDir, "future.ts");
+
+  const content =
+    headerComment +
+    `export const future = ${JSON.stringify(future, undefined, 2)} as const;\n`;
+
+  await fs.writeFile(futureFilePath, content);
+  written.add(futureFilePath);
 
   if (target === "ts") {
     await dir.write(

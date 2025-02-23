@@ -18,7 +18,7 @@ export function generateIndex(params: GeneratorParams) {
   // });
 
   index.addImportStar("$", "./reflection");
-  index.addExportFrom({ createClient: true }, "edgedb");
+  index.addExportFrom({ createClient: true }, "gel");
   index.addImportStar("$syntax", "./syntax", { allowFileExt: true });
   index.addImportStar("$op", "./operators", { allowFileExt: true });
 

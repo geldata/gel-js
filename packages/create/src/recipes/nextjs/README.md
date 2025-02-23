@@ -1,24 +1,24 @@
-# Next.js Integration Recipe for EdgeDB
+# Next.js Integration Recipe for Gel
 
-This recipe provides a starting point for building a [Next.js](https://nextjs.org/) application with EdgeDB as the database. It is based on the official Next.js starter template.
+This recipe provides a starting point for building a [Next.js](https://nextjs.org/) application with Gel as the database. It is based on the official Next.js starter template.
 
 We try to actively monitor and incorporate significant changes from the original "create-app" templates to ensure developers have access to the latest features and best practices. However, we might not cover every possible configuration or permutation due to the vast scope of possibilities.
 
-✨ Check out the [`@edgedb/create` package](https://github.com/edgedb/edgedb-js/blob/master/packages/create/README.md) for more information.
+✨ Check out the [`@gel/create` package](https://github.com/gel/gel-js/blob/master/packages/create/README.md) for more information.
 
 ## Usage
 
 ```bash
-$ npm create @edgedb
+$ npm create @gel
 # or
-yarn create @edgedb
+yarn create @gel
 # or
-pnpm create @edgedb
+pnpm create @gel
 # or
-bun create @edgedb
+bun create @gel
 ```
 
-After running the command, you will be prompted to provide a project name and choose the **"Next.js"** template. You can also specify whether to use EdgeDB Auth, initialize a git repository, and install dependencies.
+After running the command, you will be prompted to provide a project name and choose the **"Next.js"** template. You can also specify whether to use Gel Auth, initialize a git repository, and install dependencies.
 
 The tool will then create a new directory with the specified name and set up the project.
 
@@ -36,7 +36,7 @@ Navigate into `packages/create`:
 $ cd packages/create
 ```
 
-Build @edgedb/create
+Build @gel/create
 
 ```bash
 $ yarn build

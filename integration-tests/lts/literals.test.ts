@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
-import * as edgedb from "edgedb";
-import { TypeKind } from "edgedb/dist/reflection";
+import * as gel from "gel";
+import { TypeKind } from "gel/dist/reflection";
 import e from "./dbschema/edgeql-js";
-import { setupTests } from "./setupTeardown";
+import { setupTests, versionGTE } from "./setupTeardown";
 
 describe("literals", () => {
   test("literals", () => {
-    const duration = new edgedb.Duration(0, 0, 0, 0, 5, 6, 7, 8, 9, 10);
-    const localdate = new edgedb.LocalDate(2021, 10, 31);
-    const localdatetime = new edgedb.LocalDateTime(2021, 10, 31, 21, 45, 30);
-    const localtime = new edgedb.LocalTime(15, 15, 0);
-    const relduration = new edgedb.RelativeDuration(1, 2, 3);
-    const dateduration = new edgedb.DateDuration(1, 2, 3, 4);
+    const duration = new gel.Duration(0, 0, 0, 0, 5, 6, 7, 8, 9, 10);
+    const localdate = new gel.LocalDate(2021, 10, 31);
+    const localdatetime = new gel.LocalDateTime(2021, 10, 31, 21, 45, 30);
+    const localtime = new gel.LocalTime(15, 15, 0);
+    const relduration = new gel.RelativeDuration(1, 2, 3);
+    const dateduration = new gel.DateDuration(1, 2, 3, 4);
     const uuid = "317fee4c-0da5-45aa-9980-fedac211bfb6";
 
     assert.equal(
@@ -68,26 +68,50 @@ describe("literals", () => {
       e.std.uuid(uuid).toEdgeQL(),
       `<std::uuid>"317fee4c-0da5-45aa-9980-fedac211bfb6"`,
     );
-    assert.equal(
-      e.cal.local_date(localdate).toEdgeQL(),
-      `<cal::local_date>'2021-10-31'`,
-    );
-    assert.equal(
-      e.cal.local_datetime(localdatetime).toEdgeQL(),
-      `<cal::local_datetime>'2021-10-31T21:45:30'`,
-    );
-    assert.equal(
-      e.cal.local_time(localtime).toEdgeQL(),
-      `<cal::local_time>'15:15:00'`,
-    );
-    assert.equal(
-      e.cal.relative_duration(relduration).toEdgeQL(),
-      `<cal::relative_duration>'P1Y2M21D'`,
-    );
-    assert.equal(
-      e.cal.date_duration(dateduration).toEdgeQL(),
-      `<cal::date_duration>'P1Y2M25D'`,
-    );
+
+    if (versionGTE(6)) {
+      assert.equal(
+        e.cal.local_date(localdate).toEdgeQL(),
+        `<std::cal::local_date>'2021-10-31'`,
+      );
+      assert.equal(
+        e.cal.local_datetime(localdatetime).toEdgeQL(),
+        `<std::cal::local_datetime>'2021-10-31T21:45:30'`,
+      );
+      assert.equal(
+        e.cal.local_time(localtime).toEdgeQL(),
+        `<std::cal::local_time>'15:15:00'`,
+      );
+      assert.equal(
+        e.cal.relative_duration(relduration).toEdgeQL(),
+        `<std::cal::relative_duration>'P1Y2M21D'`,
+      );
+      assert.equal(
+        e.cal.date_duration(dateduration).toEdgeQL(),
+        `<std::cal::date_duration>'P1Y2M25D'`,
+      );
+    } else {
+      assert.equal(
+        e.cal.local_date(localdate).toEdgeQL(),
+        `<cal::local_date>'2021-10-31'`,
+      );
+      assert.equal(
+        e.cal.local_datetime(localdatetime).toEdgeQL(),
+        `<cal::local_datetime>'2021-10-31T21:45:30'`,
+      );
+      assert.equal(
+        e.cal.local_time(localtime).toEdgeQL(),
+        `<cal::local_time>'15:15:00'`,
+      );
+      assert.equal(
+        e.cal.relative_duration(relduration).toEdgeQL(),
+        `<cal::relative_duration>'P1Y2M21D'`,
+      );
+      assert.equal(
+        e.cal.date_duration(dateduration).toEdgeQL(),
+        `<cal::date_duration>'P1Y2M25D'`,
+      );
+    }
   });
 
   test("collection type literals", () => {
@@ -105,7 +129,7 @@ describe("literals", () => {
     const horror = e.Genre.Horror;
     assert.deepEqual(e.Genre.Horror.__element__.__kind__, TypeKind.enum);
     assert.deepEqual(horror.__element__, e.Genre);
-    assert.deepEqual(horror.__cardinality__, edgedb.$.Cardinality.One);
+    assert.deepEqual(horror.__cardinality__, gel.$.Cardinality.One);
     assert.equal(
       e.literal(e.Genre, "Horror").toEdgeQL(),
       `default::Genre.Horror`,

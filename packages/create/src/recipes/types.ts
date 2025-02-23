@@ -13,7 +13,7 @@ export interface BaseOptions {
   projectName: string;
   framework: Framework;
   projectDir: string;
-  useEdgeDBAuth: boolean;
+  useGelAuth: boolean;
 }
 
 export interface Recipe<RecipeOptions = undefined> {

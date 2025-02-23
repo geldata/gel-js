@@ -1,4 +1,4 @@
-import type { LocalDate, LocalDateTime } from "edgedb";
+import type { LocalDate, LocalDateTime } from "gel";
 import type { ScalarType } from "../typesystem";
 
 export type $local_date = ScalarType<"cal::local_date", LocalDate>;

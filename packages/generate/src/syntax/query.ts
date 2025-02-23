@@ -1,5 +1,5 @@
-import type * as edgedb from "edgedb";
-import { Cardinality, ExpressionKind } from "edgedb/dist/reflection/index";
+import type * as gel from "gel";
+import { Cardinality, ExpressionKind } from "gel/dist/reflection/index";
 import { jsonifyComplexParams } from "./json";
 import { select } from "./select";
 
@@ -17,7 +17,7 @@ export const runnableExpressionKinds = new Set([
 
 const wrappedExprCache = new WeakMap();
 
-export async function $queryFunc(this: any, cxn: edgedb.Executor, args: any) {
+export async function $queryFunc(this: any, cxn: gel.Executor, args: any) {
   const expr = runnableExpressionKinds.has(this.__kind__)
     ? this
     : wrappedExprCache.get(this) ??
@@ -38,11 +38,7 @@ export async function $queryFunc(this: any, cxn: edgedb.Executor, args: any) {
   }
 }
 
-export async function $queryFuncJSON(
-  this: any,
-  cxn: edgedb.Executor,
-  args: any,
-) {
+export async function $queryFuncJSON(this: any, cxn: gel.Executor, args: any) {
   const expr = runnableExpressionKinds.has(this.__kind__)
     ? this
     : wrappedExprCache.get(this) ??

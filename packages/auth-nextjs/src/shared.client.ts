@@ -1,10 +1,10 @@
 import {
   type BuiltinOAuthProviderNames,
   type emailPasswordProviderName,
-} from "@edgedb/auth-core";
-import { WebAuthnClient } from "@edgedb/auth-core/webauthn";
+} from "@gel/auth-core";
+import { WebAuthnClient } from "@gel/auth-core/webauthn";
 
-export * as webauthn from "@edgedb/auth-core/webauthn";
+export * as webauthn from "@gel/auth-core/webauthn";
 
 export type BuiltinProviderNames =
   | BuiltinOAuthProviderNames
@@ -33,9 +33,9 @@ export abstract class NextAuthHelpers {
     this.options = {
       baseUrl: options.baseUrl.replace(/\/$/, ""),
       authRoutesPath: options.authRoutesPath?.replace(/^\/|\/$/g, "") ?? "auth",
-      authCookieName: options.authCookieName ?? "edgedb-session",
+      authCookieName: options.authCookieName ?? "gel-session",
       pkceVerifierCookieName:
-        options.pkceVerifierCookieName ?? "edgedb-pkce-verifier",
+        options.pkceVerifierCookieName ?? "gel-pkce-verifier",
       passwordResetPath: options.passwordResetPath,
       magicLinkFailurePath: options.magicLinkFailurePath,
     };

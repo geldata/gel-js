@@ -1,6 +1,6 @@
-import createClientAuth from "@edgedb/auth-sveltekit/client";
+import createClientAuth from "@gel/auth-sveltekit/client";
 
-/** @type {import('@edgedb/auth-sveltekit/client').AuthOptions} */
+/** @type {import('@gel/auth-sveltekit/client').AuthOptions} */
 export const options = {
   baseUrl: "http://localhost:5173",
 };

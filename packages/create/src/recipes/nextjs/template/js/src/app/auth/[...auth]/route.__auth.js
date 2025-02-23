@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/edgedb";
+import { auth } from "@/gel";
 
 export const { GET, POST } = auth.createAuthRouteHandlers({
   async onBuiltinUICallback({ error, tokenData, provider, isSignUp }) {

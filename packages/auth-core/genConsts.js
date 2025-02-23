@@ -1,5 +1,5 @@
 const fs = require("node:fs/promises");
-const { createClient } = require("edgedb");
+const { createClient } = require("gel");
 
 const client = createClient("_localdev");
 
@@ -38,9 +38,9 @@ export type BuiltinOAuthProviderNames =
 
 export const emailPasswordProviderName = ${providerNames.emailpassword.replace(
       /^'|'$/g,
-      '"'
+      '"',
     )};
-`
+`,
   );
 
   console.log('Generated into "src/consts.ts"');

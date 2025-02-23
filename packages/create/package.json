@@ -1,16 +1,17 @@
 {
-  "name": "@edgedb/create",
-  "version": "0.2.2",
+  "name": "@gel/create",
+  "version": "0.3.0-rc.1",
   "type": "module",
-  "description": "Create a new EdgeDB-based project",
-  "homepage": "https://edgedb.com/docs",
-  "author": "EdgeDB <info@edgedb.com>",
+  "description": "Create a new Gel-based project",
+  "homepage": "https://geldata.com/docs",
+  "author": "Gel <info@geldata.com>",
   "engines": {
     "node": ">= 18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/edgedb/edgedb-js.git"
+    "url": "https://github.com/geldata/gel-js.git",
+    "directory": "packages/create"
   },
   "license": "Apache-2.0",
   "sideEffects": false,
@@ -18,7 +19,6 @@
     "/dist"
   ],
   "bin": "dist/cli.js",
-  "peerDependencies": {},
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/node": "^20.12.13",
@@ -30,6 +30,7 @@
     "debug": "^4.3.4",
     "picocolors": "^1.0.1",
     "read-pkg": "^9.0.1",
+    "shell-quote": "^1.8.2",
     "write-package": "^7.0.1"
   },
   "scripts": {

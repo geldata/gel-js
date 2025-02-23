@@ -1,0 +1,37 @@
+{
+  "name": "@edgedb/auth-nextjs",
+  "version": "0.4.0",
+  "description": "This package has been renamed to @gel/auth-nextjs. Please update your dependencies.",
+  "author": "Gel <info@geldata.com>",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geldata/gel-js.git",
+    "directory": "edgedb/auth-nextjs"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "mauth-nextjsn": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./app": "./dist/app/index.js",
+    "./app/client": "./dist/app/client.js",
+    "./pages/*": "./dist/pages/*.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepare": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@gel/auth-nextjs": "^0.4.0-rc"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "deprecated": "This package has been renamed to @gel/auth-nextjs"
+}

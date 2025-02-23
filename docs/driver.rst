@@ -92,7 +92,7 @@ value specified below is the *default value* for that setting.
       },
     })
     .withTransactionOptions({
-      isolation: IsolationLevel.Serializable, // only supported value
+      isolation: IsolationLevel.Serializable, // or .RepeatableRead if readonly
       deferrable: false,
       readonly: false,
     });
@@ -409,6 +409,11 @@ The ``transaction()`` API guarantees that:
    would be retried;
 3. If any other, non-retryable error occurs, the transaction is rolled
    back and the ``transaction()`` block throws.
+
+The *transaction* object exposes ``query()``, ``execute()``, ``querySQL()``,
+``executeSQL()``, and other ``query*()`` methods that *clients* expose, with
+the only difference that queries will run within the current transaction
+and can be retried automatically.
 
 The key implication of retrying transactions is that the entire
 nested code block can be re-run, including any non-querying

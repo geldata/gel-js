@@ -1,5 +1,5 @@
 import * as tc from "conditional-type-checks";
-import { type Client, createClient } from "edgedb";
+import { type Client, createClient } from "gel";
 
 export { tc };
 
@@ -8,6 +8,20 @@ export type TestData = depromisify<ReturnType<typeof setupTests>>["data"];
 
 export async function setupTests() {
   const client = createClient();
+
+  await client.query(`
+    insert User {
+      movies := {
+        (insert Movie { title := "Inception", year := 2010, plot := "Inception plot" })
+      },
+      shows := {
+        (insert Show { title := "Friends", year := 1994, seasons := 10 })
+      },
+      documentaries:= {
+        (insert Documentary { title := "Free Solo", plot := "Free Solo plot" })
+      }
+    }`);
+
   return {
     data: null,
     client,
@@ -20,6 +34,9 @@ async function cleanupData(client: Client) {
     delete User;
     delete Post;
     delete WithMultiRange;
+    delete Movie;
+    delete Show;
+    delete Documentary;
   `);
 }
 
@@ -30,7 +47,7 @@ export async function teardownTests(client: Client) {
 }
 
 export const versionGTE = (majorVer: number) => {
-  const version = JSON.parse(process.env._JEST_EDGEDB_VERSION!);
+  const version = JSON.parse(process.env._JEST_GEL_VERSION!);
   return version.major >= majorVer;
 };
 

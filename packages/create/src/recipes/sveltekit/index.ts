@@ -5,7 +5,7 @@ import { updatePackage } from "write-package";
 import { copyTemplateFiles } from "../../utils.js";
 import type { BaseOptions, Recipe } from "../types.js";
 
-const logger = debug("@edgedb/create:recipe:sveltekit");
+const logger = debug("@gel/create:recipe:sveltekit");
 
 interface SveltekitOptions {
   lang: "ts" | "jsdoc" | "js";
@@ -41,7 +41,7 @@ const recipe: Recipe<SveltekitOptions> = {
     });
   },
   async apply(
-    { projectDir, useEdgeDBAuth }: BaseOptions,
+    { projectDir, useGelAuth }: BaseOptions,
     { lang }: SveltekitOptions,
   ) {
     logger("Running Sveltekit recipe");
@@ -49,7 +49,7 @@ const recipe: Recipe<SveltekitOptions> = {
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
     let tags;
-    if (useEdgeDBAuth) {
+    if (useGelAuth) {
       tags = new Set<string>(["auth"]);
     }
 
@@ -78,8 +78,8 @@ const recipe: Recipe<SveltekitOptions> = {
         }),
       },
       dependencies: {
-        ...(useEdgeDBAuth && {
-          "@edgedb/auth-sveltekit": "^0.1.1",
+        ...(useGelAuth && {
+          "@gel/auth-sveltekit": "^0.1.1",
         }),
       },
       devDependencies: {

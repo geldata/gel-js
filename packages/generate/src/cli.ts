@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 
-import { adapter, type Client, createClient, createHttpClient } from "edgedb";
+import path from "node:path";
+import process from "node:process";
+import { systemUtils, type Client, createClient, createHttpClient } from "gel";
 import * as TOML from "@iarna/toml";
 
 import {
   type ConnectConfig,
   validTlsSecurityValues,
   isValidTlsSecurityValue,
-} from "edgedb/dist/conUtils";
-import { parseConnectArguments } from "edgedb/dist/conUtils.server";
+} from "gel/dist/conUtils";
+import { parseConnectArguments } from "gel/dist/conUtils.server";
 import {
   type CommandOptions,
   promptForPassword,
@@ -18,13 +20,15 @@ import { generateQueryBuilder } from "./edgeql-js";
 import { runInterfacesGenerator } from "./interfaces";
 import { type Target, exitWithError } from "./genutil";
 import { generateQueryFiles } from "./queries";
+import { runGelPrismaGenerator } from "./gel-prisma";
 
-const { path, readFileUtf8, exists } = adapter;
+const { readFileUtf8, exists } = systemUtils;
 
 enum Generator {
   QueryBuilder = "edgeql-js",
   Queries = "queries",
   Interfaces = "interfaces",
+  GelPrisma = "prisma",
 }
 
 const availableGeneratorsHelp = `
@@ -34,7 +38,7 @@ Available generators:
  - interfaces`;
 
 const run = async () => {
-  const args = adapter.process.argv.slice(2);
+  const args = process.argv.slice(2);
   const generator: Generator = args.shift() as any;
 
   const connectionConfig: ConnectConfig = {};
@@ -42,19 +46,19 @@ const run = async () => {
 
   if ((generator as any) === "-h" || (generator as any) === "--help") {
     printHelp();
-    adapter.process.exit();
+    process.exit();
   }
   if (!generator || generator[0] === "-") {
     console.error(
-      `Error: No generator specified.\n  \`npx @edgedb/generate <generator>\`${availableGeneratorsHelp}`,
+      `Error: No generator specified.\n  \`npx @gel/generate <generator>\`${availableGeneratorsHelp}`,
     );
-    adapter.exit();
+    process.exit();
   }
   if (!Object.values(Generator).includes(generator)) {
     console.error(
       `Error: Invalid generator "${generator}".${availableGeneratorsHelp}`,
     );
-    adapter.exit();
+    process.exit();
   }
 
   switch (generator) {
@@ -65,18 +69,30 @@ const run = async () => {
     case Generator.Interfaces:
       options.target = "ts";
       break;
+    case Generator.GelPrisma:
+      break;
   }
 
   let projectRoot: string | null = null;
-  let currentDir = adapter.process.cwd();
+  let currentDir = process.cwd();
   let schemaDir = "dbschema";
   const systemRoot = path.parse(currentDir).root;
   while (currentDir !== systemRoot) {
-    if (await exists(path.join(currentDir, "edgedb.toml"))) {
+    const gelToml = path.join(currentDir, "gel.toml");
+    const edgedbToml = path.join(currentDir, "edgedb.toml");
+    let configFile: string | null = null;
+
+    if (await exists(gelToml)) {
+      configFile = gelToml;
+    } else if (await exists(edgedbToml)) {
+      configFile = edgedbToml;
+    }
+
+    if (configFile) {
       projectRoot = currentDir;
       const config: {
         project?: { "schema-dir"?: string };
-      } = TOML.parse(await readFileUtf8(currentDir, "edgedb.toml"));
+      } = TOML.parse(await readFileUtf8(configFile));
 
       const maybeProjectTable = config.project;
       const maybeSchemaDir =
@@ -111,7 +127,7 @@ const run = async () => {
       }
       if (args.length === 0) {
         console.error(`Error: No value provided for ${flag} option`);
-        adapter.exit();
+        process.exit();
       }
       return args.shift();
     };
@@ -180,7 +196,10 @@ const run = async () => {
         options.useHttpClient = true;
         break;
       case "--target": {
-        if (generator === Generator.Interfaces) {
+        if (
+          generator === Generator.Interfaces ||
+          generator === Generator.GelPrisma
+        ) {
           exitWithError(
             `--target is not supported for generator "${generator}"`,
           );
@@ -210,13 +229,16 @@ const run = async () => {
         options.out = getVal();
         break;
       case "--file":
-        if (generator === Generator.Interfaces) {
+        if (
+          generator === Generator.Interfaces ||
+          generator === Generator.GelPrisma
+        ) {
           options.file = getVal();
         } else if (generator === Generator.Queries) {
           if (args.length > 0 && args[0][0] !== "-") {
             options.file = getVal();
           } else {
-            options.file = adapter.path.join(schemaDir, "queries");
+            options.file = path.join(schemaDir, "queries");
           }
         } else {
           exitWithError(
@@ -238,6 +260,24 @@ const run = async () => {
       case "--no-update-ignore-file":
         options.updateIgnoreFile = false;
         break;
+      case "--future":
+        options.future = {
+          strictTypeNames: true,
+          polymorphismAsDiscriminatedUnions: true,
+        };
+        break;
+      case "--future-strict-type-names":
+        options.future = {
+          ...options.future,
+          strictTypeNames: true,
+        };
+        break;
+      case "--future-polymorphism-as-discriminated-unions":
+        options.future = {
+          ...options.future,
+          polymorphismAsDiscriminatedUnions: true,
+        };
+        break;
       default:
         exitWithError(`Unknown option: ${flag}`);
     }
@@ -249,7 +289,7 @@ const run = async () => {
 
   if (options.showHelp) {
     printHelp();
-    adapter.process.exit();
+    process.exit();
   }
 
   switch (generator) {
@@ -262,13 +302,17 @@ const run = async () => {
     case Generator.Interfaces:
       console.log(`Generating TS interfaces from schema...`);
       break;
+    case Generator.GelPrisma:
+      console.log(`Generating Prisma schema from database...`);
+      break;
   }
 
-  if (!options.target) {
+  // don't need to do any of that for the prisma schema generator
+  if (!options.target && generator !== Generator.GelPrisma) {
     if (!projectRoot) {
       throw new Error(
         `Failed to detect project root.
-Run this command inside an EdgeDB project directory or specify the desired target language with \`--target\``,
+Run this command inside an Gel project directory or specify the desired target language with \`--target\``,
       );
     }
 
@@ -285,7 +329,7 @@ Run this command inside an EdgeDB project directory or specify the desired targe
 
     // doesn't work with `extends`
     // switch to more robust solution after splitting
-    // @edgedb/generate into separate package
+    // @gel/generate into separate package
     // @ts-ignore
     const isDenoRuntime = typeof Deno !== "undefined";
 
@@ -327,7 +371,7 @@ Run this command inside an EdgeDB project directory or specify the desired targe
       }
     }
     const overrideTargetMessage = `   To override this, use the --target flag.
-   Run \`npx @edgedb/generate --help\` for full options.`;
+   Run \`npx @gel/generate --help\` for full options.`;
     console.log(overrideTargetMessage);
   }
 
@@ -383,27 +427,34 @@ Run this command inside an EdgeDB project directory or specify the desired targe
           schemaDir,
         });
         break;
+      case Generator.GelPrisma:
+        await runGelPrismaGenerator({
+          options,
+          client,
+        });
+        break;
     }
   } catch (e) {
     exitWithError((e as Error).message);
   } finally {
     await client.close();
   }
-  adapter.process.exit();
+  process.exit();
 };
 
 function printHelp() {
-  console.log(`@edgedb/generate
+  console.log(`@gel/generate
 
-Official EdgeDB code generators for TypeScript/JavaScript
+Official Gel code generators for TypeScript/JavaScript
 
 USAGE
-    npx @edgedb/generate [COMMAND] [OPTIONS]
+    npx @gel/generate [COMMAND] [OPTIONS]
 
 COMMANDS:
     queries         Generate typed functions from .edgeql files
     edgeql-js       Generate query builder
     interfaces      Generate TS interfaces for schema types
+    prisma          Generate a Prisma schema for an existing database instance
 
 
 CONNECTION OPTIONS:
@@ -432,12 +483,18 @@ OPTIONS:
         Change the output directory the querybuilder files are generated into
         (Only valid for 'edgeql-js' generator)
     --file <path>
-        Change the output filepath of the 'queries' and 'interfaces' generators
+        Change the output filepath of the 'queries', 'interfaces', and 'prisma' generators
         When used with the 'queries' generator, also changes output to single-file mode
     --force-overwrite
         Overwrite <path> contents without confirmation
     --no-update-ignore-file
         Do not prompt to update gitignore with generated code
+    --future
+        Include future features
+    --future-strict-type-names
+        Return the exact string literal for .__type__.name instead of a general string type
+    --future-polymorphism-as-discriminated-unions
+        Use a discriminated union as the return type for polymorphic queries, where each member includes __typename
 `);
 }
 run();

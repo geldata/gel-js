@@ -1,24 +1,24 @@
 {
   "private": true,
-  "name": "@edgedb/integration-lts",
+  "name": "@gel/integration-lts",
   "version": "0.0.0",
   "scripts": {
     "typecheck": "echo 'Integration tests - lts, skipping typecheck...'",
     "build": "echo 'Integration tests, no build output...'",
     "generate": "../../packages/generate/dist/cli.js",
     "test": "yarn test:ts && yarn test:non_ts",
-    "test:ts": "pwd && yarn generate edgeql-js && yarn generate queries --file && yarn generate interfaces && NODE_OPTIONS=\"--experimental-vm-modules\" jest --detectOpenHandles --forceExit",
-    "test:non_ts": "yarn test:esm && yarn test:cjs && yarn test:mts && yarn test:deno",
+    "test:ts": "pwd && yarn generate edgeql-js --future && yarn generate queries --file && yarn generate interfaces && NODE_OPTIONS=\"--experimental-vm-modules\" jest --testPathIgnorePatterns='(./select-current.test.ts|esm/.*|mts/.*|cjs/.*)' --detectOpenHandles --forceExit",
+    "test:ts_current": "pwd && yarn generate edgeql-js && NODE_OPTIONS=\"--experimental-vm-modules\" jest ./select-current.test.ts --detectOpenHandles --forceExit",
+    "test:non_ts": "yarn test:esm && yarn test:cjs && yarn test:mts",
     "test:esm": "yarn generate queries --target esm --file esm/queries && yarn generate edgeql-js --target esm --output-dir esm/edgeql-js && cd esm && node test.js",
     "test:cjs": "yarn generate queries --target cjs --file cjs/queries && yarn generate edgeql-js --target cjs --output-dir cjs/edgeql-js && cd cjs && node test.js",
     "test:mts": "yarn generate queries --target mts --file mts/queries && yarn generate edgeql-js --target mts --output-dir mts/edgeql-js && cd mts && yarn build && node dist/test.js",
-    "test:deno": "cd deno && deno task edgeql-js && deno task queries && deno task play",
     "ci:integration-test": "tsx ./testRunner.ts",
     "bench:types": "cd ../.. && tsx integration-tests/lts/bench.ts"
   },
   "devDependencies": {
     "@arktype/attest": "^0.7.8",
-    "@edgedb/generate": "*",
+    "@gel/generate": "^0.6.0-rc",
     "@tsconfig/node-lts": "^20.1.3",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
@@ -29,7 +29,7 @@
     "typescript": "^5.5.2"
   },
   "dependencies": {
-    "edgedb": "*",
+    "gel": "^2.0.0-rc",
     "fast-check": "^3.19.0"
   }
 }

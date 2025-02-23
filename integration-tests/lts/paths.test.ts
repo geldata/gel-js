@@ -56,12 +56,12 @@ describe("paths", () => {
     );
     assert.deepEqual(
       AtLeastOneHero.number_of_movies.__cardinality__,
-      $.Cardinality.Many,
+      $.Cardinality.AtLeastOne,
     );
     tc.assert<
       tc.IsExact<
         AtLeastOneHero["number_of_movies"]["__cardinality__"],
-        $.Cardinality.Many
+        $.Cardinality.AtLeastOne
       >
     >(true);
 

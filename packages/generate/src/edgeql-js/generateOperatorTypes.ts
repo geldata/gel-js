@@ -240,7 +240,7 @@ function operatorFromOpDef(
     opName === "std::if_else"
       ? "if_else"
       : splitName(opDef.originalName).name.toLowerCase();
-  const log = debug(`edgedb:codegen:operatorFromOpDef:${opName}`);
+  const log = debug(`gel:codegen:operatorFromOpDef:${opName}`);
   log({
     opName,
     operatorSymbol,
@@ -600,7 +600,7 @@ export function generateOperators({
 
   for (const [opName, _opDefs] of operators.entries()) {
     if (skipOperators.has(opName)) continue;
-    const log = debug(`edgedb:codegen:generateOperators:${opName}`);
+    const log = debug(`gel:codegen:generateOperators:${opName}`);
     log(
       _opDefs.map((opDef) => ({
         return_type: opDef.return_type,

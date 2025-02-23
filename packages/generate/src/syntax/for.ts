@@ -1,4 +1,4 @@
-import { Cardinality, ExpressionKind } from "edgedb/dist/reflection/index";
+import { Cardinality, ExpressionKind } from "gel/dist/reflection/index";
 import { cardutil } from "./cardinality";
 import type { Expression, BaseType, BaseTypeSet } from "./typesystem";
 import { $expressionify } from "./path";

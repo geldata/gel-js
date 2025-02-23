@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
-import { $ } from "edgedb";
+import type * as gel from "gel";
+import { $ } from "gel";
 
 import e from "./dbschema/edgeql-js";
 
 import { setupTests, teardownTests } from "./setupTeardown";
 
 describe("globals", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
 
   beforeAll(async () => {
     const setup = await setupTests();

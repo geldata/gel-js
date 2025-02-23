@@ -7,14 +7,14 @@ import {
   DateDuration,
   Range,
   InputDataError,
-} from "edgedb";
+} from "gel";
 import {
   Cardinality,
   ExpressionKind,
   OperatorKind,
   TypeKind,
   util,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import {
   type $expr_Array,
   type $expr_NamedTuple,
@@ -37,7 +37,7 @@ import type {
   $expr_PathNode,
   $expr_TypeIntersection,
 } from "./path";
-import { reservedKeywords } from "edgedb/dist/reflection/index";
+import { reservedKeywords } from "gel/dist/reflection/index";
 import type { $expr_Cast } from "./cast";
 import type { $expr_Detached } from "./detached";
 import type { $expr_For, $expr_ForVar } from "./for";
@@ -55,6 +55,7 @@ import type { $expr_Update } from "./update";
 import type { $expr_Alias, $expr_With } from "./with";
 import type { $expr_Group, GroupingSet } from "./group";
 import type { $expr_Global } from "./globals";
+import { future } from "./future";
 
 export type SomeExpression =
   | $expr_PathNode
@@ -208,7 +209,8 @@ export function $toEdgeQL(this: any) {
       refData.aliases.length > 0
     ) {
       // first, check if expr is bound to scope
-      let withBlock = refData.boundScope;
+      let withBlock = (refData.boundScope?.__expr__ ??
+        null) as WithScopeExpr | null;
 
       const parentScopes = [...refData.parentScopes];
 
@@ -274,11 +276,31 @@ export function $toEdgeQL(this: any) {
         withBlocks.set(withBlock, new Set());
       }
 
+      if (
+        refData.boundScope &&
+        refData.boundScope.__refs__.some(
+          (ref: any) =>
+            ref !== expr &&
+            seen.has(ref) &&
+            walkExprCtx.seen.get(ref)?.childExprs.includes(expr),
+        )
+      ) {
+        // if expr is bound to a e.with, and any of it's siblings in the e.with
+        // refs contain this expr as a child and haven't been resolved yet,
+        // return this expr to `seen` to be resolved later
+        seen.set(expr, refData);
+        continue;
+      }
+
       // check all references and aliases are within this block
-      const validScopes = new Set([
-        withBlock,
-        ...walkExprCtx.seen.get(withBlock)!.childExprs,
-      ]);
+      const validScopes = new Set(
+        [
+          withBlock,
+          // expressions already explictly bound to with block are also valid scopes
+          ...(withBlocks.get(withBlock) ?? []),
+        ] // expand out child exprs of valid with scopes
+          .flatMap((expr) => [expr, ...walkExprCtx.seen.get(expr)!.childExprs]),
+      );
       for (const scope of [
         ...refData.parentScopes,
         ...util.flatMap(refData.aliases, (alias) => [
@@ -347,7 +369,7 @@ interface WalkExprTreeCtx {
       // tracks all child exprs
       childExprs: SomeExpression[];
       // tracks bound scope from e.with
-      boundScope: WithScopeExpr | null;
+      boundScope: $expr_With | null;
       // tracks aliases from e.alias
       aliases: SomeExpression[];
       linkProps: $expr_PathLeaf[];
@@ -374,6 +396,13 @@ function walkExprTree(
   }
 
   const expr = _expr as SomeExpression;
+
+  if ((expr as any).__scopedFrom__ != null) {
+    // If expr is marked as being a scoped copy of another expr, treat it as
+    // an opaque reference and don't walk it. The enclosing select/update that
+    // owns the scope will walk the actual unscoped expr.
+    return [expr];
+  }
 
   function walkShape(shape: object) {
     for (let param of Object.values(shape)) {
@@ -431,10 +460,17 @@ function walkExprTree(
       for (const refExpr of expr.__refs__) {
         walkExprTree(refExpr, expr.__expr__, ctx);
         const seenRef = ctx.seen.get(refExpr as any)!;
+        if (seenRef.childExprs.includes(expr.__expr__)) {
+          throw new Error(
+            `Ref expressions in with() cannot reference the expression to ` +
+              `which the 'WITH' block is being attached. ` +
+              `Consider wrapping the expression in a select.`,
+          );
+        }
         if (seenRef.boundScope) {
           throw new Error(`Expression bound to multiple 'WITH' blocks`);
         }
-        seenRef.boundScope = expr.__expr__;
+        seenRef.boundScope = expr;
       }
       break;
     case ExpressionKind.Literal:
@@ -444,16 +480,9 @@ function walkExprTree(
     case ExpressionKind.PathLeaf:
     case ExpressionKind.PathNode:
       if (expr.__parent__) {
-        if ((expr.__parent__.type as any).__scopedFrom__) {
-          // if parent is scoped expr then don't walk expr
-          // since it will already be walked by enclosing select/update
-
-          childExprs.push(expr.__parent__.type as any);
-        } else {
-          childExprs.push(
-            ...walkExprTree(expr.__parent__.type, parentScope, ctx),
-          );
-        }
+        childExprs.push(
+          ...walkExprTree(expr.__parent__.type, parentScope, ctx),
+        );
 
         if (
           // is link prop
@@ -1197,7 +1226,7 @@ ${indent(groupStatement.join("\n"), 4)}
         );
     }
   } else if (expr.__kind__ === ExpressionKind.TypeIntersection) {
-    return `${renderEdgeQL(expr.__expr__, ctx)}[IS ${
+    return `${renderEdgeQL(expr.__expr__, ctx, false)}[IS ${
       expr.__element__.__name__
     }]`;
   } else if (expr.__kind__ === ExpressionKind.For) {
@@ -1277,6 +1306,8 @@ function shapeToEdgeQL(
 
   const seen = new Set();
 
+  let hasPolyEl = false;
+
   for (const key in shape) {
     if (!Object.prototype.hasOwnProperty.call(shape, key)) continue;
     if (seen.has(key)) {
@@ -1300,6 +1331,7 @@ function shapeToEdgeQL(
     if (val.__kind__ === ExpressionKind.PolyShapeElement) {
       polyType = val.__polyType__;
       val = val.__shapeElement__;
+      hasPolyEl = true;
     }
     const polyIntersection = polyType
       ? `[IS ${polyType.__element__.__name__}].`
@@ -1395,6 +1427,13 @@ function shapeToEdgeQL(
 
   if (lines.length === 0 && injectImplicitId) {
     addLine("id");
+  }
+  if (
+    hasPolyEl &&
+    !seen.has("__typename") &&
+    future.polymorphismAsDiscriminatedUnions
+  ) {
+    addLine("__typename := .__type__.name");
   }
   return keysOnly ? `{${lines.join(", ")}}` : `{\n${lines.join(",\n")}\n}`;
 }
@@ -1596,7 +1635,7 @@ function indent(str: string, depth: number) {
 }
 
 // backtick quote identifiers if needed
-// https://github.com/edgedb/edgedb/blob/master/edb/edgeql/quote.py
+// https://github.com/geldata/gel/blob/master/edb/edgeql/quote.py
 function q(ident: string, allowBacklinks = true): string {
   if (
     !ident ||

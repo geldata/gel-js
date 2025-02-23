@@ -169,8 +169,8 @@ Client
 
     .. js:method:: query<T>(query: string, args?: QueryArgs): Promise<T[]>
 
-        Run a query and return the results as an array. This method **always**
-        returns an array.
+        Run an EdgeQL query and return the results as an array.
+        This method **always** returns an array.
 
         This method takes :ref:`optional query arguments
         <edgedb-js-api-async-optargs>`.
@@ -321,6 +321,48 @@ Client
             consider casting the value into ``str`` and decoding it on
             the client side into a more appropriate type, such as
             BigInt_.
+
+    .. js:method:: executeSQL(query: string, args?: unknown[]): Promise<void>
+
+        Execute a SQL command.
+
+        :param query: SQL query text.
+
+        This method takes optional query arguments.
+
+        Example:
+
+        .. code-block:: js
+
+            await client.executeSQL(`
+              INSERT INTO "MyType"(prop) VALUES ("value");
+            `)
+
+    .. js:method:: querySQL<T>(query: string, args?: unknown[]): Promise<T[]>
+
+        Run a SQL query and return the results as an array.
+        This method **always** returns an array.
+
+        The array will contain the returned rows. By default, rows are
+        ``Objects`` with columns addressable by name.
+
+        This can controlled with ``client.withSQLRowMode('array' | 'object')``
+        API.
+
+        This method takes optional query arguments.
+
+        Example:
+
+        .. code-block:: js
+
+            let vals = await client.querySQL(`SELECT 1 as foo`)
+            console.log(vals); // [{'foo': 1}]
+
+            vals = await client
+              .withSQLRowMode('array')
+              .querySQL(`SELECT 1 as foo`);
+
+            console.log(vals); // [[1]]
 
     .. js:method:: transaction<T>( \
             action: (tx: Transaction) => Promise<T> \

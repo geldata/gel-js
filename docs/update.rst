@@ -117,6 +117,53 @@ In the query builder this is represented with the following syntax.
     }
   }))
 
+**Updating a single link property**
+
+.. code-block:: typescript
+
+  e.update(e.Movie, (movie) => ({
+    filter_single: { title: "The Eternals" },
+    set: {
+      actors: {
+        "+=": e.select(movie.actors, (actor) => ({
+          "@character_name": e.str("Sersi"),
+          filter: e.op(actor.name, "=", "Gemma Chan")
+        }))
+      }
+    }
+  }));
+
+**Updating many link properties**
+
+.. code-block:: typescript
+
+  const q = e.params(
+    {
+      cast: e.array(e.tuple({ name: e.str, character_name: e.str })),
+    },
+    (params) =>
+      e.update(e.Movie, (movie) => ({
+        filter_single: { title: "The Eternals" },
+        set: {
+          actors: {
+            "+=": e.for(e.array_unpack(params.cast), (cast) =>
+              e.select(movie.characters, (character) => ({
+                "@character_name": cast.character_name,
+                filter: e.op(cast.name, "=", character.name),
+              })),
+            ),
+          },
+        },
+      })),
+  ).run(client, {
+    cast: [
+      { name: "Gemma Chan", character_name: "Sersi" },
+      { name: "Richard Madden", character_name: "Ikaris" },
+      { name: "Angelina Jolie", character_name: "Thena" },
+      { name: "Salma Hayek", character_name: "Ajak" },
+    ],
+  });
+
 Bulk updates
 ^^^^^^^^^^^^
 

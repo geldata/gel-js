@@ -1,4 +1,4 @@
-import type { Client, MultiRange } from "edgedb";
+import type { Client, MultiRange } from "gel";
 import e from "./dbschema/edgeql-js";
 import { setupTests, tc, teardownTests } from "./setupTeardown";
 

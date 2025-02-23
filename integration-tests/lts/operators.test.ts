@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import superjson from "superjson";
-import type { Client } from "edgedb";
+import type { Client } from "gel";
 import fc from "fast-check";
 import e from "./dbschema/edgeql-js";
 import * as $ from "../../packages/generate/src/syntax/reflection";

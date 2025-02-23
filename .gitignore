@@ -1,5 +1,4 @@
 dist
-packages/deno
 /.bench
 /.vscode
 node_modules

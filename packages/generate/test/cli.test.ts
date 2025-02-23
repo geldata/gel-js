@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import path from "path";
-import { adapter } from "edgedb";
+import { systemUtils } from "gel";
 import { execSync } from "child_process";
 
 const QBDIR = path.resolve(__dirname, "..");
@@ -11,6 +11,6 @@ describe("cli", () => {
       stdio: "inherit",
     });
     const qbIndex = path.resolve(QBDIR, "dbschema", "edgeql-js", "index.ts");
-    assert.equal(await adapter.exists(qbIndex), true);
+    assert.equal(await systemUtils.exists(qbIndex), true);
   }, 60000);
 });

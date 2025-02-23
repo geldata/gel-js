@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "edgedb/*",
     "integration-tests/*"
   ],
   "packageManager": "yarn@1.22.19",
@@ -12,7 +13,7 @@
     "prettier": "^3.2.5",
     "turbo": "^2.0.7",
     "typescript": "^5.5.2",
-    "typescript-eslint": "^8.0.0-alpha.22"
+    "typescript-eslint": "^8.17.0"
   },
   "scripts": {
     "typecheck": "turbo run typecheck",
@@ -24,5 +25,8 @@
     "format:fix": "prettier --write 'packages/*/(src|test)/**/*.(mts|ts)' 'integration-tests/*/*.(mts|ts)'",
     "ci:typecheck": "turbo run ci:typecheck",
     "ci:test": "turbo run ci:test"
+  },
+  "overrides": {
+    "@types/react": "npm:types-react@rc"
   }
 }

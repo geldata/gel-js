@@ -1,1 +1,1 @@
-export { WebAuthnClient } from "@edgedb/auth-core/webauthn";
+export { WebAuthnClient } from "@gel/auth-core/webauthn";

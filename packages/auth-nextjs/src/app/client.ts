@@ -4,7 +4,7 @@ import {
   type NextAuthOptions,
 } from "../shared.client";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export { type NextAuthOptions, type BuiltinProviderNames };
 
 export default function createNextAppClientAuth(options: NextAuthOptions) {

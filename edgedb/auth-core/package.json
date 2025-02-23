@@ -1,0 +1,42 @@
+{
+  "name": "@edgedb/auth-core",
+  "version": "0.3.0",
+  "description": "This package has been renamed to @gel/auth-core. Please update your dependencies.",
+  "author": "Gel <info@geldata.com>",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geldata/gel-js.git",
+    "directory": "edgedb/auth-core"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "mauth-coren": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepare": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@gel/auth-core": "^0.3.0-rc"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "deprecated": "This package has been renamed to @gel/auth-core"
+}

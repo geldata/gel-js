@@ -23,6 +23,7 @@ export interface BaseObject {
 }
 export interface test_Person extends BaseObject {
   name: string;
+  age?: number | null;
   height?: string | null;
   isAdult?: boolean | null;
 }

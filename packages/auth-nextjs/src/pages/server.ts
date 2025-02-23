@@ -1,5 +1,5 @@
-import { type Client } from "edgedb";
-import { type TokenData } from "@edgedb/auth-core";
+import { type Client } from "gel";
+import { type TokenData } from "@gel/auth-core";
 import {
   type BuiltinProviderNames,
   type CreateAuthRouteHandlers,
@@ -8,7 +8,7 @@ import {
   NextAuthSession,
 } from "../shared";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export {
   NextAuthSession,
   type NextAuthOptions,
@@ -32,7 +32,9 @@ export class NextPagesAuth extends NextAuth {
       sessionCache.get(req) ??
       new NextAuthSession(
         this.client,
-        req.cookies[this.options.authCookieName]?.split(";")[0] ?? null,
+        req.cookies[this.options.authCookieName]?.split(";")[0] ||
+          req.cookies["edgedb-session"]?.split(";")[0] ||
+          null,
       );
     sessionCache.set(req, session);
     return session;

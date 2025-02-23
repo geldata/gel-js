@@ -205,6 +205,7 @@ describe("object types", () => {
       assert.deepEqual(hero["*"], {
         id: true,
         name: true,
+        age: true,
         height: true,
         isAdult: true,
         secret_identity: true,

@@ -1,22 +1,22 @@
-# Express Integration Recipe for EdgeDB
+# Express Integration Recipe for Gel
 
-This recipe provides a starting point for building an [Express](https://expressjs.com/) application with EdgeDB as the database.
+This recipe provides a starting point for building an [Express](https://expressjs.com/) application with Gel as the database.
 
-✨ Check out the [`@edgedb/create` package](https://github.com/edgedb/edgedb-js/blob/master/packages/create/README.md) for more information.
+✨ Check out the [`@gel/create` package](https://github.com/gel/gel-js/blob/master/packages/create/README.md) for more information.
 
 ## Usage
 
 ```bash
-$ npm create @edgedb
+$ npm create @gel
 # or
-yarn create @edgedb
+yarn create @gel
 # or
-pnpm create @edgedb
+pnpm create @gel
 # or
-bun create @edgedb
+bun create @gel
 ```
 
-After running the command, you will be prompted to provide a project name and choose the **"Express"** template. You can also specify whether to use EdgeDB Auth, initialize a git repository, and install dependencies.
+After running the command, you will be prompted to provide a project name and choose the **"Express"** template. You can also specify whether to use Gel Auth, initialize a git repository, and install dependencies.
 
 The tool will then create a new directory with the specified name and set up the project.
 
@@ -34,7 +34,7 @@ Navigate into `packages/create`:
 $ cd packages/create
 ```
 
-Build @edgedb/create
+Build @gel/create
 
 ```bash
 $ yarn build

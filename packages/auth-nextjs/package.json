@@ -1,11 +1,11 @@
 {
-  "name": "@edgedb/auth-nextjs",
-  "description": "Helper library to integrate the EdgeDB Auth extension with Next.js",
-  "version": "0.3.2",
-  "author": "EdgeDB <info@edgedb.com>",
+  "name": "@gel/auth-nextjs",
+  "description": "Helper library to integrate the Gel Auth extension with Next.js",
+  "version": "0.4.0-rc.1",
+  "author": "Gel <info@geldata.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/edgedb/edgedb-js.git",
+    "url": "https://github.com/geldata/gel-js.git",
     "directory": "packages/auth-nextjs"
   },
   "license": "Apache-2.0",
@@ -27,18 +27,21 @@
   "devDependencies": {
     "@repo/tsconfig": "*",
     "@types/node": "^20.12.13",
-    "@types/react": "^18.3.3",
-    "edgedb": "*",
-    "next": "14.2.3",
-    "react": "^18.3.1",
+    "@types/react": "npm:types-react@rc",
+    "gel": "^2.0.0-rc",
+    "next": "15.0.3",
+    "react": "19.0.0-rc-b01722d5-20241114",
     "typescript": "^5.5.2"
   },
   "peerDependencies": {
-    "edgedb": "^1.3.6",
-    "next": ">=13.5.6 <15.0.0",
-    "react": "^18.2.0"
+    "gel": "^2.0.0-rc",
+    "next": ">=13.5.6 <16.0.0",
+    "react": "^18.2.0 || ^19.0"
   },
   "dependencies": {
-    "@edgedb/auth-core": "0.2.1"
+    "@gel/auth-core": "^0.3.0-rc"
+  },
+  "overrides": {
+    "@types/react": "npm:types-react@rc"
   }
 }

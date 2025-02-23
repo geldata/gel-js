@@ -11,29 +11,26 @@
       "outputs": ["dist/**"]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "env": ["GEL_SERVER_BIN"]
     },
     "ci:typecheck": {
       "dependsOn": [
-        "@edgedb/auth-nextjs#typecheck",
-        "@edgedb/auth-express#typecheck",
-        "@edgedb/auth-remix#typecheck",
-        "@edgedb/auth-sveltekit#typecheck"
+        "@gel/auth-nextjs#typecheck",
+        "@gel/auth-express#typecheck",
+        "@gel/auth-remix#typecheck",
+        "@gel/auth-sveltekit#typecheck",
+        "@gel/ai#typecheck",
+        "@gel/vercel-ai-provider#typecheck"
       ]
     },
     "ci:test": {
-      "dependsOn": [
-        "build",
-        "edgedb#test",
-        "@edgedb/auth-core#test",
-        "@edgedb/create#test",
-        "@edgedb/ai#test"
-      ],
-      "env": ["CI", "EDGEDB_SERVER_BIN"]
+      "dependsOn": ["build", "gel#test", "@gel/auth-core#test"],
+      "env": ["CI", "GEL_SERVER_BIN"]
     },
     "ci:integration-test": {
       "dependsOn": ["build"],
-      "env": ["CI", "EDGEDB_SERVER_BIN"]
+      "env": ["CI", "GEL_SERVER_BIN"]
     }
   }
 }

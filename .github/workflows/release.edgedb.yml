@@ -1,0 +1,365 @@
+# .github/release.edgedb.yml
+
+name: release edgedb
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: yarn
+
+      - name: Build all packages
+        run: yarn build
+
+      # edgedb
+
+      - name: Copy readme
+        run: cp README.md edgedb/edgedb/README.md
+
+      - id: check_publish_driver
+        name: Dry-run publish 'edgedb' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/edgedb/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If 'edgedb' version unchanged
+        if: steps.check_publish_driver.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace edgedb version --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/edgedb/package.json').version")
+          yarn workspace edgedb version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish 'edgedb'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/edgedb/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_driver.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create 'edgedb' GitHub Release
+        if: steps.check_publish_driver.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.check_publish_driver.outputs.version }}
+          name: edgedb-js v${{ steps.check_publish_driver.outputs.version }}
+          draft: true
+          prerelease: false
+
+      # @edgedb/generate
+
+      - id: check_publish_generate
+        name: Dry-run publish '@edgedb/generate' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/generate/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/generate' version unchanged
+        if: steps.check_publish_generate.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/generate version --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/generate/package.json').version")
+          yarn workspace @edgedb/generate version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/generate'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/generate/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_generate.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/generate' GitHub Release
+        if: steps.check_publish_generate.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: generate-v${{ steps.check_publish_generate.outputs.version }}
+          name: "@edgedb/generate v${{ steps.check_publish_generate.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/auth-core
+
+      - id: check_publish_auth_core
+        name: Dry-run publish '@edgedb/auth-core' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-core/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/auth-core' version unchanged
+        if: steps.check_publish_auth_core.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/auth-core version --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/auth-core/package.json').version")
+          yarn workspace @edgedb/auth-core version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/auth-core'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-core/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_auth_core.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/auth-core' Release
+        if: steps.check_publish_auth_core.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: auth-core-v${{ steps.check_publish_auth_core.outputs.version }}
+          name: "@edgedb/auth-core v${{ steps.check_publish_auth_core.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/auth-nextjs
+
+      - id: check_publish_auth_nextjs
+        name: Dry-run publish '@edgedb/auth-nextjs' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-nextjs/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/auth-nextjs' version unchanged
+        if: steps.check_publish_auth_nextjs.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/auth-nextjs version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/auth-nextjs/package.json').version")
+          yarn workspace @edgedb/auth-nextjs version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/auth-nextjs'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-nextjs/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_auth_nextjs.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/auth-nextjs' Release
+        if: steps.check_publish_auth_nextjs.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: auth-nextjs-v${{ steps.check_publish_auth_nextjs.outputs.version }}
+          name: "@edgedb/auth-nextjs v${{ steps.check_publish_auth_nextjs.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/auth-express
+
+      - id: check_publish_auth_express
+        name: Dry-run publish '@edgedb/auth-express' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-express/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/auth-express' version unchanged
+        if: steps.check_publish_auth_express.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/auth-express version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/auth-express/package.json').version")
+          yarn workspace @edgedb/auth-express version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/auth-express'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-express/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_auth_express.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/auth-express' Release
+        if: steps.check_publish_auth_express.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: auth-express-v${{ steps.check_publish_auth_express.outputs.version }}
+          name: "@edgedb/auth-express v${{ steps.check_publish_auth_express.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/auth-remix
+
+      - id: check_publish_auth_remix
+        name: Dry-run publish '@edgedb/auth-remix' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-remix/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/auth-remix' version unchanged
+        if: steps.check_publish_auth_remix.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/auth-remix version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/auth-remix/package.json').version")
+          yarn workspace @edgedb/auth-remix version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/auth-remix'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-remix/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_auth_remix.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/auth-remix' Release
+        if: steps.check_publish_auth_remix.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: auth-remix-v${{ steps.check_publish_auth_remix.outputs.version }}
+          name: "@edgedb/auth-remix v${{ steps.check_publish_auth_remix.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/auth-sveltekit
+
+      - id: check_publish_auth_sveltekit
+        name: Dry-run publish '@edgedb/auth-sveltekit' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-sveltekit/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/auth-sveltekit' version unchanged
+        if: steps.check_publish_auth_sveltekit.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/auth-sveltekit version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/auth-sveltekit/package.json').version")
+          yarn workspace @edgedb/auth-sveltekit version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/auth-sveltekit'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/auth-sveltekit/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_auth_sveltekit.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/auth-sveltekit' Release
+        if: steps.check_publish_auth_sveltekit.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: auth-sveltekit-v${{ steps.check_publish_auth_sveltekit.outputs.version }}
+          name: "@edgedb/auth-sveltekit v${{ steps.check_publish_auth_sveltekit.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/create
+
+      - id: check_publish_create
+        name: Dry-run publish '@edgedb/create' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/create/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/create' version unchanged
+        if: steps.check_publish_create.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/create version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/create/package.json').version")
+          yarn workspace @edgedb/create version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/create'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/create/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_create.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/create' Release
+        if: steps.check_publish_create.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: create-v${{ steps.check_publish_create.outputs.version }}
+          name: "@edgedb/create v${{ steps.check_publish_create.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @edgedb/ai
+
+      - id: check_publish_ai
+        name: Dry-run publish '@edgedb/ai' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/ai/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@edgedb/ai' version unchanged
+        if: steps.check_publish_ai.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @edgedb/ai version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./edgedb/ai/package.json').version")
+          yarn workspace @edgedb/ai version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Publish '@edgedb/ai'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: edgedb/ai/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.check_publish_ai.outputs.type == '' && 'canary' || 'latest' }}
+
+      - name: Create '@edgedb/ai' Release
+        if: steps.check_publish_ai.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ai-v${{ steps.check_publish_ai.outputs.version }}
+          name: "@edgedb/ai v${{ steps.check_publish_ai.outputs.version }}"
+          draft: true
+          prerelease: false

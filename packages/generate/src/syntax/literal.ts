@@ -5,19 +5,9 @@ import type {
   ScalarType,
 } from "./typesystem";
 
-// import {
-//   Cardinality,
-//   ExpressionKind,
-//   BaseType,
-//   BaseTypeToTsType,
-//   makeType,
-//   ScalarType
-// } from "edgedb/dist/reflection/index";
-
-// import type {$expr_Literal} from "./literal";
 import { $expressionify } from "./path";
 import { spec } from "./__spec__";
-import { Cardinality, ExpressionKind } from "edgedb/dist/reflection/index";
+import { Cardinality, ExpressionKind } from "gel/dist/reflection/index";
 import { makeType } from "./hydrate";
 
 export type $expr_Literal<Type extends BaseType = BaseType> = Expression<{

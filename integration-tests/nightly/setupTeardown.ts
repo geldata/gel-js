@@ -1,5 +1,5 @@
 import * as tc from "conditional-type-checks";
-import { type Client, createClient } from "edgedb";
+import { type Client, createClient } from "gel";
 
 export { tc };
 
@@ -28,7 +28,7 @@ export async function teardownTests(client: Client) {
 }
 
 export const versionGTE = (majorVer: number) => {
-  const version = JSON.parse(process.env._JEST_EDGEDB_VERSION!);
+  const version = JSON.parse(process.env._JEST_GEL_VERSION!);
   return version.major >= majorVer;
 };
 

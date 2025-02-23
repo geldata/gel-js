@@ -1,3 +1,3 @@
-import { createClient } from "edgedb";
+import { createClient } from "gel";
 
 export const client = createClient();

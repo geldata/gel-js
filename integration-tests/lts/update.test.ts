@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import type * as edgedb from "edgedb";
+import type * as gel from "gel";
 
 import e from "./dbschema/edgeql-js";
 import type { UpdateShape } from "./dbschema/edgeql-js/syntax";
 import { setupTests, tc, teardownTests, type TestData } from "./setupTeardown";
 
 describe("update", () => {
-  let client: edgedb.Client;
+  let client: gel.Client;
   let data: TestData;
 
   const $Hero = e.Hero.__element__;
@@ -83,6 +83,60 @@ describe("update", () => {
     })).toEdgeQL();
   });
 
+  test("nested update and explicit with", async () => {
+    e.params({ movieId: e.uuid }, (params) => {
+      const movie = e.select(e.Movie, (m) => ({
+        filter: e.op(m.id, "=", params.movieId),
+      }));
+
+      const updateChar = e.update(movie.characters, (c) => ({
+        set: {
+          name: e.str_lower(c.name),
+        },
+      }));
+
+      const updateProfile = e.update(movie.profile, (p) => ({
+        set: {
+          a: e.str_upper(p.a),
+        },
+      }));
+
+      return e.with([updateChar, updateProfile], e.select(movie));
+    }).toEdgeQL();
+  });
+
+  test("nested update and explicit with, unwrapped select should fail", async () => {
+    assert.throws(
+      () =>
+        e
+          .params({ movieId: e.uuid }, (params) => {
+            const movie = e.select(e.Movie, (m) => ({
+              filter: e.op(m.id, "=", params.movieId),
+            }));
+
+            const updateChar = e.update(movie.characters, (c) => ({
+              set: {
+                name: e.str_lower(c.name),
+              },
+            }));
+
+            const updateProfile = e.update(movie.profile, (p) => ({
+              set: {
+                a: e.str_upper(p.a),
+              },
+            }));
+
+            return e.with([updateChar, updateProfile], movie);
+          })
+          .toEdgeQL(),
+      {
+        message:
+          `Ref expressions in with() cannot reference the expression to which the ` +
+          `'WITH' block is being attached. Consider wrapping the expression in a select.`,
+      },
+    );
+  });
+
   test("scoped update", async () => {
     const query = e.update(e.Hero, (hero) => ({
       filter_single: e.op(hero.name, "=", data.spidey.name),
@@ -132,10 +186,41 @@ describe("update", () => {
     }));
     await q2.run(client);
 
+    const theAvengersCast: { name: string; character_name: string }[] = [
+      { name: data.iron_man.name, character_name: "Tony Stark!" },
+      { name: data.cap.name, character_name: "Steve Rogers!" },
+      { name: data.thanos.name, character_name: "Thanos!" },
+    ];
+
+    const q2CharName = e.params(
+      { cast: e.array(e.tuple({ name: e.str, character_name: e.str })) },
+      (params) =>
+        e.update(theAvengers, (m) => ({
+          set: {
+            characters: {
+              "+=": e.for(e.array_unpack(params.cast), (cast) =>
+                e.select(m.characters, (c) => ({
+                  "@character_name": cast.character_name,
+                  filter: e.op(c.name, "=", cast.name),
+                })),
+              ),
+            },
+          },
+        })),
+    );
+    await q2CharName.run(client, { cast: theAvengersCast });
+
     const t2 = await e
-      .select(theAvengers, () => ({ id: true, characters: true }))
+      .select(theAvengers, () => ({
+        id: true,
+        characters: () => ({ "@character_name": true, name: true }),
+      }))
       .run(client);
     assert.equal(t2?.characters.length, 3);
+    const charSet = new Set(t2.characters.map((c) => c["@character_name"]));
+    assert.ok(charSet.has("Thanos!"));
+    assert.ok(charSet.has("Tony Stark!"));
+    assert.ok(charSet.has("Steve Rogers!"));
 
     await e
       .update(theAvengers, () => ({

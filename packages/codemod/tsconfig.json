@@ -1,0 +1,18 @@
+{
+  "extends": "@repo/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "transforms/**/*",
+    "cli.ts",
+    "scripts/**/*",
+  ],
+  "exclude": [
+    "transforms/recipes/**/template/**/*",
+    "__testfixtures__/**/*",
+    "node_modules"
+  ]
+}

@@ -20,7 +20,7 @@ beforeAll(async () => {
       ext::auth::AuthConfig::token_time_to_live := <duration>'24 hours';
 
     configure current database set
-      ext::auth::SMTPConfig::sender := 'noreply@example.edgedb.com';
+      ext::auth::SMTPConfig::sender := 'noreply@example.geldata.com';
 
     configure current database
       insert ext::auth::EmailPasswordProviderConfig {};
@@ -39,7 +39,7 @@ test("test password signup/signin flow", async () => {
     const auth = await Auth.create(client);
 
     const signupResponse = await auth.signupWithEmailPassword(
-      "test@example.edgedb.com",
+      "test@example.geldata.com",
       "supersecretpassword",
       `${auth.baseUrl}/auth/emailpassword/verify`,
     );
@@ -49,7 +49,7 @@ test("test password signup/signin flow", async () => {
 
     await expect(
       auth.signinWithEmailPassword(
-        "test@example.edgedb.com",
+        "test@example.geldata.com",
         "supersecretpassword",
       ),
     ).rejects.toThrow("Email verification is required");

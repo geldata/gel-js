@@ -1,21 +1,20 @@
-# @edgedb/auth-nextjs: Helper library to integrate the EdgeDB Auth extension with Next.js
-
-> Warning: This library is still in an alpha state, and so, bugs are likely and the api's should be considered unstable and may change in future releases.
+# @gel/auth-nextjs: Helper library to integrate the Gel Auth extension with Next.js
 
 ### Setup
 
 **Prerequisites**:
+
 - Node v18+
   - **Note**: Due to using the `crypto` global, you will need to start Node with `--experimental-global-webcrypto`. You can add this option to your `NODE_OPTIONS` environment variable, like `NODE_OPTIONS='--experimental-global-webcrypto'` in the appropriate `.env` file.
-- Before adding EdgeDB auth to your Next.js app, you will first need to enable the `auth` extension in your EdgeDB schema, and have configured the extension with some providers. Refer to the auth extension docs for details on how to do this.
+- Before adding Gel auth to your Next.js app, you will first need to enable the `auth` extension in your Gel schema, and have configured the extension with some providers. Refer to the auth extension docs for details on how to do this.
 
-1. Initialize the auth helper by passing an EdgeDB `Client` object to `createAuth()`, along with some configuration options. This will return a `NextAppAuth` object which you can use across your app. Similarly to the `Client` it's recommended to export this auth object from some root configuration file in your app.
+1. Initialize the auth helper by passing an Gel `Client` object to `createAuth()`, along with some configuration options. This will return a `NextAppAuth` object which you can use across your app. Similarly to the `Client` it's recommended to export this auth object from some root configuration file in your app.
 
    ```ts
-   // edgedb.ts
+   // gel.ts
 
-   import { createClient } from "edgedb";
-   import createAuth from "@edgedb/auth-nextjs/app";
+   import { createClient } from "gel";
+   import createAuth from "@gel/auth-nextjs/app";
 
    export const client = createClient();
 
@@ -28,8 +27,8 @@
 
    - `baseUrl: string`, _required_, The url of your application; needed for various auth flows (eg. OAuth) to redirect back to.
    - `authRoutesPath?: string`, The path to the auth route handlers, defaults to `'auth'`, see below for more details.
-   - `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to `'edgedb-session'`.
-   - `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to `'edgedb-pkce-verifier'`
+   - `authCookieName?: string`, The name of the cookie where the auth token will be stored, defaults to `'gel-session'`.
+   - `pkceVerifierCookieName?: string`: The name of the cookie where the verifier for the PKCE flow will be stored, defaults to `'gel-pkce-verifier'`
    - `passwordResetPath?: string`: The path relative to the `baseUrl` of the the password reset page; needed if you want to enable password reset emails in your app.
    - `magicLinkFailurePath?: string`: The path relative to the `baseUrl` of the page we should redirect users to if there is an error when trying to sign in with a magic link. The page will get an `error` search parameter attached with an error message. This property is required if you use the Magic Link authentication feature.
 
@@ -39,7 +38,7 @@
    // app/auth/[...auth]/route.ts
 
    import { redirect } from "next/navigation";
-   import { auth } from "@/edgedb";
+   import { auth } from "@/gel";
 
    const { GET, POST } = auth.createAuthRouteHandlers({
      onOAuthCallback({ error, tokenData, isSignUp }) {
@@ -68,7 +67,7 @@
 
    By default the handlers expect to exist under the `/auth` path in your app, however if you want to place them elsewhere, you will also need to configure the `authRoutesPath` option of `createAuth` to match.
 
-3. Now we just need to setup the UI to allow your users to sign in/up, etc. The easiest way to get started is to use the EdgeDB Auth's builtin UI. Or alternatively you can implement your own custom UI.
+3. Now we just need to setup the UI to allow your users to sign in/up, etc. The easiest way to get started is to use the Gel Auth's builtin UI. Or alternatively you can implement your own custom UI.
 
    **Builtin UI**
 
@@ -97,7 +96,7 @@
 Now you have auth all configured and user's can signin/signup/etc. you can use the `auth.getSession()` method in your app pages to retrieve an `AuthSession` object. This session object allows you to check if the user is currently logged in with the `isSignedIn` method, and also provides a `Client` object automatically configured with the `ext::auth::client_token` global, so you can run queries using the `ext::auth::ClientTokenIdentity` of the currently signed in user.
 
 ```ts
-import { auth } from "@/edgedb";
+import { auth } from "@/gel";
 
 export default async function Home() {
   const session = await auth.getSession();

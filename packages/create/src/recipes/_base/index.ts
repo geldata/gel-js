@@ -6,14 +6,14 @@ import debug from "debug";
 import * as p from "@clack/prompts";
 import { updatePackage } from "write-package";
 
-import { getPackageManager, copyTemplateFiles } from "../../utils.js";
+import { copyTemplateFiles, PackageManager } from "../../utils.js";
 import type { Framework, BaseRecipe, BaseOptions } from "../types.js";
 
-const logger = debug("@edgedb/create:recipe:base");
+const logger = debug("@gel/create:recipe:base");
 
 const recipe: BaseRecipe = {
   async getOptions() {
-    const packageManager = getPackageManager();
+    const packageManager = new PackageManager();
     logger({ packageManager });
 
     const opts = await p.group(
@@ -34,9 +34,9 @@ const recipe: BaseRecipe = {
               { value: "none", label: "None" },
             ],
           }),
-        useEdgeDBAuth: () =>
+        useGelAuth: () =>
           p.confirm({
-            message: "Use the EdgeDB Auth extension?",
+            message: "Use the Gel Auth extension?",
             initialValue: true,
           }),
       },

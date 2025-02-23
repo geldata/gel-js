@@ -26,7 +26,11 @@ module default {
     property character_name -> str;
   }
 
-  abstract type Person {
+  abstract type LivingThing {
+    age: int32;
+  }
+
+  abstract type Person extending LivingThing {
     required property name -> str {
       constraint exclusive;
     };
@@ -40,7 +44,9 @@ module default {
 
   type Hero extending Person {
     property secret_identity -> str;
-    property number_of_movies -> int64;
+    required property number_of_movies -> int64 {
+      default := 0;
+    };
     multi link villains := .<nemesis[IS Villain];
   }
 
@@ -147,7 +153,7 @@ module default {
   }
 
   # Unicode handling
-  # https://github.com/edgedb/edgedb/blob/master/tests/schemas/dump02_default.esdl
+  # https://github.com/geldata/gel/blob/master/tests/schemas/dump02_default.esdl
 
   abstract annotation `🍿`;
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/edgedb";
-import type { TokenData } from "@edgedb/auth-core";
+import { auth } from "@/gel";
+import type { TokenData } from "@gel/auth-core";
 
 export const { GET, POST } = auth.createAuthRouteHandlers({
   async onBuiltinUICallback({

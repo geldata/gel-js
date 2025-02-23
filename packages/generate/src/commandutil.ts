@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import { adapter } from "edgedb";
+import process from "node:process";
+import { systemUtils } from "gel";
 import { type Target, exitWithError } from "./genutil";
+import type { defaultFutureFlags } from "./edgeql-js";
 
 export interface CommandOptions {
   showHelp?: boolean;
@@ -14,12 +16,13 @@ export interface CommandOptions {
   forceOverwrite?: boolean;
   updateIgnoreFile?: boolean;
   useHttpClient?: boolean;
+  future?: Partial<Record<keyof typeof defaultFutureFlags, boolean>>;
 }
 
-const { input } = adapter;
+const { input } = systemUtils;
 
 export function isTTY() {
-  return adapter.process.stdin.isTTY && adapter.process.stdout.isTTY;
+  return process.stdin.isTTY && process.stdout.isTTY;
 }
 
 export async function promptBoolean(prompt: string, defaultVal?: boolean) {
@@ -64,13 +67,13 @@ export async function promptForPassword(username: string) {
 }
 
 export function readPasswordFromStdin() {
-  if (adapter.process.stdin.isTTY) {
+  if (process.stdin.isTTY) {
     exitWithError(`Cannot read password from stdin: stdin is a TTY.`);
   }
 
   return new Promise<string>((resolve) => {
     let data = "";
-    adapter.process.stdin.on("data", (chunk) => (data += chunk));
-    adapter.process.stdin.on("end", () => resolve(data.trimEnd()));
+    process.stdin.on("data", (chunk) => (data += chunk));
+    process.stdin.on("end", () => resolve(data.trimEnd()));
   });
 }

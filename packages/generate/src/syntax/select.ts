@@ -6,7 +6,7 @@ import {
   RelativeDuration,
   ConfigMemory,
   DateDuration,
-} from "edgedb";
+} from "gel";
 import type { $bool, $number } from "./modules/std";
 
 import {
@@ -14,7 +14,7 @@ import {
   ExpressionKind,
   TypeKind,
   OperatorKind,
-} from "edgedb/dist/reflection/index";
+} from "gel/dist/reflection/index";
 import { makeType } from "./hydrate";
 
 import { cardutil } from "./cardinality";
@@ -888,11 +888,19 @@ export function select<
   ElementName extends `${Element["__name__"]}`,
   ElementPointers extends Element["__pointers__"],
   ElementShape extends Element["__shape__"],
+  ElementExclusives extends Element["__exclusives__"],
+  ElementPolyTypenames extends Element["__polyTypenames__"],
   Card extends Expr["__cardinality__"],
 >(
   expr: Expr,
 ): $expr_Select<{
-  __element__: ObjectType<ElementName, ElementPointers, ElementShape>;
+  __element__: ObjectType<
+    ElementName,
+    ElementPointers,
+    ElementShape,
+    ElementExclusives,
+    ElementPolyTypenames
+  >;
   __cardinality__: Card;
 }>;
 export function select<Expr extends TypeSet>(
@@ -916,7 +924,13 @@ export function select<
   expr: Expr,
   shape: (scope: Scope) => Readonly<Shape>,
 ): $expr_Select<{
-  __element__: ObjectType<ElementName, Element["__pointers__"], SelectShape>;
+  __element__: ObjectType<
+    ElementName,
+    Element["__pointers__"],
+    SelectShape,
+    Element["__exclusives__"],
+    Element["__polyTypenames__"]
+  >;
   __cardinality__: SelectCard;
 }>;
 /*

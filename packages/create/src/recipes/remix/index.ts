@@ -5,20 +5,20 @@ import { updatePackage } from "write-package";
 import type { BaseOptions, Recipe } from "../types.js";
 import { copyTemplateFiles } from "../../utils.js";
 
-const logger = debug("@edgedb/create:recipe:remix");
+const logger = debug("@gel/create:recipe:remix");
 
 const recipe: Recipe = {
   skip(opts: BaseOptions) {
     return opts.framework !== "remix";
   },
-  async apply({ projectDir, useEdgeDBAuth }: BaseOptions) {
+  async apply({ projectDir, useGelAuth }: BaseOptions) {
     logger("Running remix recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
     let tags;
 
-    if (useEdgeDBAuth) {
+    if (useGelAuth) {
       tags = new Set<string>(["auth"]);
     }
 
@@ -37,7 +37,7 @@ const recipe: Recipe = {
         typecheck: "tsc",
       },
       dependencies: {
-        ...(useEdgeDBAuth ? { "@edgedb/auth-remix": "^0.1.0" } : {}),
+        ...(useGelAuth ? { "@gel/auth-remix": "^0.1.0" } : {}),
         react: "^18",
         "react-dom": "^18",
         "@remix-run/css-bundle": "*",

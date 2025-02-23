@@ -1,9 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import serverAuth, {
-  type AuthRouteHandlers,
-} from "@edgedb/auth-sveltekit/server";
-import { client } from "$lib/server/edgedb";
+import serverAuth, { type AuthRouteHandlers } from "@gel/auth-sveltekit/server";
+import { client } from "$lib/server/gel";
 import { options } from "$lib/auth";
 
 const authRouteHandlers: AuthRouteHandlers = {

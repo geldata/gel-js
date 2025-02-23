@@ -1,7 +1,11 @@
-import { $, adapter, type Client, type Executor } from "edgedb";
+import path from "node:path";
+import { promises as fs } from "node:fs";
+import { $, systemUtils, type Client, type Executor } from "gel";
 import { type CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
 import type { Target } from "./genutil";
+
+const { walk, readFileUtf8 } = systemUtils;
 
 // generate per-file queries
 // generate queries in a single file
@@ -18,15 +22,15 @@ currently supported.`);
   }
 
   const noRoot = !params.root;
-  const root = params.root ?? adapter.process.cwd();
+  const root = params.root ?? process.cwd();
   if (noRoot) {
     console.warn(
-      `No \`edgedb.toml\` found, using process.cwd() as root directory:
+      `No project config file found, using process.cwd() as root directory:
    ${params.root}
 `,
     );
   } else {
-    console.log(`Detected project root via edgedb.toml:`);
+    console.log(`Detected project root via project config file:`);
     console.log("   " + params.root);
   }
 
@@ -54,16 +58,16 @@ currently supported.`);
     } = {};
     let wasError = false;
     await Promise.all(
-      matches.map(async (path) => {
-        const prettyPath = "./" + adapter.path.posix.relative(root, path);
+      matches.map(async (p) => {
+        const prettyPath = "./" + path.posix.relative(root, p);
 
         try {
-          const query = await adapter.readFileUtf8(path);
+          const query = await readFileUtf8(p);
           const types = await $.analyzeQuery(client, query);
           console.log(`   ${prettyPath}`);
           const files = generateFiles({
             target: params.options.target!,
-            path,
+            path: p,
             types,
           });
           for (const f of files) {
@@ -92,15 +96,14 @@ currently supported.`);
       );
       for (const [extension, file] of Object.entries(filesByExtension)) {
         const filePath =
-          (adapter.path.isAbsolute(params.options.file)
+          (path.isAbsolute(params.options.file)
             ? params.options.file
-            : adapter.path.join(adapter.process.cwd(), params.options.file)) +
-          extension;
-        const prettyPath = adapter.path.isAbsolute(params.options.file)
+            : path.join(process.cwd(), params.options.file)) + extension;
+        const prettyPath = path.isAbsolute(params.options.file)
           ? filePath
-          : `./${adapter.path.posix.relative(root, filePath)}`;
+          : `./${path.posix.relative(root, filePath)}`;
         console.log(`   ${prettyPath}`);
-        await adapter.fs.writeFile(
+        await fs.writeFile(
           filePath,
           headerComment +
             `${stringifyImports(file.imports)}\n\n${file.contents}`,
@@ -110,27 +113,27 @@ currently supported.`);
     return;
   }
 
-  async function generateFilesForQuery(path: string) {
+  async function generateFilesForQuery(p: string) {
     try {
-      const query = await adapter.readFileUtf8(path);
+      const query = await readFileUtf8(p);
       if (!query) return;
       const types = await $.analyzeQuery(client, query);
       const files = generateFiles({
         target: params.options.target!,
-        path,
+        path: p,
         types,
       });
       for (const f of files) {
-        const prettyPath = "./" + adapter.path.posix.relative(root, f.path);
+        const prettyPath = "./" + path.posix.relative(root, f.path);
         console.log(`   ${prettyPath}`);
-        await adapter.fs.writeFile(
+        await fs.writeFile(
           f.path,
           headerComment + `${stringifyImports(f.imports)}\n\n${f.contents}`,
         );
       }
     } catch (err) {
       console.log(
-        `Error in file './${adapter.path.posix.relative(root, path)}': ${(
+        `Error in file './${path.posix.relative(root, p)}': ${(
           err as any
         ).toString()}`,
       );
@@ -156,12 +159,12 @@ export function stringifyImports(imports: ImportMap) {
 }
 
 async function getMatches(root: string, schemaDir: string) {
-  return adapter.walk(root, {
+  return walk(root, {
     match: [/[^/]\.edgeql$/],
     skip: [
       /node_modules/,
-      RegExp(`${schemaDir}\\${adapter.path.sep}migrations`),
-      RegExp(`${schemaDir}\\${adapter.path.sep}fixups`),
+      RegExp(`${schemaDir}\\${path.sep}migrations`),
+      RegExp(`${schemaDir}\\${path.sep}fixups`),
     ],
   });
 }
@@ -187,13 +190,10 @@ export function generateFiles(params: {
   imports: ImportMap;
   extension: string;
 }[] {
-  const queryFileName = adapter.path.basename(params.path);
+  const queryFileName = path.basename(params.path);
   const baseFileName = queryFileName.replace(/\.edgeql$/, "");
-  const outputDirname = adapter.path.dirname(params.path);
-  const outputBaseFileName = adapter.path.join(
-    outputDirname,
-    `${baseFileName}.query`,
-  );
+  const outputDirname = path.dirname(params.path);
+  const outputBaseFileName = path.join(outputDirname, `${baseFileName}.query`);
 
   const method = cardinalityToExecutorMethod[params.types.cardinality];
   if (!method) {
@@ -224,10 +224,8 @@ ${params.types.query.trim().replace(/\\/g, "\\\\").replace(/`/g, "\\`")}\`${
 
   const tsImports =
     params.types.importMap ??
-    new ImportMap(
-      params.types.imports ? [["edgedb", params.types.imports]] : [],
-    );
-  tsImports.add("edgedb", "Executor");
+    new ImportMap(params.types.imports ? [["gel", params.types.imports]] : []);
+  tsImports.add("gel", "Executor");
 
   const tsImpl = `${queryDefs}
 

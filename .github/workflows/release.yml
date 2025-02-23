@@ -22,373 +22,660 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
       - name: Install deps
         run: yarn
 
-      # edgedb
+      # gel
 
       - name: Copy readme
-        run: cp README.md packages/driver/README.md
+        run: cp README.md packages/gel/README.md
 
-      - name: Build edgedb
-        run: yarn workspace edgedb run build
+      - name: Build gel
+        run: yarn workspace gel run build
 
-      - id: check_publish_driver
-        name: Dry-run publish 'edgedb' to npm
+      - id: check_publish_gel
+        name: Dry-run publish 'gel' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
-          package: packages/driver/package.json
+          package: packages/gel/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If 'edgedb' version unchanged
-        if: steps.check_publish_driver.outputs.type == ''
+      - name: If 'gel' version unchanged
+        if: steps.check_publish_gel.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace edgedb version --no-git-tag-version --minor
-          CURRENT_VERSION=$(node -p "require('./packages/driver/package.json').version")
-          yarn workspace edgedb version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace gel version --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./packages/gel/package.json').version")
+          yarn workspace gel version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish 'edgedb'
+      - name: Extract prerelease tag from version
+        id: get_tag_gel
+        working-directory: packages/gel
+        run: |
+          # Get the version from package.json using npm-pkg CLI.
+          # This handles running npm-pkg inside monorepo.
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          # Check if there's a prerelease tag (a '-' in the version)
+          if echo "$VERSION" | grep -q '-'; then
+            # Extract prerelease identifier: any characters after the '-' up to the first '.'
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          # Set the tag output for use in later steps.
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish 'gel'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
-          package: packages/driver/package.json
+          package: packages/gel/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_driver.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_gel.outputs.tag }}
 
-      - name: Create 'edgedb' GitHub Release
-        if: steps.check_publish_driver.outputs.type != ''
+      - name: Create 'gel' GitHub Release
+        if: steps.check_publish_gel.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.check_publish_driver.outputs.version }}
-          name: edgedb-js v${{ steps.check_publish_driver.outputs.version }}
+          tag_name: v${{ steps.check_publish_gel.outputs.version }}
+          name: gel-js v${{ steps.check_publish_gel.outputs.version }}
           draft: true
           prerelease: false
 
-      # @edgedb/generate
+      # @gel/generate
 
-      - name: Build @edgedb/generate
-        run: yarn workspace @edgedb/generate run build
+      - name: Build @gel/generate
+        run: yarn workspace @gel/generate run build
 
       - id: check_publish_generate
-        name: Dry-run publish '@edgedb/generate' to npm
+        name: Dry-run publish '@gel/generate' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/generate/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/generate' version unchanged
+      - name: If '@gel/generate' version unchanged
         if: steps.check_publish_generate.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/generate version --no-git-tag-version --minor
+          yarn workspace @gel/generate version --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/generate/package.json').version")
-          yarn workspace @edgedb/generate version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/generate version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/generate'
+      - name: Extract prerelease tag from version
+        id: get_tag_generate
+        working-directory: packages/generate
+        run: |
+          # Get the version from package.json using npm-pkg CLI.
+          # This handles running npm-pkg inside monorepo.
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          # Check if there's a prerelease tag (a '-' in the version)
+          if echo "$VERSION" | grep -q '-'; then
+            # Extract prerelease identifier: any characters after the '-' up to the first '.'
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          # Set the tag output for use in later steps.
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/generate'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/generate/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_generate.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_generate.outputs.tag }}
 
-      - name: Create '@edgedb/generate' GitHub Release
+      - name: Create '@gel/generate' GitHub Release
         if: steps.check_publish_generate.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: generate-v${{ steps.check_publish_generate.outputs.version }}
-          name: "@edgedb/generate v${{ steps.check_publish_generate.outputs.version }}"
+          name: "@gel/generate v${{ steps.check_publish_generate.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/auth-core
+      # @gel/auth-core
 
-      - name: Build @edgedb/auth-core
-        run: yarn workspace @edgedb/auth-core run build
+      - name: Build @gel/auth-core
+        run: yarn workspace @gel/auth-core run build
 
       - id: check_publish_auth_core
-        name: Dry-run publish '@edgedb/auth-core' to npm
+        name: Dry-run publish '@gel/auth-core' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-core/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/auth-core' version unchanged
+      - name: If '@gel/auth-core' version unchanged
         if: steps.check_publish_auth_core.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/auth-core version --no-git-tag-version --minor
+          yarn workspace @gel/auth-core version --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/auth-core/package.json').version")
-          yarn workspace @edgedb/auth-core version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/auth-core version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/auth-core'
+      - name: Extract prerelease tag from version
+        id: get_tag_auth_core
+        working-directory: packages/auth-core
+        run: |
+          # Get the version from package.json using npm-pkg CLI.
+          # This handles running npm-pkg inside monorepo.
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          # Check if there's a prerelease tag (a '-' in the version)
+          if echo "$VERSION" | grep -q '-'; then
+            # Extract prerelease identifier: any characters after the '-' up to the first '.'
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          # Set the tag output for use in later steps.
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/auth-core'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-core/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_auth_core.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_auth_core.outputs.tag }}
 
-      - name: Create '@edgedb/auth-core' Release
+      - name: Create '@gel/auth-core' Release
         if: steps.check_publish_auth_core.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: auth-core-v${{ steps.check_publish_auth_core.outputs.version }}
-          name: "@edgedb/auth-core v${{ steps.check_publish_auth_core.outputs.version }}"
+          name: "@gel/auth-core v${{ steps.check_publish_auth_core.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/auth-nextjs
+      # @gel/auth-nextjs
 
-      - name: Build @edgedb/auth-nextjs
-        run: yarn workspace @edgedb/auth-nextjs run build
+      - name: Build @gel/auth-nextjs
+        run: yarn workspace @gel/auth-nextjs run build
 
       - id: check_publish_auth_nextjs
-        name: Dry-run publish '@edgedb/auth-nextjs' to npm
+        name: Dry-run publish '@gel/auth-nextjs' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-nextjs/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/auth-nextjs' version unchanged
+      - name: If '@gel/auth-nextjs' version unchanged
         if: steps.check_publish_auth_nextjs.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/auth-nextjs version  --no-git-tag-version --minor
+          yarn workspace @gel/auth-nextjs version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/auth-nextjs/package.json').version")
-          yarn workspace @edgedb/auth-nextjs version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/auth-nextjs version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/auth-nextjs'
+      - name: Extract prerelease tag from version
+        id: get_tag_auth_nextjs
+        working-directory: packages/auth-nextjs
+        run: |
+          # Get the version from package.json using npm-pkg CLI.
+          # This handles running npm-pkg inside monorepo.
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          # Check if there's a prerelease tag (a '-' in the version)
+          if echo "$VERSION" | grep -q '-'; then
+            # Extract prerelease identifier: any characters after the '-' up to the first '.'
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          # Set the tag output for use in later steps.
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/auth-nextjs'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-nextjs/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_auth_nextjs.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_auth_nextjs.outputs.tag }}
 
-      - name: Create '@edgedb/auth-nextjs' Release
+      - name: Create '@gel/auth-nextjs' Release
         if: steps.check_publish_auth_nextjs.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: auth-nextjs-v${{ steps.check_publish_auth_nextjs.outputs.version }}
-          name: "@edgedb/auth-nextjs v${{ steps.check_publish_auth_nextjs.outputs.version }}"
+          name: "@gel/auth-nextjs v${{ steps.check_publish_auth_nextjs.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/auth-express
+      # @gel/auth-express
 
-      - name: Build @edgedb/auth-express
-        run: yarn workspace @edgedb/auth-express run build
+      - name: Build @gel/auth-express
+        run: yarn workspace @gel/auth-express run build
 
       - id: check_publish_auth_express
-        name: Dry-run publish '@edgedb/auth-express' to npm
+        name: Dry-run publish '@gel/auth-express' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-express/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/auth-express' version unchanged
+      - name: If '@gel/auth-express' version unchanged
         if: steps.check_publish_auth_express.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/auth-express version  --no-git-tag-version --minor
+          yarn workspace @gel/auth-express version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/auth-express/package.json').version")
-          yarn workspace @edgedb/auth-express version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/auth-express version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/auth-express'
+      - name: Extract prerelease tag from version
+        id: get_tag_auth_express
+        working-directory: packages/auth-express
+        run: |
+          # Get the version from package.json using npm-pkg CLI.
+          # This handles running npm-pkg inside monorepo.
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          # Check if there's a prerelease tag (a '-' in the version)
+          if echo "$VERSION" | grep -q '-'; then
+            # Extract prerelease identifier: any characters after the '-' up to the first '.'
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          # Set the tag output for use in later steps.
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/auth-express'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-express/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_auth_express.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_auth_express.outputs.tag }}
 
-      - name: Create '@edgedb/auth-express' Release
+      - name: Create '@gel/auth-express' Release
         if: steps.check_publish_auth_express.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: auth-express-v${{ steps.check_publish_auth_express.outputs.version }}
-          name: "@edgedb/auth-express v${{ steps.check_publish_auth_express.outputs.version }}"
+          name: "@gel/auth-express v${{ steps.check_publish_auth_express.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/auth-remix
+      # @gel/auth-remix
 
-      - name: Build @edgedb/auth-remix
-        run: yarn workspace @edgedb/auth-remix run build
+      - name: Build @gel/auth-remix
+        run: yarn workspace @gel/auth-remix run build
 
       - id: check_publish_auth_remix
-        name: Dry-run publish '@edgedb/auth-remix' to npm
+        name: Dry-run publish '@gel/auth-remix' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-remix/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/auth-remix' version unchanged
+      - name: If '@gel/auth-remix' version unchanged
         if: steps.check_publish_auth_remix.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/auth-remix version  --no-git-tag-version --minor
+          yarn workspace @gel/auth-remix version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/auth-remix/package.json').version")
-          yarn workspace @edgedb/auth-remix version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/auth-remix version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/auth-remix'
+      - name: Extract prerelease tag from version
+        id: get_tag_auth_remix
+        working-directory: packages/auth-remix
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/auth-remix'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-remix/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_auth_remix.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_auth_remix.outputs.tag }}
 
-      - name: Create '@edgedb/auth-remix' Release
+      - name: Create '@gel/auth-remix' Release
         if: steps.check_publish_auth_remix.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: auth-remix-v${{ steps.check_publish_auth_remix.outputs.version }}
-          name: "@edgedb/auth-remix v${{ steps.check_publish_auth_remix.outputs.version }}"
+          name: "@gel/auth-remix v${{ steps.check_publish_auth_remix.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/auth-sveltekit
+      # @gel/auth-sveltekit
 
-      - name: Build @edgedb/auth-sveltekit
-        run: yarn workspace @edgedb/auth-sveltekit run build
+      - name: Build @gel/auth-sveltekit
+        run: yarn workspace @gel/auth-sveltekit run build
 
       - id: check_publish_auth_sveltekit
-        name: Dry-run publish '@edgedb/auth-sveltekit' to npm
+        name: Dry-run publish '@gel/auth-sveltekit' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-sveltekit/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/auth-sveltekit' version unchanged
+      - name: If '@gel/auth-sveltekit' version unchanged
         if: steps.check_publish_auth_sveltekit.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/auth-sveltekit version  --no-git-tag-version --minor
+          yarn workspace @gel/auth-sveltekit version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/auth-sveltekit/package.json').version")
-          yarn workspace @edgedb/auth-sveltekit version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/auth-sveltekit version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/auth-sveltekit'
+      - name: Extract prerelease tag from version
+        id: get_tag_auth_sveltekit
+        working-directory: packages/auth-sveltekit
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/auth-sveltekit'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/auth-sveltekit/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_auth_sveltekit.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_auth_sveltekit.outputs.tag }}
 
-      - name: Create '@edgedb/auth-sveltekit' Release
+      - name: Create '@gel/auth-sveltekit' Release
         if: steps.check_publish_auth_sveltekit.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: auth-sveltekit-v${{ steps.check_publish_auth_sveltekit.outputs.version }}
-          name: "@edgedb/auth-sveltekit v${{ steps.check_publish_auth_sveltekit.outputs.version }}"
+          name: "@gel/auth-sveltekit v${{ steps.check_publish_auth_sveltekit.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/create
+      # @gel/create
 
-      - name: Build @edgedb/create
-        run: yarn workspace @edgedb/create run build
+      - name: Build @gel/create
+        run: yarn workspace @gel/create run build
 
       - id: check_publish_create
-        name: Dry-run publish '@edgedb/create' to npm
+        name: Dry-run publish '@gel/create' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/create/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/create' version unchanged
+      - name: If '@gel/create' version unchanged
         if: steps.check_publish_create.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/create version  --no-git-tag-version --minor
+          yarn workspace @gel/create version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/create/package.json').version")
-          yarn workspace @edgedb/create version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/create version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/create'
+      - name: Extract prerelease tag from version
+        id: get_tag_create
+        working-directory: packages/create
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/create'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/create/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_create.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_create.outputs.tag }}
 
-      - name: Create '@edgedb/create' Release
+      - name: Create '@gel/create' Release
         if: steps.check_publish_create.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: create-v${{ steps.check_publish_create.outputs.version }}
-          name: "@edgedb/create v${{ steps.check_publish_create.outputs.version }}"
+          name: "@gel/create v${{ steps.check_publish_create.outputs.version }}"
           draft: true
           prerelease: false
 
-      # @edgedb/ai
+      # @gel/ai
 
-      - name: Build @edgedb/ai
-        run: yarn workspace @edgedb/ai run build
+      - name: Build @gel/ai
+        run: yarn workspace @gel/ai run build
 
       - id: check_publish_ai
-        name: Dry-run publish '@edgedb/ai' to npm
+        name: Dry-run publish '@gel/ai' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/ai/package.json
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: true
 
-      - name: If '@edgedb/ai' version unchanged
+      - name: If '@gel/ai' version unchanged
         if: steps.check_publish_ai.outputs.type == ''
         run: |
           echo "Version in package.json has not changed. Creating canary release."
-          yarn workspace @edgedb/ai version  --no-git-tag-version --minor
+          yarn workspace @gel/ai version  --no-git-tag-version --minor
           CURRENT_VERSION=$(node -p "require('./packages/ai/package.json').version")
-          yarn workspace @edgedb/ai version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+          yarn workspace @gel/ai version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
 
-      - name: Publish '@edgedb/ai'
+      - name: Extract prerelease tag from version
+        id: get_tag_ai
+        working-directory: packages/ai
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/ai'
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
         with:
           package: packages/ai/package.json
           token: ${{ secrets.NPM_TOKEN }}
           access: public
-          tag: ${{ steps.check_publish_ai.outputs.type == '' && 'canary' || 'latest' }}
+          tag: ${{ steps.get_tag_ai.outputs.tag }}
 
-      - name: Create '@edgedb/ai' Release
+      - name: Create '@gel/ai' Release
         if: steps.check_publish_ai.outputs.type != ''
         uses: softprops/action-gh-release@v2.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ai-v${{ steps.check_publish_ai.outputs.version }}
-          name: "@edgedb/ai v${{ steps.check_publish_ai.outputs.version }}"
+          name: "@gel/ai v${{ steps.check_publish_ai.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @gel/vercel-ai-provider
+
+      - name: Build @gel/vercel-ai-provider
+        run: yarn workspace @gel/vercel-ai-provider run build
+
+      - id: check_publish_vercel-ai-provider
+        name: Dry-run publish '@gel/vercel-ai-provider' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/vercel-ai-provider/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@gel/vercel-ai-provider' version unchanged
+        if: steps.check_publish_vercel-ai-provider.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @gel/vercel-ai-provider version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./packages/vercel-ai-provider/package.json').version")
+          yarn workspace @gel/vercel-ai-provider version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Extract prerelease tag from version
+        id: get_tag_vercel_ai_provider
+        working-directory: packages/vercel-ai-provider
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/vercel-ai-provider'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/vercel-ai-provider/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.get_tag_vercel_ai_provider.outputs.tag }}
+
+      - name: Create '@gel/vercel-ai-provider' Release
+        if: steps.check_publish_vercel-ai-provider.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: vercel-ai-provider-v${{ steps.check_publish_vercel-ai-provider.outputs.version }}
+          name: "@gel/vercel-ai-provider v${{ steps.check_publish_vercel-ai-provider.outputs.version }}"
+          draft: true
+          prerelease: false
+
+      # @gel/codemod
+
+      - name: Build @gel/codemod
+        run: yarn workspace @gel/codemod run build
+
+      - id: check_publish_codemod
+        name: Dry-run publish '@gel/codemod' to npm
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/codemod/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+
+      - name: If '@gel/codemod' version unchanged
+        if: steps.check_publish_codemod.outputs.type == ''
+        run: |
+          echo "Version in package.json has not changed. Creating canary release."
+          yarn workspace @gel/codemod version  --no-git-tag-version --minor
+          CURRENT_VERSION=$(node -p "require('./packages/codemod/package.json').version")
+          yarn workspace @gel/codemod version --no-git-tag-version --new-version "${CURRENT_VERSION}-canary.$(date +'%Y%m%dT%H%M%S')"
+
+      - name: Extract prerelease tag from version
+        id: get_tag_codemod
+        working-directory: packages/codemod
+        run: |
+          VERSION=$(npm pkg get version --json | jq -r 'to_entries[0].value')
+          echo "Version is: $VERSION"
+
+          if echo "$VERSION" | grep -q '-'; then
+            TAG=$(echo "$VERSION" | sed -E 's/.*-([^\.]+).*/\1/')
+            echo "Found prerelease tag: $TAG"
+          else
+            TAG="latest"
+            echo "No prerelease tag found; defaulting to '$TAG'"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish '@gel/codemod'
+        uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
+        with:
+          package: packages/codemod/package.json
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+          tag: ${{ steps.get_tag_codemod.outputs.tag }}
+
+      - name: Create '@gel/codemod' Release
+        if: steps.check_publish_codemod.outputs.type != ''
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: codemod-v${{ steps.check_publish_codemod.outputs.version }}
+          name: "@gel/codemod v${{ steps.check_publish_codemod.outputs.version }}"
           draft: true
           prerelease: false

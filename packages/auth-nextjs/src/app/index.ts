@@ -3,8 +3,8 @@ import {
   ConfigurationError,
   PKCEError,
   InvalidDataError,
-} from "@edgedb/auth-core";
-import type { Client } from "edgedb";
+} from "@gel/auth-core";
+import type { Client } from "gel";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
@@ -17,7 +17,7 @@ import {
   _extractParams,
 } from "../shared";
 
-export * from "@edgedb/auth-core/errors";
+export * from "@gel/auth-core/errors";
 export {
   NextAuthSession,
   type NextAuthOptions,
@@ -27,18 +27,20 @@ export {
 };
 
 export class NextAppAuth extends NextAuth {
-  getSession = cache(
-    () =>
-      new NextAuthSession(
-        this.client,
-        cookies().get(this.options.authCookieName)?.value.split(";")[0] ?? null,
-      ),
-  );
+  getSession = cache(async () => {
+    const cookieStore = await cookies();
+    return new NextAuthSession(
+      this.client,
+      cookieStore.get(this.options.authCookieName)?.value.split(";")[0] ||
+        cookieStore.get("edgedb-session")?.value.split(";")[0] ||
+        null,
+    );
+  });
 
   createServerActions() {
     return {
       signout: async () => {
-        cookies().delete(this.options.authCookieName);
+        this.deleteAuthCookie();
       },
       emailPasswordSignIn: async (
         data: FormData | { email: string; password: string },
@@ -51,7 +53,7 @@ export class NextAppAuth extends NextAuth {
         const tokenData = await (
           await this.core
         ).signinWithEmailPassword(email, password);
-        this.setAuthCookie(tokenData.auth_token);
+        await this.setAuthCookie(tokenData.auth_token);
         return tokenData;
       },
       emailPasswordSignUp: async (
@@ -69,9 +71,9 @@ export class NextAppAuth extends NextAuth {
           password,
           `${this._authRoute}/emailpassword/verify`,
         );
-        this.setVerifierCookie(result.verifier);
+        await this.setVerifierCookie(result.verifier);
         if (result.status === "complete") {
-          this.setAuthCookie(result.tokenData.auth_token);
+          await this.setAuthCookie(result.tokenData.auth_token);
           return result.tokenData;
         }
         return null;
@@ -94,14 +96,15 @@ export class NextAppAuth extends NextAuth {
             this.options.baseUrl,
           ).toString(),
         );
-        this.setVerifierCookie(verifier);
+        await this.setVerifierCookie(verifier);
       },
       emailPasswordResetPassword: async (
         data: FormData | { reset_token: string; password: string },
       ) => {
-        const verifier = cookies().get(
-          this.options.pkceVerifierCookieName,
-        )?.value;
+        const cookieStore = await cookies();
+        const verifier =
+          cookieStore.get(this.options.pkceVerifierCookieName)?.value ||
+          cookieStore.get("edgedb-pkce-verifier")?.value;
         if (!verifier) {
           throw new PKCEError("no pkce verifier cookie found");
         }
@@ -113,8 +116,8 @@ export class NextAppAuth extends NextAuth {
         const tokenData = await (
           await this.core
         ).resetPasswordWithResetToken(resetToken, verifier, password);
-        this.setAuthCookie(tokenData.auth_token);
-        cookies().delete(this.options.pkceVerifierCookieName);
+        await this.setAuthCookie(tokenData.auth_token);
+        this.deleteVerifierCookie();
         return tokenData;
       },
       emailPasswordResendVerificationEmail: async (
@@ -145,7 +148,8 @@ export class NextAppAuth extends NextAuth {
             `${this._authRoute}/emailpassword/verify`,
           );
 
-          cookies().set({
+          const cookieStore = await cookies();
+          cookieStore.set({
             name: this.options.pkceVerifierCookieName,
             value: verifier,
             httpOnly: true,
@@ -174,7 +178,7 @@ export class NextAppAuth extends NextAuth {
             this.options.baseUrl,
           ).toString(),
         );
-        this.setVerifierCookie(verifier);
+        await this.setVerifierCookie(verifier);
       },
       magicLinkSignIn: async (data: FormData | { email: string }) => {
         if (!this.options.magicLinkFailurePath) {
@@ -193,7 +197,7 @@ export class NextAppAuth extends NextAuth {
             this.options.baseUrl,
           ).toString(),
         );
-        this.setVerifierCookie(verifier);
+        await this.setVerifierCookie(verifier);
       },
     };
   }
