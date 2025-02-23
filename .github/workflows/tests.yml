@@ -24,14 +24,13 @@ jobs:
           - os: ubuntu-latest
             node-version: "22"
             gel-version: "nightly"
-          # Upcoming server
-          - os: ubuntu-latest
-            node-version: "22"
-            gel-version: "6.0-rc.2"
           # LTS server
           - os: ubuntu-latest
             node-version: "22"
             gel-version: "4"
+          - os: ubuntu-latest
+            node-version: "22"
+            gel-version: "5"
           # macOS
           # - os: macos-latest
           #   node-version: "22"
