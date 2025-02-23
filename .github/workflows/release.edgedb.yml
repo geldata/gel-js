@@ -25,13 +25,13 @@ jobs:
       - name: Install deps
         run: yarn
 
+      - name: Build all packages
+        run: yarn build
+
       # edgedb
 
       - name: Copy readme
         run: cp README.md edgedb/edgedb/README.md
-
-      - name: Build edgedb
-        run: yarn workspace edgedb run build
 
       - id: check_publish_driver
         name: Dry-run publish 'edgedb' to npm
@@ -70,9 +70,6 @@ jobs:
 
       # @edgedb/generate
 
-      - name: Build @edgedb/generate
-        run: yarn workspace @edgedb/generate run build
-
       - id: check_publish_generate
         name: Dry-run publish '@edgedb/generate' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
@@ -109,9 +106,6 @@ jobs:
           prerelease: false
 
       # @edgedb/auth-core
-
-      - name: Build @edgedb/auth-core
-        run: yarn workspace @edgedb/auth-core run build
 
       - id: check_publish_auth_core
         name: Dry-run publish '@edgedb/auth-core' to npm
@@ -150,9 +144,6 @@ jobs:
 
       # @edgedb/auth-nextjs
 
-      - name: Build @edgedb/auth-nextjs
-        run: yarn workspace @edgedb/auth-nextjs run build
-
       - id: check_publish_auth_nextjs
         name: Dry-run publish '@edgedb/auth-nextjs' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
@@ -189,9 +180,6 @@ jobs:
           prerelease: false
 
       # @edgedb/auth-express
-
-      - name: Build @edgedb/auth-express
-        run: yarn workspace @edgedb/auth-express run build
 
       - id: check_publish_auth_express
         name: Dry-run publish '@edgedb/auth-express' to npm
@@ -230,9 +218,6 @@ jobs:
 
       # @edgedb/auth-remix
 
-      - name: Build @edgedb/auth-remix
-        run: yarn workspace @edgedb/auth-remix run build
-
       - id: check_publish_auth_remix
         name: Dry-run publish '@edgedb/auth-remix' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
@@ -269,9 +254,6 @@ jobs:
           prerelease: false
 
       # @edgedb/auth-sveltekit
-
-      - name: Build @edgedb/auth-sveltekit
-        run: yarn workspace @edgedb/auth-sveltekit run build
 
       - id: check_publish_auth_sveltekit
         name: Dry-run publish '@edgedb/auth-sveltekit' to npm
@@ -310,9 +292,6 @@ jobs:
 
       # @edgedb/create
 
-      - name: Build @edgedb/create
-        run: yarn workspace @edgedb/create run build
-
       - id: check_publish_create
         name: Dry-run publish '@edgedb/create' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
@@ -349,9 +328,6 @@ jobs:
           prerelease: false
 
       # @edgedb/ai
-
-      - name: Build @edgedb/ai
-        run: yarn workspace @edgedb/ai run build
 
       - id: check_publish_ai
         name: Dry-run publish '@edgedb/ai' to npm
