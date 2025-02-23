@@ -33,7 +33,7 @@
     "prepare": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@gel/auth-core": "0.3.0"
+    "@gel/auth-core": "^0.3.0-rc"
   },
   "devDependencies": {
     "typescript": "^5.5.2"

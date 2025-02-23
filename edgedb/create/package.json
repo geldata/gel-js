@@ -25,7 +25,7 @@
     "prepare": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@gel/create": "0.3.0"
+    "@gel/create": "^0.3.0-rc"
   },
   "devDependencies": {
     "typescript": "^5.5.2"

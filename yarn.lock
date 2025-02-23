@@ -823,14 +823,6 @@
     picocolors "^1.0.0"
     sisteransi "^1.0.5"
 
-"@edgedb/generate@*":
-  version "0.5.6"
-  resolved "https://registry.yarnpkg.com/@edgedb/generate/-/generate-0.5.6.tgz#b70a2b99f22c9eb7aaf0a4d00e8c3a1aa39e93ae"
-  integrity sha512-Nmd4ibgN3M7qxxHsOyB9NERp03449BfV+W7CWCpIE/tcvBr19GynoT5yI3k55k5NKzzstATwKtV+wVHXiOgizw==
-  dependencies:
-    "@iarna/toml" "^2.2.5"
-    debug "^4.3.4"
-
 "@emnapi/runtime@^1.2.0":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@emnapi/runtime/-/runtime-1.3.1.tgz#0fcaa575afc31f455fd33534c19381cfce6c6f60"
@@ -3127,17 +3119,6 @@ eastasianwidth@^0.2.0:
   version "0.2.0"
   resolved "https://registry.npmjs.org/eastasianwidth/-/eastasianwidth-0.2.0.tgz"
   integrity sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==
-
-edgedb@*:
-  version "1.5.12"
-  resolved "https://registry.yarnpkg.com/edgedb/-/edgedb-1.5.12.tgz#fa791f76fea10456be3e9386cc20ae24ee935335"
-  integrity sha512-IZHCAyKmdSpLqGuM2oSrw0037Qr8Y0S5KoJYArsc5KYJCv10ScU7Uyr/b7pOd2UYWx8DBFSyTmMweIgFRVOdCQ==
-  dependencies:
-    debug "^4.3.4"
-    env-paths "^3.0.0"
-    semver "^7.6.2"
-    shell-quote "^1.8.1"
-    which "^4.0.0"
 
 ee-first@1.1.1:
   version "1.1.1"

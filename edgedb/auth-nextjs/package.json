@@ -33,7 +33,7 @@
     "prepare": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@gel/auth-nextjs": "0.4.0"
+    "@gel/auth-nextjs": "^0.4.0-rc"
   },
   "devDependencies": {
     "typescript": "^5.5.2"

@@ -19,7 +19,7 @@
     "build": "rm -rf dist && tsc && chmod +x dist/cli.js"
   },
   "dependencies": {
-    "@gel/generate": "1.0.0"
+    "@gel/generate": "^0.6.0-rc"
   },
   "devDependencies": {
     "typescript": "^5.5.2"
