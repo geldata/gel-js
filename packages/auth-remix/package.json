@@ -23,11 +23,11 @@
   "devDependencies": {
     "@repo/tsconfig": "*",
     "@types/node": "^20.12.13",
-    "gel": "^2.0.0-rc",
+    "gel": "^2.0.0",
     "typescript": "^5.5.2"
   },
   "peerDependencies": {
-    "gel": "^2.0.0-rc"
+    "gel": "^2.0.0"
   },
   "dependencies": {
     "@gel/auth-core": "^0.3.0-rc",
