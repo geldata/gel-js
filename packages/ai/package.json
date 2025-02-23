@@ -1,7 +1,7 @@
 {
   "name": "@gel/ai",
   "description": "Helper library for the Gel AI extension",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0",
   "author": "Gel <info@geldata.com>",
   "type": "module",
   "repository": {

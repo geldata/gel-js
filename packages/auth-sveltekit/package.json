@@ -1,7 +1,7 @@
 {
   "name": "@gel/auth-sveltekit",
   "description": "Helper library to integrate the Gel Auth extension with Sveltekit.",
-  "version": "0.3.0-rc.1",
+  "version": "0.3.0",
   "author": "Gel <info@geldata.com>",
   "type": "module",
   "repository": {

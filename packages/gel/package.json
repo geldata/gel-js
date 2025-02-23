@@ -1,6 +1,6 @@
 {
   "name": "gel",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0",
   "description": "The official Node.js client library for Gel",
   "homepage": "https://geldata.com/docs",
   "author": "Gel <info@geldata.com>",

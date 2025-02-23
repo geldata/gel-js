@@ -1,7 +1,7 @@
 {
   "name": "@gel/auth-nextjs",
   "description": "Helper library to integrate the Gel Auth extension with Next.js",
-  "version": "0.4.0-rc.1",
+  "version": "0.4.0",
   "author": "Gel <info@geldata.com>",
   "repository": {
     "type": "git",

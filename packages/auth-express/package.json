@@ -1,7 +1,7 @@
 {
   "name": "@gel/auth-express",
   "description": "Helper library to integrate the Gel Auth extension with Express",
-  "version": "0.3.0-rc.1",
+  "version": "0.3.0",
   "type": "module",
   "author": "Gel <info@geldata.com>",
   "repository": {
