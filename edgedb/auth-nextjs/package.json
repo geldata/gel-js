@@ -14,14 +14,9 @@
   "mauth-nextjsn": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "default": "./dist/*.js"
-    }
+    "./app": "./dist/app/index.js",
+    "./app/client": "./dist/app/client.js",
+    "./pages/*": "./dist/pages/*.js"
   },
   "files": [
     "dist",
