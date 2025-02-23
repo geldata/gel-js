@@ -11,13 +11,9 @@
   },
   "license": "Apache-2.0",
   "sideEffects": false,
-  "mauth-sveltekitn": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
     "./*": {
       "types": "./dist/*.d.ts",
       "default": "./dist/*.js"
@@ -33,7 +29,7 @@
     "prepare": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@gel/auth-sveltekit": "0.3.0"
+    "@gel/auth-sveltekit": "^0.3.0-rc"
   },
   "devDependencies": {
     "typescript": "^5.5.2"

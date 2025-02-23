@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
+    "edgedb/*",
     "integration-tests/*"
   ],
   "packageManager": "yarn@1.22.19",
