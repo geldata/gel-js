@@ -70,7 +70,7 @@ You can now access the server auth in all actions and load functions through `ev
 // src/hooks.server.ts
 import serverAuth, {
   type AuthRouteHandlers,
-} from "@edgedb/auth-sveltekit/server";
+} from "@gel/auth-sveltekit/server";
 import { redirect, type Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { client } from "$lib/server/auth";
@@ -94,7 +94,7 @@ const authRouteHandlers: AuthRouteHandlers = {
     redirect(303, "/");
   },
   onSignout() {
-    redirect("/");
+    redirect(303, "/");
   },
 };
 
