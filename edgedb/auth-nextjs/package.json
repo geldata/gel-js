@@ -1,6 +1,6 @@
 {
   "name": "@edgedb/auth-nextjs",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "This package has been renamed to @gel/auth-nextjs. Please update your dependencies.",
   "author": "Gel <info@geldata.com>",
   "type": "module",
@@ -32,6 +32,5 @@
   },
   "devDependencies": {
     "typescript": "^5.5.2"
-  },
-  "deprecated": "This package has been renamed to @gel/auth-nextjs"
+  }
 }

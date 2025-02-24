@@ -1,6 +1,6 @@
 {
   "name": "@edgedb/ai",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "This package has been renamed to @gel/ai. Please update your dependencies.",
   "author": "Gel <info@geldata.com>",
   "type": "module",
@@ -37,6 +37,5 @@
   },
   "devDependencies": {
     "typescript": "^5.5.2"
-  },
-  "deprecated": "This package has been renamed to @gel/ai"
+  }
 }

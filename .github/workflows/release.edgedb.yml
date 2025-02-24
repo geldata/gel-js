@@ -30,9 +30,6 @@ jobs:
 
       # edgedb
 
-      - name: Copy readme
-        run: cp README.md edgedb/edgedb/README.md
-
       - id: check_publish_driver
         name: Dry-run publish 'edgedb' to npm
         uses: JS-DevTools/npm-publish@4b07b26a2f6e0a51846e1870223e545bae91c552
