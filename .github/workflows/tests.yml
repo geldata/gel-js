@@ -24,14 +24,13 @@ jobs:
           - os: ubuntu-latest
             node-version: "22"
             gel-version: "nightly"
-          # Upcoming server
-          - os: ubuntu-latest
-            node-version: "22"
-            gel-version: "6.0-rc.2"
           # LTS server
           - os: ubuntu-latest
             node-version: "22"
             gel-version: "4"
+          - os: ubuntu-latest
+            node-version: "22"
+            gel-version: "5"
           # macOS
           # - os: macos-latest
           #   node-version: "22"
@@ -84,13 +83,13 @@ jobs:
           yarn ci:test
 
       - name: Run query builder integration tests lts
-        if: ${{ matrix.gel-version == '4' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' || matrix.gel-version == '6.0-rc.2' }}
+        if: ${{ matrix.gel-version == '4' || matrix.gel-version == '5' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-lts
           turbo run bench:types --filter=@gel/integration-lts || echo "Benchmark types script failed, proceeding anyway."
 
       - name: Run query builder integration tests stable
-        if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' || matrix.gel-version == '6.0-rc.2' }}
+        if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-stable
 
