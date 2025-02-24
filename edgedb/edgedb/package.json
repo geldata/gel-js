@@ -1,6 +1,6 @@
 {
   "name": "edgedb",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "This package has been renamed to gel. Please update your dependencies.",
   "author": "Gel <info@geldata.com>",
   "repository": {
@@ -33,6 +33,5 @@
   },
   "devDependencies": {
     "typescript": "^5.5.2"
-  },
-  "deprecated": "This package has been renamed to gel"
+  }
 }

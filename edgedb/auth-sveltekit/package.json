@@ -1,6 +1,6 @@
 {
   "name": "@edgedb/auth-sveltekit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "This package has been renamed to @gel/auth-sveltekit. Please update your dependencies.",
   "author": "Gel <info@geldata.com>",
   "type": "module",
@@ -33,6 +33,5 @@
   },
   "devDependencies": {
     "typescript": "^5.5.2"
-  },
-  "deprecated": "This package has been renamed to @gel/auth-sveltekit"
+  }
 }
