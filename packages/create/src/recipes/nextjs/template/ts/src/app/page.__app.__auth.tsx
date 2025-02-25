@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import { auth } from "@/gel";
 
 export default async function Home() {
-  const session = auth.getSession();
+  const session = await auth.getSession();
 
   const signedIn = await session.isSignedIn();
 
