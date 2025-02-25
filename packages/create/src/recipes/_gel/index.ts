@@ -76,7 +76,7 @@ const recipe: Recipe<GelOptions> = {
       logger("Adding auth extension to project");
 
       spinner.start("Enabling auth extension in Gel schema");
-      const filePath = path.resolve(projectDir, "./dbschema/default.esdl");
+      const filePath = path.resolve(projectDir, "./dbschema/default.gel");
       const data = await fs.readFile(filePath, "utf8");
       await fs.writeFile(filePath, `using extension auth;\n\n${data}`);
       spinner.stop("Auth extension enabled in Gel schema");
