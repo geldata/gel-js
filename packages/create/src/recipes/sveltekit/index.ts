@@ -79,7 +79,7 @@ const recipe: Recipe<SveltekitOptions> = {
       },
       dependencies: {
         ...(useGelAuth && {
-          "@gel/auth-sveltekit": "^0.1.1",
+          "@gel/auth-sveltekit": "^0.3.0",
         }),
       },
       devDependencies: {
