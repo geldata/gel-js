@@ -37,7 +37,7 @@ const recipe: Recipe = {
         typecheck: "tsc",
       },
       dependencies: {
-        ...(useGelAuth ? { "@gel/auth-remix": "^0.1.0" } : {}),
+        ...(useGelAuth ? { "@gel/auth-remix": "^0.3.0" } : {}),
         react: "^18",
         "react-dom": "^18",
         "@remix-run/css-bundle": "*",

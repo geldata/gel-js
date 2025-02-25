@@ -97,7 +97,7 @@ const recipe: Recipe<NextjsOptions> = {
         lint: "next lint",
       },
       dependencies: {
-        ...(useGelAuth ? { "@gel/auth-nextjs": "^0.1.0" } : {}),
+        ...(useGelAuth ? { "@gel/auth-nextjs": "^0.4.0" } : {}),
         gel: "^2.0.0",
         react: "^19.0.0",
         "react-dom": "^19.0.0",
