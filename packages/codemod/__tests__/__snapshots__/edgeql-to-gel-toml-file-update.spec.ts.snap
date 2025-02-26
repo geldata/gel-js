@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`rename-toml transform should rename edgedb.toml file to gel.toml 1`] = `
+"[instance]
+version = "x""
+`;
