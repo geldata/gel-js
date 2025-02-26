@@ -4,7 +4,7 @@ import * as glob from 'glob';
 
 async function updateTomlContent(content: string): Promise<string> {
   return content
-    .replace(/\[edgedb\]/g, '[gel]');
+    .replace(/\[edgedb\]/g, '[instance]');
 }
 
 async function processTomlFile(filePath: string): Promise<string[]> {

@@ -5,7 +5,7 @@ import pc from "picocolors";
 import * as glob from "glob";
 import path from "node:path";
 import { run } from "jscodeshift/src/Runner.js";
-import { findAndUpdateFileExtensions } from "./scripts/esdledgeql-to-gel-file-extensions-update.js";
+import { findAndUpdateFileExtensions } from "./scripts/esdl-to-gel-file-extensions-update.js";
 import { findAndUpdatePackageJson } from "./scripts/package-json-update.js";
 import { findAndUpdateToml } from "./scripts/edgeql-to-gel-toml-file-update.js";
 
