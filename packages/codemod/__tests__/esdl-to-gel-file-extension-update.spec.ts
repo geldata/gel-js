@@ -20,7 +20,7 @@ describe('ESDL to GEL Extension Update Script', () => {
 
     await findAndUpdateFileExtensions('/root');
 
-    expect(mockGlob.sync).toHaveBeenCalledWith('**/*.{esdl}', {
+    expect(mockGlob.sync).toHaveBeenCalledWith('**/*.esdl', {
       cwd: '/root',
       ignore: ['**/node_modules/**'],
       absolute: true

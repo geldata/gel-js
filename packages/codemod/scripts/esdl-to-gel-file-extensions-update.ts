@@ -18,7 +18,7 @@ async function updateEsdlToGelExt(filePath: string): Promise<string[]> {
 
 export async function findAndUpdateFileExtensions(rootDir: string) {
   try {
-    const files = glob.sync('**/*.{esdl}', {
+    const files = glob.sync('**/*.esdl', {
       cwd: rootDir,
       ignore: ['**/node_modules/**'],
       absolute: true
