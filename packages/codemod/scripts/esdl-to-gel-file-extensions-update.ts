@@ -5,8 +5,8 @@ async function updateEsdlToGelExt(filePath: string): Promise<string[]> {
   const changes: string[] = [];
 
   try {
-    await fs.rename(filePath, filePath.replace(/\.(esdl|edgeql)$/, '.gel'));
-    changes.push(`Updated file extension from .esdl and .edgeql to .gel`);
+    await fs.rename(filePath, filePath.replace(/\.(esdl)$/, '.gel'));
+    changes.push(`Updated file extension from .esdl to .gel`);
 
     return changes;
   }
@@ -18,14 +18,14 @@ async function updateEsdlToGelExt(filePath: string): Promise<string[]> {
 
 export async function findAndUpdateFileExtensions(rootDir: string) {
   try {
-    const files = glob.sync('**/*.{esdl,edgeql}', {
+    const files = glob.sync('**/*.{esdl}', {
       cwd: rootDir,
       ignore: ['**/node_modules/**'],
       absolute: true
     });
 
     console.log(`Found ${files.length} ${files.length === 1 ? 'file' : 'files'
-      } with .esdl/.edgeql extension`);
+      } with .esdl extension`);
 
     for (const file of files) {
       console.log(`Processing ${file}...`);
