@@ -45,7 +45,7 @@ export function generateOperatorFunctions({
       code.writeln([t`${returnType}`]);
     },
     (code, _opName, opDefs) => {
-      code.writeln([r`__name__: ${quote(opDefs[0].originalName)},`]);
+      code.writeln([r`__name__: ${quote(opDefs[0]!.originalName)},`]);
       code.writeln([r`__opkind__: kind,`]);
       code.writeln([r`__args__: positionalArgs,`]);
     },
@@ -254,7 +254,7 @@ function operatorFromOpDef(
     if (opDef.anytypes?.kind === "noncastable") {
       return {
         kind: OperatorKind.Infix,
-        args: frag`infixOperandsBaseType<${typeToCodeFragment(lhs)}>`,
+        args: frag`infixOperandsBaseType<${typeToCodeFragment(lhs!)}>`,
         returnElement: "BASE_TYPE",
         returnCardinality: "COALESCE",
         operatorSymbol,
@@ -264,7 +264,7 @@ function operatorFromOpDef(
     ) {
       return {
         kind: OperatorKind.Infix,
-        args: frag`{ lhs: ${typeToCodeFragment(lhs)}, rhs: ${typeToCodeFragment(rhs)} }`,
+        args: frag`{ lhs: ${typeToCodeFragment(lhs!)}, rhs: ${typeToCodeFragment(rhs!)} }`,
         returnElement: "MERGE",
         returnCardinality: "COALESCE",
         operatorSymbol,
@@ -272,7 +272,7 @@ function operatorFromOpDef(
     } else {
       return {
         kind: OperatorKind.Infix,
-        args: frag`{ lhs: ${typeToCodeFragment(lhs)}, rhs: ${typeToCodeFragment(rhs)} }`,
+        args: frag`{ lhs: ${typeToCodeFragment(lhs!)}, rhs: ${typeToCodeFragment(rhs!)} }`,
         returnElement: "CONTAINER",
         returnCardinality: "COALESCE",
         operatorSymbol,
@@ -287,7 +287,7 @@ function operatorFromOpDef(
     const [operand] = opDef.params.positional;
     const returnCardinality = getReturnCardinality(
       opDef.name,
-      [{ ...operand, genTypeName: "Operand" }],
+      [{ ...operand!, genTypeName: "Operand" }],
       opDef.return_typemod,
       false,
     );
@@ -296,7 +296,7 @@ function operatorFromOpDef(
       // Predicate
       return {
         kind: OperatorKind.Prefix,
-        operand: typeToCodeFragment(operand),
+        operand: typeToCodeFragment(operand!),
         operatorSymbol,
         returnElement: "BOOLEAN",
         returnCardinality:
@@ -309,7 +309,7 @@ function operatorFromOpDef(
       // Homogenous
       return {
         kind: OperatorKind.Prefix,
-        operand: typeToCodeFragment(operand),
+        operand: typeToCodeFragment(operand!),
         operatorSymbol,
         returnElement: "HOMOGENEOUS",
         returnCardinality: "PARAM",
@@ -321,25 +321,25 @@ function operatorFromOpDef(
     const getArgsFromAnytypes = () => {
       if (opDef.anytypes && opDef.anytypes.kind === "noncastable") {
         if (opDef.anytypes.typeObj.kind === "range") {
-          return frag`infixOperandsRangeType<${typeToCodeFragment(lhsType)}>`;
+          return frag`infixOperandsRangeType<${typeToCodeFragment(lhsType!)}>`;
         } else if (opDef.anytypes.typeObj.kind === "multirange") {
-          return frag`infixOperandsMultiRangeType<${typeToCodeFragment(lhsType)}>`;
+          return frag`infixOperandsMultiRangeType<${typeToCodeFragment(lhsType!)}>`;
         } else if (opDef.anytypes.typeObj.kind === "array") {
           return frag`infixOperandsArrayTypeNonArray<${typeToCodeFragment(
-            lhsType,
+            lhsType!,
           )}>`;
         } else if (opDef.anytypes.typeObj.kind === "unknown") {
-          return frag`infixOperandsBaseType<${typeToCodeFragment(lhsType)}>`;
+          return frag`infixOperandsBaseType<${typeToCodeFragment(lhsType!)}>`;
         }
       }
 
-      return frag`{ lhs: ${typeToCodeFragment(lhsType)}; rhs: ${typeToCodeFragment(rhsType)} }`;
+      return frag`{ lhs: ${typeToCodeFragment(lhsType!)}; rhs: ${typeToCodeFragment(rhsType!)} }`;
     };
     const _returnCardinality = getReturnCardinality(
       opDef.name,
       [
-        { ...lhsType, genTypeName: "LHS" },
-        { ...rhsType, genTypeName: "RHS" },
+        { ...lhsType!, genTypeName: "LHS" },
+        { ...rhsType!, genTypeName: "RHS" },
       ],
       opDef.return_typemod,
       false,
@@ -349,16 +349,16 @@ function operatorFromOpDef(
         _returnCardinality.type === "MULTIPLY"
           ? _returnCardinality.params.every((p) => p.type === "OPTIONAL")
             ? "MULTIPLY_OPTIONAL"
-            : _returnCardinality.params[1].type === "ONE"
+            : _returnCardinality.params[1]?.type === "ONE"
               ? "MULTIPLY_ONE"
               : "MULTIPLY"
           : "MULTIPLY";
 
-      if (lhsType.type.kind === "scalar") {
+      if (lhsType?.type.kind === "scalar") {
         // Scalar
         return {
           kind: OperatorKind.Infix,
-          args: frag`{ lhs: ${typeToCodeFragment(lhsType)}, rhs: ${typeToCodeFragment(rhsType)} }`,
+          args: frag`{ lhs: ${typeToCodeFragment(lhsType)}, rhs: ${typeToCodeFragment(rhsType!)} }`,
           operatorSymbol,
           returnElement: "BOOLEAN",
           returnCardinality,
@@ -375,7 +375,7 @@ function operatorFromOpDef(
       }
     }
 
-    if (lhsType.type.kind === "scalar") {
+    if (lhsType?.type.kind === "scalar") {
       // Scalar
       return {
         kind: OperatorKind.Infix,
@@ -471,7 +471,7 @@ function operatorFromOpDef(
     if (anytypeIsBaseType) {
       return {
         kind: OperatorKind.Ternary,
-        args: frag`infixOperandsBaseType<${typeToCodeFragment(lhs)}>`,
+        args: frag`infixOperandsBaseType<${typeToCodeFragment(lhs!)}>`,
         operatorSymbol,
         returnElement: "BASE_TYPE",
       };
@@ -482,7 +482,7 @@ function operatorFromOpDef(
     ) {
       return {
         kind: OperatorKind.Ternary,
-        args: frag`{ lhs: ${typeToCodeFragment(lhs)}, rhs: ${typeToCodeFragment(rhs)} }`,
+        args: frag`{ lhs: ${typeToCodeFragment(lhs!)}, rhs: ${typeToCodeFragment(rhs!)} }`,
         operatorSymbol,
         returnElement: "MERGE",
       };
@@ -490,7 +490,7 @@ function operatorFromOpDef(
 
     return {
       kind: OperatorKind.Ternary,
-      args: frag`{ lhs: ${typeToCodeFragment(lhs)}, rhs: ${typeToCodeFragment(rhs)} }`,
+      args: frag`{ lhs: ${typeToCodeFragment(lhs!)}, rhs: ${typeToCodeFragment(rhs!)} }`,
       operatorSymbol,
       returnElement: "CONTAINER",
     };
@@ -605,8 +605,8 @@ export function generateOperators({
       _opDefs.map((opDef) => ({
         return_type: opDef.return_type,
         return_typemod: opDef.return_typemod,
-        params0: opDef.params[0].type,
-        params0_typemod: opDef.params[0].typemod,
+        params0: opDef.params[0]?.type,
+        params0_typemod: opDef.params[0]?.typemod,
         params1: opDef.params[1]?.type,
         params1_typemod: opDef.params[1]?.typemod,
         params2: opDef.params[2]?.type,
@@ -629,11 +629,11 @@ export function generateOperators({
           : splitName(opDef.originalName).name.toLowerCase();
 
       if (opDef.overloadIndex === overloadIndex) {
-        if (!overloadDefs[opDef.operator_kind][opSymbol]) {
-          overloadDefs[opDef.operator_kind][opSymbol] = [];
+        if (!overloadDefs[opDef.operator_kind]![opSymbol]) {
+          overloadDefs[opDef.operator_kind]![opSymbol] = [];
         }
 
-        overloadDefs[opDef.operator_kind][opSymbol].push(
+        overloadDefs[opDef.operator_kind]![opSymbol]!.push(
           generateFuncopDef(opDef),
         );
 
@@ -1244,10 +1244,10 @@ export function generateOperators({
     for (const opKind of Object.keys(overloadDefs)) {
       code.writeln([r`${opKind}: {`]);
       code.indented(() => {
-        for (const symbol of Object.keys(overloadDefs[opKind])) {
+        for (const symbol of Object.keys(overloadDefs[opKind]!)) {
           code.writeln([r`${quote(symbol)}: [`]);
           code.indented(() => {
-            for (const overloadDef of overloadDefs[opKind][symbol]) {
+            for (const overloadDef of overloadDefs[opKind]![symbol]!) {
               code.writeln([r`${overloadDef},`]);
             }
           });

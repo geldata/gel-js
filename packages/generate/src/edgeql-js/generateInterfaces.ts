@@ -29,7 +29,7 @@ export const generateInterfaces = (params: GenerateInterfacesParams) => {
 
     if (!module) {
       const modParts = mod.split("::");
-      const modName = modParts[modParts.length - 1];
+      const modName = modParts.at(-1)!;
       const parentModName = modParts.slice(0, -1).join("::");
       const parent = parentModName ? getModule(parentModName) : null;
       const internalName = makePlainIdent(modName);

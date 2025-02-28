@@ -75,7 +75,7 @@ export function generateFuncopTypes<F extends FuncopDef>(
   dir: DirBuilder,
   types: $.introspect.Types,
   casts: $.introspect.Casts,
-  funcops: $.StrictMap<string, F[]>,
+  funcops: $.StrictMap<string, [F, ...F[]]>,
   funcopExprKind: string,
   typeDefSuffix: string,
   optionalUndefined: boolean,
@@ -398,7 +398,7 @@ export function generateFuncopTypes<F extends FuncopDef>(
     code.indented(() => {
       code.writeln([
         r`const {${
-          funcDefs[0].kind ? "kind, " : ""
+          funcDefs[0]?.kind ? "kind, " : ""
         }returnType, cardinality, args: positionalArgs, namedArgs} = _.syntax.$resolveOverload('${funcName}', args, _.spec, [`,
       ]);
       code.indented(() => {
@@ -519,8 +519,8 @@ export function getReturnCardinality(
     return {
       type: "MERGE",
       params: [
-        { type: "PARAM", param: params[0].genTypeName },
-        { type: "PARAM", param: params[1].genTypeName },
+        { type: "PARAM", param: params[0]!.genTypeName },
+        { type: "PARAM", param: params[1]!.genTypeName },
       ],
     };
   }
@@ -529,8 +529,8 @@ export function getReturnCardinality(
     return {
       type: "COALESCE",
       params: [
-        { type: "PARAM", param: params[0].genTypeName },
-        { type: "PARAM", param: params[1].genTypeName },
+        { type: "PARAM", param: params[0]!.genTypeName },
+        { type: "PARAM", param: params[1]!.genTypeName },
       ],
     };
   }
@@ -538,16 +538,16 @@ export function getReturnCardinality(
   if (name === "std::distinct") {
     return {
       type: "IDENTITY",
-      param: { type: "PARAM", param: params[0].genTypeName },
+      param: { type: "PARAM", param: params[0]!.genTypeName },
     };
   }
 
   if (name === "std::if_else") {
     return {
       type: "IF_ELSE",
-      condition: { type: "PARAM", param: params[1].genTypeName },
-      trueBranch: { type: "PARAM", param: params[0].genTypeName },
-      falseBranch: { type: "PARAM", param: params[2].genTypeName },
+      condition: { type: "PARAM", param: params[1]!.genTypeName },
+      trueBranch: { type: "PARAM", param: params[0]!.genTypeName },
+      falseBranch: { type: "PARAM", param: params[2]!.genTypeName },
     };
   }
 
@@ -557,7 +557,7 @@ export function getReturnCardinality(
       with: "One",
       param: {
         type: "IDENTITY",
-        param: { type: "PARAM", param: params[0].genTypeName },
+        param: { type: "PARAM", param: params[0]!.genTypeName },
       },
     };
   }
@@ -592,7 +592,7 @@ export function getReturnCardinality(
   const cardinality: ReturnCardinality = paramCardinalities.length
     ? paramCardinalities.length > 1
       ? { type: "MULTIPLY", params: paramCardinalities }
-      : { type: "IDENTITY", param: paramCardinalities[0] }
+      : { type: "IDENTITY", param: paramCardinalities[0]! }
     : { type: "ONE" };
 
   return returnTypemod === "OptionalType" && !preservesOptionality
@@ -663,7 +663,7 @@ function renderCardinality(card: ReturnCardinality): string {
         .reduce(
           (cards, card) =>
             `$.cardutil.multiplyCardinalities<${cards}, ${renderParamCardinality(card)}>`,
-          renderParamCardinality(card.params[0]),
+          renderParamCardinality(card.params[0]!),
         );
     }
     default: {

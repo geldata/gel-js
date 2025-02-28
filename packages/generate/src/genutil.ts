@@ -210,7 +210,7 @@ export function toTSScalarType(
       }
 
       if (
-        type.tuple_elements[0].name &&
+        type.tuple_elements[0]?.name &&
         Number.isNaN(parseInt(type.tuple_elements[0].name, 10))
       ) {
         // a named tuple
@@ -353,7 +353,7 @@ export function frag(
 ) {
   const frags: CodeFragment[] = [];
   for (let i = 0; i < strings.length; i++) {
-    frags.push(strings[i]);
+    frags.push(strings[i]!);
     if (exprs[i]) {
       if (Array.isArray(exprs[i])) {
         frags.push(...(exprs[i] as CodeFragment[]));

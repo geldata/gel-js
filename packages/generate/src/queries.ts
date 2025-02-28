@@ -74,10 +74,10 @@ currently supported.`);
             if (!filesByExtension[f.extension]) {
               filesByExtension[f.extension] = f;
             } else {
-              filesByExtension[f.extension].contents += `\n\n` + f.contents;
-              filesByExtension[f.extension].imports = filesByExtension[
+              filesByExtension[f.extension]!.contents += `\n\n` + f.contents;
+              filesByExtension[f.extension]!.imports = filesByExtension[
                 f.extension
-              ].imports.merge(f.imports);
+              ]!.imports.merge(f.imports);
             }
           }
         } catch (err) {
@@ -205,7 +205,7 @@ export function generateFiles(params: {
     );
   }
   const functionName = baseFileName
-    .replace(/-[A-Za-z]/g, (m) => m[1].toUpperCase())
+    .replace(/-[A-Za-z]/g, (m) => m[1]!.toUpperCase())
     .replace(/^[^A-Za-z_]|\W/g, "_");
   const interfaceName =
     functionName.charAt(0).toUpperCase() + functionName.slice(1);

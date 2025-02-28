@@ -196,7 +196,7 @@ export const generateScalars = (params: GeneratorParams) => {
         t`type ${ref}λICastableTo = ${joinFrags(
           [
             ref,
-            ...casts.implicitCastFromMap[type.id].map((typeId) =>
+            ...casts.implicitCastFromMap[type.id]!.map((typeId) =>
               getRef(types.get(typeId).name),
             ),
           ],
