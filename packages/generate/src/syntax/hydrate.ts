@@ -111,7 +111,7 @@ function applySpecToAncestors(
 function getCommonPointers(arr: Record<string, any>[]): Record<string, any> {
   if (arr.length === 0) return {};
 
-  const firstObj = arr[0];
+  const firstObj = arr[0]!;
   const commonPointers: Record<string, any> = {};
 
   Object.keys(firstObj).forEach((key) => {

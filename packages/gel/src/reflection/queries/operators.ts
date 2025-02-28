@@ -44,7 +44,7 @@ const _operators = async (cxn: Executor) => {
     } filter not .internal and not .abstract
   `);
 
-  const operators = new StrictMap<string, OperatorDef[]>();
+  const operators = new StrictMap<string, [OperatorDef, ...OperatorDef[]]>();
 
   const seenOpDefHashes = new Set<string>();
 
@@ -60,10 +60,6 @@ const _operators = async (cxn: Executor) => {
     const { mod } = util.splitName(op.name);
 
     const name = `${mod}::${identifier}`;
-
-    if (!operators.has(name)) {
-      operators.set(name, []);
-    }
 
     const opDef: OperatorDef = {
       ...op,
@@ -81,7 +77,11 @@ const _operators = async (cxn: Executor) => {
     const hash = hashOpDef(opDef);
 
     if (!seenOpDefHashes.has(hash)) {
-      operators.get(name).push(opDef);
+      if (!operators.has(name)) {
+        operators.set(name, [opDef]);
+      } else {
+        operators.get(name)!.push(opDef);
+      }
       seenOpDefHashes.add(hash);
     }
   }

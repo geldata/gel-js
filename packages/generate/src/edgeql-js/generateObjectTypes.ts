@@ -101,7 +101,7 @@ export const getStringRepresentation: (
       })`,
     };
   } else if (type.kind === "tuple") {
-    const isNamed = type.tuple_elements[0].name !== "0";
+    const isNamed = type.tuple_elements[0]?.name !== "0";
     if (isNamed) {
       const itemsStatic = joinFrags(
         type.tuple_elements.map(
@@ -328,8 +328,8 @@ export const generateObjectTypes = (params: GeneratorParams) => {
     for (const ex of type.exclusives) {
       body.writeln([
         t`  {`,
-        ...Object.keys(ex).map((key) => {
-          const target = types.get(ex[key].target_id);
+        ...Object.entries(ex).map(([key, value]) => {
+          const target = types.get(value.target_id);
           const { staticType } = getStringRepresentation(target, { types });
           const card = `$.Cardinality.One | $.Cardinality.AtMostOne `;
           return t`${key}: {__element__: ${staticType}, __cardinality__: ${card}},`;

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "preserveSymlinks": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": false
   },
   "include": ["**/*.ts"],

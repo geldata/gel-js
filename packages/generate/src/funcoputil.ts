@@ -50,9 +50,9 @@ export function expandFuncopAnytypeOverloads<F extends FuncopDef>(
           anytypes: {
             kind: "noncastable" as const,
             type: [getRef("std::anypoint")],
-            typeObj: anypointParams[0].type,
-            refName: anypointParams[0].typeName,
-            refPath: findPathOfAnytype(anypointParams[0].type.id, types),
+            typeObj: anypointParams[0]!.type,
+            refName: anypointParams[0]!.typeName,
+            refPath: findPathOfAnytype(anypointParams[0]!.type.id, types),
           },
         },
       ];
@@ -67,9 +67,9 @@ export function expandFuncopAnytypeOverloads<F extends FuncopDef>(
           anytypes: {
             kind: "noncastable" as const,
             type: ["$.ObjectType"],
-            typeObj: anyobjectParams[0].type,
-            refName: anyobjectParams[0].typeName,
-            refPath: findPathOfAnytype(anyobjectParams[0].type.id, types),
+            typeObj: anyobjectParams[0]!.type,
+            refName: anyobjectParams[0]!.typeName,
+            refPath: findPathOfAnytype(anyobjectParams[0]!.type.id, types),
           },
         },
       ];
@@ -108,9 +108,9 @@ export function expandFuncopAnytypeOverloads<F extends FuncopDef>(
         anytypes: {
           kind: "noncastable" as const,
           type: [hasArrayType ? "$.NonArrayType" : "$.BaseType"],
-          typeObj: anytypeParams[0].type,
-          refName: anytypeParams[0].typeName,
-          refPath: findPathOfAnytype(anytypeParams[0].type.id, types),
+          typeObj: anytypeParams[0]!.type,
+          refName: anytypeParams[0]!.typeName,
+          refPath: findPathOfAnytype(anytypeParams[0]!.type.id, types),
         },
       };
 
@@ -236,7 +236,7 @@ function _findPathOfAnytype(
       return `["__element__"]${elPath}`;
     }
   } else if (type.kind === "tuple") {
-    const isNamed = type.tuple_elements[0].name !== "0";
+    const isNamed = type.tuple_elements[0]!.name !== "0";
     for (const { name, target_id } of type.tuple_elements) {
       const elPath = _findPathOfAnytype(target_id, types);
       if (elPath) {

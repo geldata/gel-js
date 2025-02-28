@@ -111,7 +111,7 @@ const run = async () => {
     if (flag.startsWith("--")) {
       if (flag.includes("=")) {
         const [f, ...v] = flag.split("=");
-        flag = f;
+        flag = f!;
         val = v.join("=");
       }
     } else if (flag.startsWith("-")) {
@@ -235,7 +235,7 @@ const run = async () => {
         ) {
           options.file = getVal();
         } else if (generator === Generator.Queries) {
-          if (args.length > 0 && args[0][0] !== "-") {
+          if (args.length > 0 && args[0]![0] !== "-") {
             options.file = getVal();
           } else {
             options.file = path.join(schemaDir, "queries");

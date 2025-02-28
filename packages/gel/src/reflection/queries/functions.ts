@@ -53,16 +53,12 @@ export const functions = async (cxn: Executor) => {
     } filter .internal = false
   `);
 
-  const functionMap = new StrictMap<string, FunctionDef[]>();
+  const functionMap = new StrictMap<string, [FunctionDef, ...FunctionDef[]]>();
 
   const seenFuncDefHashes = new Set<string>();
 
   for (const func of JSON.parse(functionsJson)) {
     const { name } = func;
-    if (!functionMap.has(name)) {
-      functionMap.set(name, []);
-    }
-
     const funcDef: FunctionDef = {
       ...func,
       description: func.annotations[0]?.["@value"],
@@ -73,7 +69,11 @@ export const functions = async (cxn: Executor) => {
     const hash = hashFuncDef(funcDef);
 
     if (!seenFuncDefHashes.has(hash)) {
-      functionMap.get(name).push(funcDef);
+      if (!functionMap.has(name)) {
+        functionMap.set(name, [funcDef]);
+      } else {
+        functionMap.get(name)!.push(funcDef);
+      }
       seenFuncDefHashes.add(hash);
     }
   }

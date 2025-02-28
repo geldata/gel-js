@@ -128,7 +128,7 @@ function getMod(fullname: string): string {
   return <string>fullname.split("::").slice(0, -1).join("::");
 }
 
-function getModAndName(fullname: string): string[] {
+function getModAndName(fullname: string): [string, string] {
   const mod = fullname.split("::");
   const name = <string>mod.pop();
   return [mod.join("::"), name];
@@ -238,7 +238,7 @@ function processLinks(types: JSONType[], modules: string[]): ProcessedSpec {
         const exclusive = link.exclusive;
         const sql_name = getSQLName(name);
 
-        const objtype = type_map[target];
+        const objtype = type_map[target]!;
         objtype.backlinks.push({
           name: `bk_${name}_${sql_source}`,
           fwname: name,
@@ -272,7 +272,7 @@ function processLinks(types: JSONType[], modules: string[]): ProcessedSpec {
 
           link_objects.push(lobj);
           link["has_link_object"] = true;
-          objtype["backlinks"][-1]["has_link_object"] = true;
+          objtype["backlinks"].at(-1)!["has_link_object"] = true;
         } else if (cardinality === "Many") {
           // Add a link table for One-to-Many and Many-to-Many
           link_tables.push({
@@ -395,7 +395,7 @@ class ModelGenerator {
     fs.writeFileSync(this.outfile, BASE_STUB + this.out.join("\n"));
   }
 
-  specToModulesDict(spec: ProcessedSpec) {
+  specToModulesDict(spec: ProcessedSpec): MappedSpec {
     const modules: { [key: string]: MappedSpec } = {};
 
     for (const mod of spec["modules"].sort()) {
@@ -405,7 +405,7 @@ class ModelGenerator {
     // convert link tables into full link objects
     for (const rec of spec.link_tables) {
       const mod = rec.module;
-      modules[mod].link_objects[rec.table] = {
+      modules[mod]!.link_objects[rec.table] = {
         module: mod,
         name: rec.name.replace(/_table$/, "_link"),
         table: rec.table,
@@ -431,15 +431,15 @@ class ModelGenerator {
 
     for (const rec of spec.link_objects) {
       const mod = rec.module;
-      modules[mod].link_objects[rec.table] = rec;
+      modules[mod]!.link_objects[rec.table] = rec;
     }
 
     for (const rec of spec.object_types) {
       const [mod, name] = getModAndName(rec.name);
-      modules[mod].object_types[name] = rec;
+      modules[mod]!.object_types[name] = rec;
     }
 
-    return modules["default"];
+    return modules["default"]!;
   }
 
   buildModels(maps: MappedSpec) {
@@ -489,7 +489,7 @@ class ModelGenerator {
     }
 
     for (const [table, rec] of Object.entries(maps.link_objects)) {
-      const [source, fwname] = table.split(".");
+      const [source, fwname] = table.split(".") as [string, string];
       const mod = new ModelClass(`${source}_${fwname}`);
       mod.table = table;
       mod.isLinkTable = true;
@@ -515,8 +515,8 @@ class ModelGenerator {
       mod.props["target_id"] = `String    @map("target")    @db.Uuid`;
 
       // Get source and target models and reconcile them with the link table
-      const src = modmap[source];
-      const tgt = modmap[target!];
+      const src = modmap[source]!;
+      const tgt = modmap[target!]!;
       const bkname = src.getBacklinkName(fwname, src.name);
 
       mod.links["target"] =
@@ -555,7 +555,7 @@ class ModelGenerator {
     const match = ARRAY_RE.exec(target);
     if (match) {
       is_array = true;
-      target = match[1];
+      target = match[1]!;
     }
 
     const type: string | undefined = GEL_SCALAR_MAP[target];
