@@ -286,7 +286,7 @@ export const generateCastMaps = (params: GeneratorParams) => {
             !type.enum_values &&
             !type.material_id &&
             !type.cast_type &&
-            !(scalarToLiteralMapping[type.name]?.literalKind)
+            !scalarToLiteralMapping[type.name]?.literalKind
           );
         })
         .map((scalar) => getRef(scalar.name)),
