@@ -104,7 +104,7 @@ export class NextAppAuth extends NextAuth {
         const cookieStore = await cookies();
         const verifier =
           cookieStore.get(this.options.pkceVerifierCookieName)?.value ||
-          cookieStore.get("edgedb-pkce-verifier")?.value;
+          cookieStore.get("gel-pkce-verifier")?.value;
         if (!verifier) {
           throw new PKCEError("no pkce verifier cookie found");
         }

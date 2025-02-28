@@ -121,13 +121,13 @@ export class ExpressAuth {
   private getVerifier(cookies: Record<string, string>) {
     return (
       cookies[this.options.pkceVerifierCookieName] ||
-      cookies["edgedb-pkce-verifier"]
+      cookies["gel-pkce-verifier"]
     );
   }
 
   private clearVerifierCookie(res: ExpressResponse) {
     res.clearCookie(this.options.pkceVerifierCookieName);
-    res.clearCookie("edgedb-pkce-verifier");
+    res.clearCookie("gel-pkce-verifier");
   }
 
   private clearAuthCookie(res: ExpressResponse) {

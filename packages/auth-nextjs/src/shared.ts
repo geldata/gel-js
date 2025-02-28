@@ -142,7 +142,7 @@ export abstract class NextAuth extends NextAuthHelpers {
   async deleteVerifierCookie() {
     const cookieStore = await cookies();
     cookieStore.delete(this.options.pkceVerifierCookieName);
-    cookieStore.delete("edgedb-pkce-verifier");
+    cookieStore.delete("gel-pkce-verifier");
   }
 
   async deleteAuthCookie() {
@@ -270,7 +270,7 @@ export abstract class NextAuth extends NextAuthHelpers {
       ) => {
         const verifier =
           req.cookies.get(this.options.pkceVerifierCookieName)?.value ||
-          req.cookies.get("edgedb-pkce-verifier")?.value;
+          req.cookies.get("gel-pkce-verifier")?.value;
 
         const params = await ctx.params;
         switch (params.auth.join("/")) {
@@ -744,7 +744,7 @@ export abstract class NextAuth extends NextAuthHelpers {
             try {
               const verifier =
                 req.cookies.get(this.options.pkceVerifierCookieName)?.value ||
-                req.cookies.get("edgedb-pkce-verifier")?.value;
+                req.cookies.get("gel-pkce-verifier")?.value;
               if (!verifier) {
                 throw new PKCEError("no pkce verifier cookie found");
               }

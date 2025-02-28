@@ -163,7 +163,7 @@ export class ServerRequestAuth extends ClientAuth {
 
   private deleteVerifierCookie() {
     deleteCookie(this.cookies, this.config.pkceVerifierCookieName);
-    deleteCookie(this.cookies, "edgedb-pkce-verifier");
+    deleteCookie(this.cookies, "gel-pkce-verifier");
   }
 
   private deleteAuthCookie() {
@@ -313,7 +313,7 @@ export class ServerRequestAuth extends ClientAuth {
   ): Promise<{ tokenData: TokenData }> {
     const verifier =
       this.cookies.get(this.config.pkceVerifierCookieName) ||
-      this.cookies.get("edgedb-pkce-verifier");
+      this.cookies.get("gel-pkce-verifier");
 
     if (!verifier) {
       throw new PKCEError("no pkce verifier cookie found");
@@ -494,13 +494,13 @@ async function handleAuthRoutes(
 
   function deleteVerifierCookie() {
     deleteCookie(cookies, config.pkceVerifierCookieName);
-    deleteCookie(cookies, "edgedb-pkce-verifier");
+    deleteCookie(cookies, "gel-pkce-verifier");
   }
 
   function getVerifierCookie() {
     return (
       cookies.get(config.pkceVerifierCookieName) ||
-      cookies.get("edgedb-pkce-verifier")
+      cookies.get("gel-pkce-verifier")
     );
   }
 

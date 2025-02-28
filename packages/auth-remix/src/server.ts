@@ -1095,7 +1095,7 @@ export class RemixServerAuth extends RemixClientAuth {
 }
 
 function deleteVerifierCookie(headers: Headers, verifierCookieName: string) {
-  const cookies = [verifierCookieName, "edgedb-pkce-verifier"];
+  const cookies = [verifierCookieName, "gel-pkce-verifier"];
   cookies.forEach((c) =>
     headers.append(
       "Set-Cookie",
@@ -1171,7 +1171,7 @@ function parseCookies(
   return {
     authCookie: parsed[options.authCookieName] || parsed["edgedb-session"],
     pkceVerifierCookie:
-      parsed[options.pkceVerifierCookieName] || parsed["edgedb-pkce-verifier"],
+      parsed[options.pkceVerifierCookieName] || parsed["gel-pkce-verifier"],
   };
 }
 
