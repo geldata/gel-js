@@ -15,11 +15,11 @@
   </a>
   <br />
   <br />
-  <a href="https://docs.geldata.com/get-started/quickstart">Quickstart</a>
+  <a href="https://docs.geldata.com/learn/quickstart/overview/nextjs">Quickstart</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://www.geldata.com">Website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://docs.geldata.com/libraries/js">Docs</a>
+  <a href="https://docs.geldata.com/reference/clients/js#gel-js-intro">Docs</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://discord.gg/umUueND6ag">Discord</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -32,7 +32,7 @@ This is the official [Gel](https://www.geldata.com) client library
 for JavaScript and TypeScript.
 
 If you're just getting started with Gel, we recommend going through the
-[Gel Quickstart](https://docs.geldata.com/get-started/quickstart) first. This walks
+[Gel Quickstart](https://docs.geldata.com/learn/quickstart/overview/nextjs) first. This walks
 you through the process of installing Gel, creating a simple schema, and
 writing some simple queries.
 
@@ -45,7 +45,7 @@ writing some simple queries.
 ## Basic usage
 
 > The examples below demonstrate only the most fundamental use cases for this
-> library. **[Go to the complete documentation site. >](https://docs.geldata.com/libraries/js)**
+> library. **[Go to the complete documentation site. >](https://docs.geldata.com/reference/clients/js#gel-js-intro)**
 
 ### Create a client
 
@@ -67,7 +67,7 @@ can determine how to connect to your database using the following mechanisms.
    command. As long as the file is within a project directory, `createClient`
    will be able to auto-discover the connection information of the project's
    associated instance. For more information on projects, follow the
-   [Using projects](https://docs.geldata.com/get-started/projects) guide.
+   [Using projects](https://docs.geldata.com/learn/projects) guide.
 
 2. _In production_: configure the connection using **environment variables**.
    (This can also be used during local development if you prefer.) The easiest
@@ -181,7 +181,7 @@ $ npx @gel/generate edgeql-js
 This will generate an EdgeQL query builder into the `./dbschema/edgeql-js`
 directory, as defined relative to your project root.
 
-For details on generating the query builder, refer to the [complete documentation](https://www.geldata.com/docs/clients/js/generation). Below is a simple `select` query as an example.
+For details on generating the query builder, refer to the [complete documentation](https://docs.geldata.com/reference/clients/js/querybuilder#generation). Below is a simple `select` query as an example.
 
 ```ts
 import { createClient } from "gel";
@@ -200,13 +200,13 @@ const result = await query.run(client);
 result.actors[0].name; // => Timothee Chalamet
 ```
 
-For details on using the query builder, refer to the full [query builder docs](https://www.geldata.com/docs/clients/js/querybuilder).
+For details on using the query builder, refer to the full [query builder docs](https://docs.geldata.com/reference/clients/js/querybuilder).
 
 ## Contribute
 
 Contributing to this library requires a local installation of Gel. Install
-Gel from [here](https://www.geldata.com/download) or
-[build it from source](https://docs.geldata.com/guides/contributing/code).
+Gel from [here](https://docs.geldata.com/learn/cli) or
+[build it from source](https://docs.geldata.com/resources/guides/contributing/code).
 
 ```bash
 $ git clone git@github.com:gel/gel-js.git
@@ -219,9 +219,9 @@ $ yarn run test       # run tests for all packages
 > In order to be able to run all tests you need to have `gel-server` in your
 > path. This can be done by either running tests from within a Python 3.12
 > virtual environment (you will have it if you built Gel locally), or by
-> [installing](https://docs.geldata.com/cli/gel_server/gel_server_install#ref-cli-gel-server-install)
+> [installing](https://docs.geldata.com/reference/cli/gel_server/gel_server_install)
 > specific Gel version and then adding its binary path to the `GEL_SERVER_BIN` environment variable.
-> Check [here](https://docs.geldata.com/cli/gel_server/gel_server_info#ref-cli-gel-server-info)
+> Check [here](https://docs.geldata.com/reference/cli/gel_server/gel_server_info)
 > to find how to get the binary path.
 
 ## License
