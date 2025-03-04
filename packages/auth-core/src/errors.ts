@@ -150,4 +150,3 @@ export class WebAuthnRegistrationFailedError extends UserError {
     return "WebAuthnRegistrationFailed";
   }
 }
-
