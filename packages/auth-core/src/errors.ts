@@ -143,3 +143,11 @@ export class WebAuthnAuthenticationFailedError extends UserError {
     return "WebAuthnAuthenticationFailed";
   }
 }
+
+/** WebAuthn registration failed. */
+export class WebAuthnRegistrationFailedError extends UserError {
+  get type() {
+    return "WebAuthnRegistrationFailed";
+  }
+}
+
