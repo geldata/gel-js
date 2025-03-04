@@ -1,6 +1,6 @@
 {
   "name": "@gel/generate",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Gel code generators for TS/JavaScript",
   "homepage": "https://geldata.com/docs",
   "author": "Gel <info@geldata.com>",
