@@ -61,7 +61,7 @@ export interface CreateAuthRouteHandlers {
   onWebAuthnSignUp(
     params: ParamsOrError<{ tokenData: TokenData | null }>,
     req: NextRequest,
-  ): Promise<NextResponse<SignupResponse>>;
+  ): Promise<Response>;
   onWebAuthnSignIn(
     params: ParamsOrError<{ tokenData: TokenData }>,
     req: NextRequest,
