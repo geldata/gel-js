@@ -5,6 +5,7 @@ import type { Codecs } from "./codecs/codecs";
 import { SQLRowModeArray } from "./codecs/record";
 import type { ReadonlyCodecMap, MutableCodecMap } from "./codecs/context";
 import { CodecContext, NOOP_CODEC_CONTEXT } from "./codecs/context";
+import type { Duration } from "./datatypes/datetime";
 
 export type BackoffFunction = (n: number) => number;
 
@@ -146,6 +147,16 @@ export interface CodecSpec {
   encode: (data: any) => any;
   decode: (data: any) => any;
 }
+
+export type SimpleConfig = Partial<{
+  session_idle_transaction_timeout: Duration;
+  query_execution_timeout: Duration;
+  allow_bare_ddl: "AlwaysAllow" | "NeverAllow";
+  allow_dml_in_functions: boolean;
+  allow_user_specified_id: boolean;
+  apply_access_policies: boolean;
+  [k: string]: unknown;
+}>;
 
 export type OptionsList = {
   module?: string;
@@ -345,7 +356,7 @@ export class Options {
     });
   }
 
-  withConfig(config: Record<string, any>): Options {
+  withConfig(config: SimpleConfig): Options {
     return this._cloneWith({ config });
   }
 

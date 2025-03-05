@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-import type { Duration } from "./datatypes/datetime";
 import type { Codecs } from "./codecs/codecs";
 import { CodecsRegistry } from "./codecs/registry";
 import type {
@@ -36,6 +35,7 @@ import {
 } from "./ifaces";
 import type {
   RetryOptions,
+  SimpleConfig,
   SimpleRetryOptions,
   SimpleTransactionOptions,
   TransactionOptions,
@@ -551,16 +551,6 @@ export interface ClientOptions {
 }
 
 export type ConnectOptions = ConnectConfig & ClientOptions;
-
-type SimpleConfig = Partial<{
-  session_idle_transaction_timeout: Duration;
-  query_execution_timeout: Duration;
-  allow_bare_ddl: "AlwaysAllow" | "NeverAllow";
-  allow_dml_in_functions: boolean;
-  allow_user_specified_id: boolean;
-  apply_access_policies: boolean;
-  [k: string]: unknown;
-}>;
 
 export class Client implements Executor {
   private pool: BaseClientPool;
