@@ -41,29 +41,19 @@ async function updatePackageJson(filePath: string): Promise<string[]> {
     }
 
     if (pkg.scripts) {
-      const updatedScripts: Record<string, string> = {};
-
       for (const [scriptName, scriptValue] of Object.entries(pkg.scripts)) {
         const updatedValue = (scriptValue as string).replace(
           /@edgedb\/generate/g,
           "@gel/generate",
         );
 
-
         if (updatedValue !== scriptValue) {
           modified = true;
-          updatedScripts[scriptName] = updatedValue;
+          pkg.scripts[scriptName] = updatedValue;
           changes.push(
             `Updated script "${scriptName}": ${scriptValue} -> ${updatedValue}`,
           );
         }
-      }
-
-      if (
-        Object.keys(updatedScripts).length > 0 &&
-        Object.keys(updatedScripts).length === Object.keys(pkg.scripts).length
-      ) {
-        pkg.scripts = updatedScripts;
       }
     }
 
