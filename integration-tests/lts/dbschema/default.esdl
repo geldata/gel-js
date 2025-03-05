@@ -217,6 +217,10 @@ module `💯💯💯` {
     using (
       SELECT <default::`🚀🚀🚀`>(`🤞` ++ 'Ł🙀')
     );
+
+  type `🚀` {
+    property `🙀` -> str;
+  }
 };
 
 module extra {
@@ -239,5 +243,11 @@ module User {
       property state -> str;
       property zip -> str;
     }
+  }
+}
+
+module `i.got.dots.doot` {
+  type Test {
+    property a: str;
   }
 }
