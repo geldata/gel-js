@@ -33,6 +33,16 @@ describe("object types", () => {
       e.default.Movie.__element__.__pointers__.characters.exclusive,
       false,
     );
+
+    assert.equal(
+      e["i.got.dots.doot"].Test.__element__.__pointers__["a"].target.__name__,
+      "std::str",
+    );
+
+    assert.equal(
+      e["💯💯💯"]["🚀"].__element__.__pointers__["🙀"].target.__name__,
+      "std::str",
+    );
   });
 
   test("link hydration", () => {
