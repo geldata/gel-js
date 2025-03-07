@@ -25,13 +25,7 @@
       ]
     },
     "ci:test": {
-      "dependsOn": [
-        "build",
-        "gel#test",
-        "@gel/generate#test:ci",
-        "@gel/auth-core#test",
-        "@gel/codemod#test"
-      ],
+      "dependsOn": ["build"],
       "env": ["CI", "GEL_SERVER_BIN"]
     },
     "ci:integration-test": {

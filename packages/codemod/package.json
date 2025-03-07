@@ -47,6 +47,7 @@
     "jscodeshift": "jscodeshift",
     "build": "tsc",
     "test": "jest",
+    "ci:test": "yarn test",
     "lint": "eslint --quiet",
     "lint:fix": "eslint --fix"
   }

@@ -48,6 +48,7 @@
     "lint": "eslint --quiet",
     "lint:fix": "eslint --fix",
     "test": "NODE_OPTIONS='--experimental-global-webcrypto' npx jest --detectOpenHandles",
+    "ci:test": "yarn test",
     "gen-errors": "edb gen-errors-json --client | node genErrors.mjs",
     "watch": "nodemon -e js,ts,tsx --ignore dist -x ",
     "dev": "yarn tsc --project tsconfig.json --incremental"
