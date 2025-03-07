@@ -128,7 +128,7 @@ export const getServerCommand = (
     "--port=auto",
     "--emit-server-status=" + statusFile,
     `--security=${strictSecurity ? "strict" : "insecure_dev_mode"}`,
-    "--bootstrap-command=create superuser role admin { set password := 'geltest' }",
+    "--bootstrap-command=create superuser role geltestuser { set password := 'geltest' }",
   ];
   return { args, availableFeatures };
 };
@@ -206,7 +206,7 @@ export const startServer = async (
     const config: ConnectConfig = {
       host: "localhost",
       port: runtimeData.port,
-      user: "admin",
+      user: "geltestuser",
       password: "geltest",
       tlsSecurity: "no_host_verification",
     };
