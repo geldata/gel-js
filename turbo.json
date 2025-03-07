@@ -28,7 +28,7 @@
       "dependsOn": [
         "build",
         "gel#test",
-        "@gel/generate#test",
+        "@gel/generate#test:ci",
         "@gel/auth-core#test",
         "@gel/codemod#test"
       ],
