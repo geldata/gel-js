@@ -128,7 +128,7 @@ export const getServerCommand = (
     "--port=auto",
     "--emit-server-status=" + statusFile,
     `--security=${strictSecurity ? "strict" : "insecure_dev_mode"}`,
-    "--bootstrap-command=ALTER ROLE admin { SET password := 'geltest' }",
+    "--bootstrap-command=create superuser role admin { set password := 'geltest' }",
   ];
   return { args, availableFeatures };
 };
