@@ -218,15 +218,11 @@ export class RAGClient {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        ...request,
-        input: request.inputs,
-      }),
+      body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      const bodyText = await response.text();
-      throw new Error(bodyText);
+      await handleResponseError(response);
     }
 
     const data: { data: { embedding: number[] }[] } = await response.json();
