@@ -118,7 +118,7 @@ export class RAGClient {
     });
 
     if (!response.ok) {
-      handleResponseError(response);
+      await handleResponseError(response);
     }
 
     return response;
