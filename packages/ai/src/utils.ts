@@ -11,17 +11,20 @@ export function extractMessageFromParsedEvent(
   return JSON.parse(data) as StreamingMessage;
 }
 
-export async function handleResponseError(response: Response) {
+export async function handleResponseError(response: Response): Promise<void> {
   const contentType = response.headers.get("content-type");
   let errorMessage: string;
 
-  if (contentType && contentType.includes("application/json")) {
-    const json = await response.json();
+  if (contentType?.includes("application/json")) {
+    const json: unknown = await response.json();
 
     errorMessage =
-      typeof json === "object" && json != null && "message" in json
+      typeof json === "object" &&
+      json != null &&
+      "message" in json &&
+      typeof json.message === "string"
         ? json.message
-        : `An error occurred: ${json}`;
+        : `An error occurred: ${JSON.stringify(json)}`;
   } else {
     const bodyText = await response.text();
     errorMessage = bodyText || "An unknown error occurred";
