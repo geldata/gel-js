@@ -64,7 +64,7 @@ export function errorFromJSON(data: any) {
 
   const attrs = new Map<number, string>();
   for (const [name, field] of Object.entries(_JSON_FIELDS)) {
-    if (data["name"] != null) {
+    if (data[name] != null) {
       attrs.set(field, data[name]);
     }
   }
