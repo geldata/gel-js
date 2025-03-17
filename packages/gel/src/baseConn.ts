@@ -240,7 +240,7 @@ export class BaseRawConnection {
     let warnings: errors.GelError[] = [];
 
     const headers = this._readHeaders();
-    if (headers["warnings"] != null) {
+    if (headers.warnings != null) {
       warnings = JSON.parse(headers.warnings).map((warning: any) => {
         const err = errorFromJSON(warning);
         (err as any)._query = query;
