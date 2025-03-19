@@ -25,16 +25,7 @@ import * as systemUtils from "./systemUtils";
 export { systemUtils };
 
 export { RawConnection as _RawConnection } from "./rawConn";
-export type { Executor } from "./ifaces";
 export type { Client, ConnectOptions } from "./baseClient";
-export {
-  IsolationLevel,
-  RetryCondition,
-  RetryOptions,
-  Options,
-} from "./options";
-export { defaultBackoff, logWarnings, throwWarnings } from "./options";
-export type { BackoffFunction } from "./options";
 
 export * from "./index.shared";
 export * as $ from "./reflection/index";
