@@ -48,7 +48,7 @@ export type WarningHandler = (warnings: errors.GelError[]) => void;
 export const throwWarnings: WarningHandler = (warnings) => {
   throw new AggregateError(
     warnings,
-    `Warnings occurred while running query: ${warnings.map((warn) => warn.message)}`,
+    `warnings occurred while running query: ${warnings.map((warn) => warn.message)}`,
   );
 };
 
