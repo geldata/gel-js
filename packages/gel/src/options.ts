@@ -43,22 +43,22 @@ export interface SimpleRetryOptions {
   backoff?: BackoffFunction;
 }
 
-export type WarningHandler = (warnings: errors.GelError[]) => void;
+export type WarningHandler = (warnings: errors.WarningMessage[]) => void;
 
-export function throwWarnings(warnings: errors.GelError[]) {
+export const throwWarnings: WarningHandler = (warnings) => {
   throw new Error(
     `warnings occurred while running query: ${warnings.map((warn) => warn.message)}`,
     { cause: warnings },
   );
-}
+};
 
-export function logWarnings(warnings: errors.GelError[]) {
+export const logWarnings: WarningHandler = (warnings) => {
   for (const warning of warnings) {
     console.warn(
       new Error(`Gel warning: ${warning.message}`, { cause: warning }),
     );
   }
-}
+};
 
 export class RetryOptions {
   // This type is immutable.
