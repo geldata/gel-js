@@ -34,7 +34,7 @@ export {
   Options,
 } from "./options";
 export { defaultBackoff, logWarnings, throwWarnings } from "./options";
-export type { BackoffFunction } from "./options";
+export type { BackoffFunction, WarningHandler } from "./options";
 
 export * from "./index.shared";
 export * as $ from "./reflection/index";
