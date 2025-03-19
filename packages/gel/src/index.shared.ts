@@ -35,6 +35,17 @@ export { parseWKT } from "./datatypes/wkt";
 
 export type { Executor } from "./ifaces";
 
+export {
+  IsolationLevel,
+  RetryCondition,
+  RetryOptions,
+  Options,
+  defaultBackoff,
+  logWarnings,
+  throwWarnings,
+} from "./options";
+export type { BackoffFunction, WarningHandler } from "./options";
+
 export * from "./errors";
 
 export type { Codecs } from "./codecs/codecs";
