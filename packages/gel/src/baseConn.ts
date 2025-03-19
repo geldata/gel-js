@@ -102,7 +102,7 @@ export type ParseResult = [
   capabilities: number,
   inCodecBuffer: Uint8Array | null,
   outCodecBuffer: Uint8Array | null,
-  warnings: errors.GelError[],
+  warnings: errors.WarningMessage[],
 ];
 
 export type connConstructor = new (
@@ -234,10 +234,10 @@ export class BaseRawConnection {
     number,
     Uint8Array,
     Uint8Array,
-    errors.GelError[],
+    errors.WarningMessage[],
   ] {
     let capabilities = -1;
-    let warnings: errors.GelError[] = [];
+    let warnings: errors.WarningMessage[] = [];
 
     const headers = this._readHeaders();
     if (headers.warnings != null) {
@@ -583,7 +583,7 @@ export class BaseRawConnection {
     let outCodec: ICodec | null = null;
     let inCodecBuf: Uint8Array | null = null;
     let outCodecBuf: Uint8Array | null = null;
-    let warnings: errors.GelError[] = [];
+    let warnings: errors.WarningMessage[] = [];
 
     while (parsing) {
       if (!this.buffer.takeMessage()) {
@@ -685,7 +685,7 @@ export class BaseRawConnection {
     result: any[] | WriteBuffer,
     capabilitiesFlags: number = RESTRICTED_CAPABILITIES,
     options?: QueryOptions,
-  ): Promise<errors.GelError[]> {
+  ): Promise<errors.WarningMessage[]> {
     let ctx = state.makeCodecContext();
 
     const wb = new WriteMessageBuffer();
@@ -718,7 +718,7 @@ export class BaseRawConnection {
 
     let error: Error | null = null;
     let parsing = true;
-    let warnings: errors.GelError[] = [];
+    let warnings: errors.WarningMessage[] = [];
 
     while (parsing) {
       if (!this.buffer.takeMessage()) {
@@ -909,7 +909,7 @@ export class BaseRawConnection {
     state: Options,
     privilegedMode = false,
     language: Language = Language.EDGEQL,
-  ): Promise<{ result: any; warnings: errors.GelError[] }> {
+  ): Promise<{ result: any; warnings: errors.WarningMessage[] }> {
     if (
       language !== Language.EDGEQL &&
       versionGreaterThan([3, 0], this.protocolVersion)
@@ -935,7 +935,7 @@ export class BaseRawConnection {
     const ret: any[] = [];
     // @ts-ignore
     let _;
-    let warnings: errors.GelError[] = [];
+    let warnings: errors.WarningMessage[] = [];
 
     let [card, inCodec, outCodec] = this.queryCodecCache.get(key) ?? [];
 
