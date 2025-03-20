@@ -46,19 +46,16 @@ export interface SimpleRetryOptions {
 export type WarningHandler = (warnings: errors.GelError[]) => void;
 
 export const throwWarnings: WarningHandler = (warnings) => {
-  throw new Error(
-    `warnings occurred while running query: ${warnings.map((warn) => warn.message)}`,
-    { cause: warnings },
-  );
+  throw new AggregateError(warnings, formatWarnings(warnings));
 };
 
 export const logWarnings: WarningHandler = (warnings) => {
-  for (const warning of warnings) {
-    console.warn(
-      new Error(`Gel warning: ${warning.message}`, { cause: warning }),
-    );
-  }
+  const merged = new Error(formatWarnings(warnings));
+  console.warn(Object.assign(merged, { name: "" }));
 };
+
+const formatWarnings = (warnings: errors.GelError[]) =>
+  `warnings occurred while running query:\n${warnings.map((warn) => warn.message).join("\n")}`;
 
 export class RetryOptions {
   // This type is immutable.
