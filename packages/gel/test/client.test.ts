@@ -2288,17 +2288,19 @@ if (getAvailableFeatures().has("binary-over-http")) {
     expect(result).toHaveLength(5);
     expect(result[0]["__tname__"]).toBe("schema::Function");
 
-    const parseResult2 = await fetchConn.rawParse(
-      Language.EDGEQL,
-      `select _warn_on_call();`,
-      new Options(),
-      options,
-    );
-    const warnings = parseResult2[7];
-    expect(Array.isArray(warnings)).toBe(true);
-    expect(warnings!.length).toBe(1);
-    expect(warnings![0]).toBeInstanceOf(GelError);
-    expect(warnings![0].message.trim()).toBe("Test warning please ignore");
+    if (getGelVersion().major >= 6) {
+      const parseResult2 = await fetchConn.rawParse(
+        Language.EDGEQL,
+        `select _warn_on_call();`,
+        new Options(),
+        options,
+      );
+      const warnings = parseResult2[7];
+      expect(Array.isArray(warnings)).toBe(true);
+      expect(warnings!.length).toBe(1);
+      expect(warnings![0]).toBeInstanceOf(GelError);
+      expect(warnings![0].message.trim()).toBe("Test warning please ignore");
+    }
   });
 
   test("binary protocol over http failing auth", async () => {
