@@ -19,6 +19,7 @@
 import {
   BaseRawConnection,
   Capabilities,
+  type ParseResult,
   PROTO_VER,
   RESTRICTED_CAPABILITIES,
 } from "./baseConn";
@@ -28,6 +29,7 @@ import type { CodecsRegistry } from "./codecs/registry";
 import type { NormalizedConnectConfig } from "./conUtils";
 import {
   BinaryProtocolError,
+  type GelError,
   InternalClientError,
   ProtocolError,
 } from "./errors";
@@ -212,12 +214,10 @@ export class AdminUIFetchConnection extends BaseFetchConnection {
     state: Options,
     options?: QueryOptions,
     abortSignal?: AbortSignal | null,
-  ): Promise<
-    [ICodec, ICodec, Uint8Array, Uint8Array, ProtocolVersion, number]
-  > {
+  ): Promise<[ProtocolVersion, ...ParseResult]> {
     this.abortSignal = abortSignal ?? null;
 
-    const result = (await this._parse(
+    const result = await this._parse(
       language,
       query,
       OutputFormat.BINARY,
@@ -225,15 +225,8 @@ export class AdminUIFetchConnection extends BaseFetchConnection {
       state,
       STUDIO_CAPABILITIES,
       options,
-    ))!;
-    return [
-      result[1],
-      result[2],
-      result[4]!,
-      result[5]!,
-      this.protocolVersion,
-      result[3],
-    ];
+    );
+    return [this.protocolVersion, ...result];
   }
 
   public async rawExecute(
@@ -245,11 +238,11 @@ export class AdminUIFetchConnection extends BaseFetchConnection {
     inCodec?: ICodec,
     args: QueryArgs = null,
     abortSignal?: AbortSignal | null,
-  ): Promise<Uint8Array> {
+  ): Promise<[Uint8Array, GelError[]]> {
     this.abortSignal = abortSignal ?? null;
 
     const result = new WriteBuffer();
-    await this._executeFlow(
+    const warnings = await this._executeFlow(
       language,
       query,
       args,
@@ -262,7 +255,7 @@ export class AdminUIFetchConnection extends BaseFetchConnection {
       STUDIO_CAPABILITIES,
       options,
     );
-    return result.unwrap();
+    return [result.unwrap(), warnings];
   }
 }
 
