@@ -2216,9 +2216,11 @@ test("warnings handler", async () => {
 
     client = client.withWarningHandler(throwWarnings);
 
-    await expect(client.query("select _warn_on_call();")).rejects.toThrow(
-      /warnings occurred while running query: Test warning please ignore/,
+    const queryRes = client.query("select _warn_on_call();");
+    await expect(queryRes).rejects.toThrow(
+      /warnings occurred while running query/,
     );
+    await expect(queryRes).rejects.toThrow(/Test warning please ignore/);
   } finally {
     await client.close();
   }
