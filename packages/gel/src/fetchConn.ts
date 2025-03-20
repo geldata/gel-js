@@ -19,7 +19,7 @@
 import {
   BaseRawConnection,
   Capabilities,
-  ParseResult,
+  type ParseResult,
   PROTO_VER,
   RESTRICTED_CAPABILITIES,
 } from "./baseConn";
@@ -29,7 +29,7 @@ import type { CodecsRegistry } from "./codecs/registry";
 import type { NormalizedConnectConfig } from "./conUtils";
 import {
   BinaryProtocolError,
-  GelError,
+  type GelError,
   InternalClientError,
   ProtocolError,
 } from "./errors";
