@@ -2269,24 +2269,36 @@ if (getAvailableFeatures().has("binary-over-http")) {
       implicitLimit: BigInt(5),
     } as const;
 
-    const [_, outCodec] = await fetchConn.rawParse(
+    const parseResult = await fetchConn.rawParse(
       Language.EDGEQL,
       query,
       state,
       options,
     );
-    const resultData = await fetchConn.rawExecute(
+    const [resultData] = await fetchConn.rawExecute(
       Language.EDGEQL,
       query,
       state,
-      outCodec,
+      parseResult[3], // outCodec
       options,
     );
 
-    const result = _decodeResultBuffer(outCodec, resultData);
+    const result = _decodeResultBuffer(parseResult[3], resultData);
 
     expect(result).toHaveLength(5);
     expect(result[0]["__tname__"]).toBe("schema::Function");
+
+    const parseResult2 = await fetchConn.rawParse(
+      Language.EDGEQL,
+      `select _warn_on_call();`,
+      new Options(),
+      options,
+    );
+    const warnings = parseResult2[7];
+    expect(Array.isArray(warnings)).toBe(true);
+    expect(warnings!.length).toBe(1);
+    expect(warnings![0]).toBeInstanceOf(GelError);
+    expect(warnings![0].message.trim()).toBe("Test warning please ignore");
   });
 
   test("binary protocol over http failing auth", async () => {
