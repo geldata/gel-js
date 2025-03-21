@@ -63,7 +63,7 @@ jobs:
           yarn format
 
       - name: Install Gel
-        uses: geldata/setup-gel@6763b6de72782d9c2e5ecc1095986a1c707da68f
+        uses: geldata/setup-gel@358410cc5618fa956d16f1b7157a8c86f9b517cf # v1.4
         with:
           instance-name: test
           server-version: ${{ matrix.gel-version }}
@@ -71,12 +71,12 @@ jobs:
       # should be updated to use gel cli
       - name: Show actual Gel server version
         run: |
-          echo ACTIVE_GEL_VERSION=$(edgedb query 'select sys::get_version_as_str()' -I test) >> $GITHUB_ENV
+          echo ACTIVE_GEL_VERSION=$(gel query 'select sys::get_version_as_str()' -I test) >> $GITHUB_ENV
       # should be updated to use gel cli
       - name: Install postgis extension
         if: ${{ matrix.gel-version == 'nightly' || matrix.gel-versoin == '6.0-rc.2' }}
         run: |
-          edgedb extension install postgis -I test --slot 6-alpha-3
+          gel extension install postgis -I test --slot 6-alpha-3
 
       - name: Run package tests
         run: |
@@ -131,14 +131,14 @@ jobs:
       - name: Build and pack CLI wrapper
         run: |
           yarn workspace gel run build
-          yarn workspace gel pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
+          yarn workspace gel pack --filename=${{ github.workspace }}/gel-cli.tar.gz
 
       - name: Test CLI wrapper with npm
         run: |
           mkdir ${{ runner.temp }}/temp-npm
           cd ${{ runner.temp }}/temp-npm
           npm init -y
-          npm install ${{ github.workspace }}/edgedb-cli.tar.gz
+          npm install ${{ github.workspace }}/gel-cli.tar.gz
           npm exec gel -- project init --non-interactive
           npm exec gel -- --version
           npm exec gel -- query 'select sys::get_version_as_str()'
@@ -154,7 +154,7 @@ jobs:
           mkdir ${{ runner.temp }}/temp-yarn
           cd ${{ runner.temp }}/temp-yarn
           yarn init -y
-          yarn add ${{ github.workspace}}/edgedb-cli.tar.gz
+          yarn add ${{ github.workspace}}/gel-cli.tar.gz
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
@@ -176,7 +176,7 @@ jobs:
           yarn set version berry
           yarn init -y
           touch yarn.lock
-          yarn add ${{ github.workspace }}/edgedb-cli.tar.gz
+          yarn add ${{ github.workspace }}/gel-cli.tar.gz
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
@@ -196,7 +196,7 @@ jobs:
           mkdir ${{ runner.temp }}/temp-pnpm
           cd ${{ runner.temp}}/temp-pnpm
           pnpm init
-          pnpm add ${{ github.workspace }}/edgedb-cli.tar.gz
+          pnpm add ${{ github.workspace }}/gel-cli.tar.gz
           pnpm exec gel project init --non-interactive
           pnpm exec gel --version
           pnpm exec gel query 'select sys::get_version_as_str()'
@@ -213,7 +213,7 @@ jobs:
           mkdir temp-bun
           cd temp-bun
           bun init
-          bun add ${{ github.workspace }}/edgedb-cli.tar.gz
+          bun add ${{ github.workspace }}/gel-cli.tar.gz
           bun gel project init --non-interactive
           bun gel --version
           bun gel query 'select sys::get_version_as_str()'
