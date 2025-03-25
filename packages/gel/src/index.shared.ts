@@ -40,6 +40,7 @@ export {
   RetryCondition,
   RetryOptions,
   Options,
+  SimpleConfig,
   defaultBackoff,
   logWarnings,
   throwWarnings,
