@@ -308,6 +308,8 @@ function getBaseDist(arch: string, platform: string, libc = ""): string {
     distPlatform = `unknown-linux-${libc}`;
   } else if (platform === "darwin") {
     distPlatform = "apple-darwin";
+  } else if (platform === "win32") {
+    distPlatform = "pc-windows-msvc";
   } else {
     throw Error(`This action cannot be run on ${platform}`);
   }
