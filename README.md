@@ -209,7 +209,7 @@ Gel from [here](https://docs.geldata.com/learn/cli) or
 [build it from source](https://docs.geldata.com/resources/guides/contributing/code).
 
 ```bash
-$ git clone git@github.com:gel/gel-js.git
+$ git clone git@github.com:geldata/gel-js.git
 $ cd gel-js
 $ yarn                # install dependencies
 $ yarn run build      # build all packages
