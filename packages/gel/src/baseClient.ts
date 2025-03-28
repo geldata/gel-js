@@ -751,7 +751,7 @@ export class Client implements Executor {
     }
   }
 
-  async parse(query: string) {
+  async describe(query: string) {
     const holder = await this.pool.acquireHolder(this.options);
     try {
       const cxn = await holder._getConnection();
@@ -768,9 +768,17 @@ export class Client implements Executor {
         in: result[1],
         out: result[2],
         cardinality,
+        capabilities: result[3],
       };
     } finally {
       await holder.release();
     }
+  }
+
+  /**
+   * @deprecated Use `describe` instead.
+   */
+  async parse(query: string) {
+    return await this.describe(query);
   }
 }

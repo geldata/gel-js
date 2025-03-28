@@ -68,6 +68,8 @@ import { getHTTPSCRAMAuth } from "../src/httpScram";
 import cryptoUtils from "../src/cryptoUtils";
 import { getAuthenticatedFetch } from "../src/utils";
 import { Language } from "../src/ifaces";
+import { Cardinality } from "../src/reflection";
+import { Capabilities } from "../src/baseConn";
 
 class CancelTransaction extends Error {}
 
@@ -1976,6 +1978,25 @@ test("execute", async () => {
       });
   } finally {
     await con.close();
+  }
+});
+
+test("describe", async () => {
+  const client = getClient();
+  await client.execute(`create type ScriptParseTest {
+    create property name -> str;
+  };`);
+
+  try {
+    expect(
+      await client.describe(`insert ScriptParseTest { name := 'test' };`),
+    ).toMatchObject({
+      cardinality: Cardinality.One,
+      capabilities: Capabilities.MODIFICATONS,
+    });
+  } finally {
+    await client.execute(`drop type ScriptParseTest;`);
+    await client.close();
   }
 });
 
