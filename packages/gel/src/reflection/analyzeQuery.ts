@@ -16,6 +16,7 @@ type QueryType = {
   args: string;
   result: string;
   cardinality: Cardinality;
+  capabilities: number;
   query: string;
   importMap: ImportMap;
   /** @deprecated */
@@ -26,7 +27,12 @@ export async function analyzeQuery(
   client: Client,
   query: string,
 ): Promise<QueryType> {
-  const { cardinality, in: inCodec, out: outCodec } = await client.parse(query);
+  const {
+    cardinality,
+    capabilities,
+    in: inCodec,
+    out: outCodec,
+  } = await client.describe(query);
 
   const args = generateTSTypeFromCodec(inCodec, Cardinality.One, {
     optionalNulls: true,
@@ -39,6 +45,7 @@ export async function analyzeQuery(
     result: result.type,
     args: args.type,
     cardinality,
+    capabilities,
     query,
     importMap: imports,
     imports: imports.get("gel") ?? new Set(),
