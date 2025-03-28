@@ -1993,7 +1993,7 @@ test("describe", async () => {
     ).toMatchObject({
       cardinality: Cardinality.One,
       capabilities: Capabilities.MODIFICATONS,
-    })
+    });
   } finally {
     await client.execute(`drop type ScriptParseTest;`);
     await client.close();

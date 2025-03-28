@@ -31,4 +31,4 @@ export * from "./reservedKeywords";
 // export * from "./syntax";
 export * as introspect from "./queries";
 export * from "./analyzeQuery";
-export { Capabilities } from "../baseConn"
+export { Capabilities } from "../baseConn";
