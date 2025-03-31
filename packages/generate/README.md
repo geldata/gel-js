@@ -2,7 +2,7 @@
 
 The `@gel/generate` package implements a set of code generation tools that are useful when developing an Gel-backed applications with TypeScript/JavaScript.
 
-✨ [View Documentation >>](https://docs.geldata.com/reference/clients/js/queries)
+✨ [View Documentation >>](https://docs.geldata.com/reference/clients/js/generation)
 
 ## Installation
 
