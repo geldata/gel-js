@@ -133,24 +133,11 @@ export class RAGClient {
       context,
     );
 
-    if (!res.headers.get("content-type")?.includes("application/json")) {
-      throw new Error(
-        "Expected response to have content-type: application/json",
-      );
+    if (!res.ok) {
+      await handleResponseError(res);
     }
 
-    const data = await res.json();
-
-    if (
-      !data ||
-      typeof data !== "object" ||
-      typeof data.response !== "string"
-    ) {
-      throw new Error(
-        "Expected response to be an object with response key of type string",
-      );
-    }
-    return data.response;
+    return await parseRagResponse(res);
   }
 
   streamRag(
@@ -228,4 +215,44 @@ export class RAGClient {
     const data: { data: { embedding: number[] }[] } = await response.json();
     return data.data[0].embedding;
   }
+}
+
+async function parseRagResponse(response: Response): Promise<string> {
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    throw new Error("Expected response to have content-type: application/json");
+  }
+
+  const data: unknown = await response.json();
+
+  if (!data) {
+    throw new Error(`Expected JSON data, but got ${JSON.stringify(data)}`);
+  }
+
+  if (typeof data !== "object") {
+    throw new Error(
+      `Expected response to be an object, but got ${JSON.stringify(data)}`,
+    );
+  }
+
+  if ("text" in data && typeof data.text !== "string") {
+    if (typeof data.text !== "string") {
+      throw new Error(
+        `Expected data.text to be a string, but got ${typeof data.text}: ${JSON.stringify(data.text)}`,
+      );
+    }
+    return data.text;
+  }
+
+  if ("response" in data && typeof data.response !== "string") {
+    if (typeof data.response !== "string") {
+      throw new Error(
+        `Expected data.response to be a string, but got ${typeof data.response}: ${JSON.stringify(data.response)}`,
+      );
+    }
+    return data.response;
+  }
+
+  throw new Error(
+    `Expected response to include a non-empty string for either the 'text' or 'response' key, but got: ${JSON.stringify(data)}`,
+  );
 }
