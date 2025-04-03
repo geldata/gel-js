@@ -79,8 +79,12 @@ export interface TokenData {
 
 export type RegistrationResponse =
   | { code: string }
-  | { verification_email_sent_at: string };
+  | { verification_email_sent_at: string; identity_id?: string };
 
 export type SignupResponse =
   | { status: "complete"; verifier: string; tokenData: TokenData }
-  | { status: "verificationRequired"; verifier: string };
+  | {
+      status: "verificationRequired";
+      verifier: string;
+      identity_id: string | null;
+    };

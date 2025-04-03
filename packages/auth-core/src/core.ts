@@ -94,7 +94,11 @@ export class Auth {
         tokenData: await this.getToken(result.code, verifier),
       };
     } else {
-      return { status: "verificationRequired", verifier };
+      return {
+        status: "verificationRequired",
+        verifier,
+        identity_id: result.identity_id ?? null,
+      };
     }
   }
 
@@ -161,7 +165,11 @@ export class Auth {
         tokenData: await this.getToken(result.code, verifier),
       };
     } else {
-      return { status: "verificationRequired", verifier };
+      return {
+        status: "verificationRequired",
+        verifier,
+        identity_id: result.identity_id ?? null,
+      };
     }
   }
 
