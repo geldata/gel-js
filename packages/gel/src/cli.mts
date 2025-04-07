@@ -186,7 +186,7 @@ function runCli(
   return execSync(command, execOptions);
 }
 
-async function findPackageUrl(): Promise<string> {
+async function findPackageUrl(): Promise<URL> {
   const arch = os.arch();
   const platform = os.platform();
 
@@ -213,8 +213,8 @@ async function findPackageUrl(): Promise<string> {
     throw new Error(`Unsupported OS: ${platform}`);
   }
 
-  const pkg = `${EDGEDB_PKG_ROOT}/${dist}/gel-cli${ext}`;
-  debug("  - Package URL:", pkg);
+  const pkg = new URL(`/dist/${dist}/gel-cli${ext}`, EDGEDB_PKG_ROOT);
+  debug("  - Package URL:", pkg.href);
   return pkg;
 }
 
