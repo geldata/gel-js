@@ -139,6 +139,7 @@ jobs:
           yarn workspace gel pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
 
       - name: Test CLI wrapper with npm
+        shell: bash
         run: |
           mkdir ${{ runner.temp }}/temp-npm
           cd ${{ runner.temp }}/temp-npm
@@ -155,6 +156,7 @@ jobs:
           fi
 
       - name: Test CLI wrapper with yarn
+        shell: bash
         run: |
           mkdir ${{ runner.temp }}/temp-yarn
           cd ${{ runner.temp }}/temp-yarn
@@ -175,6 +177,7 @@ jobs:
           version: latest
           cache: false
       - name: Test CLI wrapper with yarn-berry
+        shell: bash
         run: |
           mkdir ${{ runner.temp }}/temp-yarn-berry
           cd ${{ runner.temp }}/temp-yarn-berry
@@ -197,6 +200,7 @@ jobs:
           version: latest
           run_install: false
       - name: Test CLI wrapper with pnpm
+        shell: bash
         run: |
           mkdir ${{ runner.temp }}/temp-pnpm
           cd ${{ runner.temp}}/temp-pnpm
@@ -214,6 +218,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135
       - name: Test CLI wrapper with bun
+        shell: bash
         run: |
           mkdir temp-bun
           cd temp-bun
