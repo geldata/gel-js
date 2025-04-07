@@ -6,7 +6,6 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as process from "node:process";
-import * as semver from "semver";
 import envPaths from "env-paths";
 import Debug from "debug";
 import which from "which";
@@ -19,13 +18,6 @@ const SCRIPT_LOCATION = await fs.realpath(fileURLToPath(import.meta.url));
 const EDGEDB_PKG_ROOT = "https://packages.edgedb.com";
 const CACHE_DIR = envPaths("gel", { suffix: "" }).cache;
 const CACHED_CLI_PATH = path.join(CACHE_DIR, "/bin/gel");
-
-interface Package {
-  name: string;
-  version: string;
-  revision: string;
-  installref: string;
-}
 
 const SCRIPT_NAME = import.meta.url.split("/").pop() || "gel";
 
@@ -170,13 +162,12 @@ async function getCliLocationFromCachedCli(): Promise<string | null> {
 
 async function downloadCliPackage() {
   debug("Downloading CLI package...");
-  const cliPkg = await findPackage();
+  const cliPkgUrl = await findPackageUrl();
   const downloadDir = path.dirname(CACHED_CLI_PATH);
   await fs.mkdir(downloadDir, { recursive: true }).catch((error) => {
     if (error.code !== "EEXIST") throw error;
   });
-  const downloadUrl = new URL(cliPkg.installref, EDGEDB_PKG_ROOT);
-  await downloadFile(downloadUrl, CACHED_CLI_PATH);
+  await downloadFile(cliPkgUrl, CACHED_CLI_PATH);
   debug("  - CLI package downloaded to:", CACHED_CLI_PATH);
 
   const fd = await fs.open(CACHED_CLI_PATH, "r+");
@@ -195,92 +186,43 @@ function runCli(
   return execSync(command, execOptions);
 }
 
-async function findPackage(): Promise<Package> {
+async function findPackageUrl(): Promise<URL> {
   const arch = os.arch();
   const platform = os.platform();
-  const includeCliPrereleases = true;
-  const cliVersionRange = ">=4.1.1";
-  const libc = platform === "linux" ? "musl" : "";
-  const dist = getBaseDist(arch, platform, libc);
 
-  debug(`Finding compatible package for ${dist}...`);
-  const versionMap = await getVersionMap(dist);
-  const pkg = await getMatchingPkg(
-    versionMap,
-    cliVersionRange,
-    includeCliPrereleases,
-  );
-  if (!pkg) {
-    throw Error(
-      `No compatible Gel CLI package found for the current platform ${dist}`,
-    );
-  }
-  debug("  - Package found:", pkg);
-  return pkg;
-}
+  debug("Getting base distribution for:", platform, arch);
+  let dist = "";
+  let ext = "";
 
-async function getVersionMap(dist: string): Promise<Map<string, Package>> {
-  debug("Getting version map for distribution:", dist);
-  const indexRequest = await fetch(
-    new URL(`archive/.jsonindexes/${dist}.json`, EDGEDB_PKG_ROOT),
-  );
-  const index = (await indexRequest.json()) as { packages: Package[] };
-  const versionMap = new Map();
-
-  for (const pkg of index.packages) {
-    if (pkg.name !== "edgedb-cli") {
-      continue;
-    }
-
-    if (
-      !versionMap.has(pkg.version) ||
-      versionMap.get(pkg.version).revision < pkg.revision
-    ) {
-      versionMap.set(pkg.version, pkg);
-    }
-  }
-
-  return versionMap;
-}
-
-async function getMatchingPkg(
-  versionMap: Map<string, Package>,
-  cliVersionRange: string,
-  includeCliPrereleases: boolean,
-): Promise<Package | null> {
-  debug("Getting matching version for range:", cliVersionRange);
-  let matchingPkg: Package | null = null;
-  for (const [version, pkg] of versionMap.entries()) {
-    if (
-      semver.satisfies(version, cliVersionRange, {
-        includePrerelease: includeCliPrereleases,
-      })
-    ) {
-      if (
-        !matchingPkg ||
-        semver.compareBuild(version, matchingPkg.version) > 0
-      ) {
-        matchingPkg = pkg;
-      }
-    }
-  }
-
-  if (matchingPkg) {
-    debug("  - Matching version found:", matchingPkg.version);
-    return matchingPkg;
+  if (arch === "x64") {
+    dist += "x86_64";
+  } else if (arch === "arm64") {
+    dist += "aarch64";
   } else {
-    throw Error(
-      "no published Gel CLI version matches requested version " +
-        `'${cliVersionRange}'`,
-    );
+    throw new Error(`Unsupported architecture: ${arch}`);
   }
+
+  if (platform === "win32") {
+    dist += "-pc-windows-msvc";
+    ext = ".exe";
+  } else if (platform === "darwin") {
+    dist += "-apple-darwin";
+  } else if (platform === "linux") {
+    dist += "-unknown-linux-musl";
+  } else {
+    throw new Error(`Unsupported OS: ${platform}`);
+  }
+
+  const pkg = new URL(`/dist/${dist}/gel-cli${ext}`, EDGEDB_PKG_ROOT);
+  debug("  - Package URL:", pkg.href);
+  return pkg;
 }
 
 async function downloadFile(url: string | URL, path: string) {
   debug("Downloading file from URL:", url);
   const response = await fetch(url);
   if (!response.ok || !response.body) {
-    throw new Error(`  - Download failed: ${response.statusText}`);
+    throw new Error(`Download from ${url} failed: ${response.statusText}`);
   }
 
   const fileStream = createWriteStream(path, { flush: true });
@@ -294,35 +236,6 @@ async function downloadFile(url: string | URL, path: string) {
   } else {
     throw new Error("  - Download failed: no response body");
   }
-}
-
-function getBaseDist(arch: string, platform: string, libc = ""): string {
-  debug("Getting base distribution for:", arch, platform, libc);
-  let distArch = "";
-  let distPlatform = "";
-
-  if (platform === "linux") {
-    if (libc === "") {
-      libc = "gnu";
-    }
-    distPlatform = `unknown-linux-${libc}`;
-  } else if (platform === "darwin") {
-    distPlatform = "apple-darwin";
-  } else {
-    throw Error(`This action cannot be run on ${platform}`);
-  }
-
-  if (arch === "x64") {
-    distArch = "x86_64";
-  } else if (arch === "arm64") {
-    distArch = "aarch64";
-  } else {
-    throw Error(`This action does not support the ${arch} architecture`);
-  }
-
-  const dist = `${distArch}-${distPlatform}`;
-  debug("  - Base distribution:", dist);
-  return dist;
 }
 
 function getInstallDir(cliPath: string): string {
