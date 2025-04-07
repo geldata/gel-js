@@ -222,7 +222,7 @@ async function downloadFile(url: string | URL, path: string) {
   debug("Downloading file from URL:", url);
   const response = await fetch(url);
   if (!response.ok || !response.body) {
-    throw new Error(`  - Download failed: ${response.statusText}`);
+    throw new Error(`Download from ${url} failed: ${response.statusText}`);
   }
 
   const fileStream = createWriteStream(path, { flush: true });

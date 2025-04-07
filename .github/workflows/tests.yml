@@ -114,6 +114,8 @@ jobs:
   test-cli-wrapper:
     name: "Test CLI Wrapper"
     runs-on: ubuntu-latest
+    env:
+      DEBUG: "*"
     steps:
       - uses: actions/checkout@v4
         with:
