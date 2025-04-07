@@ -189,34 +189,7 @@ function runCli(
 async function findPackageUrl(): Promise<string> {
   const arch = os.arch();
   const platform = os.platform();
-  const [dist, ext] = getBaseDist(arch, platform);
 
-  const pkg = `${EDGEDB_PKG_ROOT}/${dist}/gel-cli${ext}`;
-  debug("  - Package found:", pkg);
-  return pkg;
-}
-
-async function downloadFile(url: string | URL, path: string) {
-  debug("Downloading file from URL:", url);
-  const response = await fetch(url);
-  if (!response.ok || !response.body) {
-    throw new Error(`  - Download failed: ${response.statusText}`);
-  }
-
-  const fileStream = createWriteStream(path, { flush: true });
-
-  if (response.body) {
-    for await (const chunk of streamReader(response.body)) {
-      fileStream.write(chunk);
-    }
-    fileStream.end();
-    debug("  - File downloaded successfully.");
-  } else {
-    throw new Error("  - Download failed: no response body");
-  }
-}
-
-function getBaseDist(platform: string, arch: string): [string, string] {
   debug("Getting base distribution for:", platform, arch);
   let dist = "";
   let ext = "";
@@ -240,8 +213,29 @@ function getBaseDist(platform: string, arch: string): [string, string] {
     throw new Error(`Unsupported OS: ${platform}`);
   }
 
-  debug("  - Base distribution:", dist);
-  return [dist, ext];
+  const pkg = `${EDGEDB_PKG_ROOT}/${dist}/gel-cli${ext}`;
+  debug("  - Package URL:", pkg);
+  return pkg;
+}
+
+async function downloadFile(url: string | URL, path: string) {
+  debug("Downloading file from URL:", url);
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new Error(`  - Download failed: ${response.statusText}`);
+  }
+
+  const fileStream = createWriteStream(path, { flush: true });
+
+  if (response.body) {
+    for await (const chunk of streamReader(response.body)) {
+      fileStream.write(chunk);
+    }
+    fileStream.end();
+    debug("  - File downloaded successfully.");
+  } else {
+    throw new Error("  - Download failed: no response body");
+  }
 }
 
 function getInstallDir(cliPath: string): string {
