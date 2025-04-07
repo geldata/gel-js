@@ -234,7 +234,7 @@ async function parseRagResponse(response: Response): Promise<string> {
     );
   }
 
-  if ("text" in data && typeof data.text !== "string") {
+  if ("text" in data) {
     if (typeof data.text !== "string") {
       throw new Error(
         `Expected data.text to be a string, but got ${typeof data.text}: ${JSON.stringify(data.text)}`,
@@ -243,7 +243,7 @@ async function parseRagResponse(response: Response): Promise<string> {
     return data.text;
   }
 
-  if ("response" in data && typeof data.response !== "string") {
+  if ("response" in data) {
     if (typeof data.response !== "string") {
       throw new Error(
         `Expected data.response to be a string, but got ${typeof data.response}: ${JSON.stringify(data.response)}`,
