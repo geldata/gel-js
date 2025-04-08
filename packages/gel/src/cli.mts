@@ -17,7 +17,11 @@ const IS_TTY = process.stdout.isTTY;
 const SCRIPT_LOCATION = await fs.realpath(fileURLToPath(import.meta.url));
 const EDGEDB_PKG_ROOT = "https://packages.edgedb.com";
 const CACHE_DIR = envPaths("gel", { suffix: "" }).cache;
-const CACHED_CLI_PATH = path.join(CACHE_DIR, "bin", process.platform === "win32" ? "gel.exe" : "gel");
+const CACHED_CLI_PATH = path.join(
+  CACHE_DIR,
+  "bin",
+  process.platform === "win32" ? "gel.exe" : "gel",
+);
 
 const SCRIPT_NAME = import.meta.url.split("/").pop() || "gel";
 
