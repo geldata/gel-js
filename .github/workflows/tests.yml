@@ -138,6 +138,11 @@ jobs:
           yarn workspace gel run build
           yarn workspace gel pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
 
+      - name: Update Linux kernel for WSL2 (Windows only)
+        if: runner.os == 'Windows'
+        run: |
+          wsl --update
+
       - name: Test CLI wrapper with npm
         shell: bash
         run: |
