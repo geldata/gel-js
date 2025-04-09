@@ -43,6 +43,9 @@ export {
   defaultBackoff,
   logWarnings,
   throwWarnings,
+  type SimpleRetryOptions,
+  type SimpleConfig,
+  type CodecSpec,
 } from "./options";
 export type { BackoffFunction, WarningHandler } from "./options";
 
