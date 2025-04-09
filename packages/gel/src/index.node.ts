@@ -23,9 +23,14 @@ export { createClient, createHttpClient } from "./nodeClient";
 
 import * as systemUtils from "./systemUtils";
 export { systemUtils };
+export type { TransactionOptions, SimpleTransactionOptions } from "./options";
 
 export { RawConnection as _RawConnection } from "./rawConn";
-export type { Client, ConnectOptions } from "./baseClient";
+export {
+  ResolvedConnectConfig,
+  type NormalizedConnectConfig,
+} from "./conUtils";
+export { Client, type ConnectOptions } from "./baseClient";
 
 export * from "./index.shared";
 export * as $ from "./reflection/index";
