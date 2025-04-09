@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { getClient } from "./testbase";
+import { getClient } from "@repo/test-utils";
 
 import { Auth } from "../src/core";
 

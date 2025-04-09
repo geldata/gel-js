@@ -29,6 +29,7 @@ export { RawConnection as _RawConnection } from "./rawConn";
 export {
   ResolvedConnectConfig,
   type NormalizedConnectConfig,
+  type ConnectConfig,
 } from "./conUtils";
 export { Client, type ConnectOptions } from "./baseClient";
 

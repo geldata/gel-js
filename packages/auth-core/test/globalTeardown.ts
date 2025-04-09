@@ -1,4 +1,4 @@
-import { shutdown } from "../../gel/test/testUtil";
+import { shutdown } from "@repo/test-utils";
 
 export default async () => {
   // tslint:disable-next-line
