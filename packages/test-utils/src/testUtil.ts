@@ -440,8 +440,8 @@ export function getAvailableExtensions(): Map<
  */
 export async function waitFor<T>(
   promise: () => Promise<T>,
-  timeout: number,
-  interval: number,
+  timeout = 10_000,
+  interval = 500,
 ): Promise<T> {
   const startTime = Date.now();
   let attempts = 0;

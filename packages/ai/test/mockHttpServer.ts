@@ -93,8 +93,39 @@ export function createMockHttpServer(): MockHttpServer {
           `Mock server received /v1/chat/completions request: ${bodyString}`,
         );
         chatCompletionsRequests = [...chatCompletionsRequests, recordedRequest];
-        res.writeHead(200);
-        res.end(JSON.stringify(defaultChatCompletionResponse));
+
+        const acceptHeader = req.headers["accept"];
+        if (acceptHeader && acceptHeader.includes("text/event-stream")) {
+          res.writeHead(200, { "Content-Type": "text/event-stream" });
+          const completionId = "chatcmpl-e7f8e220-656c-4455-a132-dacfc1370798";
+          const model = parsedBody.model;
+          const created = Math.floor(Date.now() / 1000);
+          const finishReason = defaultChatCompletionResponse.choices[0].finish_reason;
+          const content = defaultChatCompletionResponse.choices[0].message.content;
+          const contentChunks = content.match(/.{1,50}/g) || []; // Split content into chunks of 50 characters
+
+          res.write(`data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
+                    `"system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}\n\n`);
+
+          contentChunks.forEach((text, index) => {
+            res.write(`data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
+                      `"system_fingerprint":null,"choices":[{"index":${index + 1},"delta":{"content":"${text}"},"finish_reason":null}]}\n\n`);
+          });
+
+          res.write(`data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
+                    `"system_fingerprint":null,"choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}]}\n\n`);
+
+          res.write(`data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
+                    `"system_fingerprint":"fp_10c08bf97d","choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}],` +
+                    `"usage":{"queue_time":0.061348671,"prompt_tokens":18,"prompt_time":0.000211569,` +
+                    `"completion_tokens":439,"completion_time":0.798181818,"total_tokens":457,"total_time":0.798393387}}\n\n`);
+
+          res.write('data: [DONE]\n\n');
+          res.end();
+        } else {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(defaultChatCompletionResponse));
+        }
       } else if (req.method === "POST" && req.url === "/v1/embeddings") {
         console.log(
           `Mock server received /v1/embeddings request: ${bodyString}`,

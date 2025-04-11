@@ -31,7 +31,7 @@ create type TestTextGenerationModel extending ext::ai::TextGenerationModel {
   alter annotation ext::ai::text_gen_model_context_window := "16385";
 };
 
-create type Document {
+create type Astronomy {
   create required property content: str;
 
   create deferred index ext::ai::index(embedding_model := "text-embedding-test") on (.content);
@@ -49,7 +49,7 @@ configure current branch set ext::ai::Config::indexer_naptime := <duration>"100m
   } finally {
     await client.close();
   }
-}, 15_000);
+}, 25_000);
 
 afterAll(async () => {
   // Stop the mock server
@@ -65,56 +65,60 @@ describe("@gel/ai", () => {
   });
 
   afterEach(async () => {
-    await client.close();
+    await client?.close();
   });
 
-  test("query", async () => {
-    client = getClient();
+  test("RAG query", async () => {
+    client = getClient({
+      tlsSecurity: "insecure",
+    });
     await client.execute(`
-insert Document {
-  content := "In the digital dawn, we craft our fate,"
-};
-insert Document {
-  content := "Where circuits hum with relentless pace."
-};
-insert Document {
-  content := "Efficiency, a double-edged tool,"
-};
-insert Document {
-  content := "Promises rest, yet demands more."
-};
-insert Document {
-  content := "The clock ticks on, a silent thief,"
-};
-insert Document {
-  content := "Stealing moments, sowing belief."
-};
-insert Document {
-  content := "In the race for more, we lose the day,"
-};
-insert Document {
-  content := "As leisure fades in the bright glow."
-};
-insert Document {
-  content := "Growth, a hungry beast we feed,"
-};
-insert Document {
-  content := "While time for peace becomes a need."
-};
-    `);
-
-    await waitFor(
-      async () => expect(mockServer.getEmbeddingsRequests().length).toBe(1),
-      10_000,
-      500,
+insert Astronomy { content := 'Skies on Mars are red' };
+insert Astronomy { content := 'Skies on Earth are blue' };
+      `);
+    await waitFor(async () =>
+      expect(mockServer.getEmbeddingsRequests().length).toBe(1),
     );
+
+    const ragClient = createRAGClient(client, {
+      model: "text-generation-test",
+    }).withContext({
+      query: "select Astronomy",
+    });
+
+    const result = await ragClient.queryRag({
+      prompt: "What color are the skies on Mars?",
+    });
+
+    expect(result).toEqual("This is a mock response.");
+
+    const streamedResult = ragClient.streamRag({
+      prompt: "What color are the skies on Mars?",
+    });
+
+    let streamedResultString = "";
+    for await (const message of streamedResult) {
+      if (
+        message.type === "content_block_start" &&
+        message.content_block.type === "text"
+      ) {
+        streamedResultString += message.content_block.text;
+      } else if (
+        message.type === "content_block_delta" &&
+        message.delta.type === "text_delta"
+      ) {
+        streamedResultString += message.delta.text;
+      }
+    }
+
+    expect(streamedResultString).toEqual("This is a mock response.");
   }, 25_000);
 
   test("embedding request", async () => {
     client = getClient({
       tlsSecurity: "insecure",
     });
-    const ragClient = createRAGClient(client as any, {
+    const ragClient = createRAGClient(client, {
       model: "text-generation-test",
     });
 
