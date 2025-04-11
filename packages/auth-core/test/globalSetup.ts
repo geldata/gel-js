@@ -5,7 +5,7 @@ import {
   getServerCommand,
   getWSLPath,
   startServer,
-} from "../../gel/test/testUtil";
+} from "@repo/test-utils";
 
 export default async () => {
   // tslint:disable-next-line

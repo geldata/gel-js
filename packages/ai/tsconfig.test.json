@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/tsconfig/client.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true
+  },
+  "include": ["test/**/*"]
+}
+

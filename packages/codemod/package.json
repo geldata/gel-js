@@ -46,7 +46,7 @@
     "codemod": "node ./dist/cli.js",
     "jscodeshift": "jscodeshift",
     "build": "tsc",
-    "test": "jest",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "ci:test": "yarn test",
     "lint": "eslint --quiet",
     "lint:fix": "eslint --fix"
