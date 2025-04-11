@@ -43,22 +43,6 @@ const defaultChatCompletionResponse = {
   system_fingerprint: "fp_test",
 };
 
-const defaultEmbeddingResponse = {
-  object: "list",
-  data: [
-    {
-      object: "embedding",
-      embedding: [0.1, 0.2, 0.3], // Example embedding vector
-      index: 0,
-    },
-  ],
-  model: "text-embedding-ada-002",
-  usage: {
-    prompt_tokens: 8,
-    total_tokens: 8,
-  },
-};
-
 export function createMockHttpServer(): MockHttpServer {
   let chatCompletionsRequests: RecordedRequest[] = [];
   let embeddingsRequests: RecordedRequest[] = [];
