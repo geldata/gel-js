@@ -34,8 +34,8 @@
     "lint:fix": "eslint --fix"
   },
   "devDependencies": {
-    "@repo/tsconfig": "*",
     "@repo/test-utils": "*",
+    "@repo/tsconfig": "*",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
     "gel": "^2.0.0",
@@ -47,6 +47,7 @@
     "gel": "^2.0.0"
   },
   "dependencies": {
-    "eventsource-parser": "^1.1.2"
+    "eventsource-parser": "^1.1.2",
+    "ts-jest": "29.1.4"
   }
 }
