@@ -5,7 +5,7 @@ import type { $expr_For } from "./for";
 import type { $expr_Insert } from "./insert";
 import type { $expr_Update } from "./update";
 import type { $expr_Group } from "./group";
-import { $expressionify } from "./path";
+import { $assert_single, $expressionify, $unwrap_assert_single } from "./path";
 
 export type $expr_Alias<
   El extends BaseType = BaseType,
@@ -50,13 +50,21 @@ function _with<Expr extends WithableExpression>(
   refs: Expression[],
   expr: Expr,
 ): $expr_With<Expr> {
-  return $expressionify({
+  // handle case where e.select/e.update wraps their select/update expr in
+  // assert_single, for which we need to unwrap so refs are attached to the
+  // with block of the inner select/update expr, and then re-wrap the whole
+  // 'with' expr with assert_single
+  const unwrapped = $unwrap_assert_single(expr);
+
+  const withExpr = $expressionify({
     __kind__: ExpressionKind.With,
     __element__: expr.__element__,
     __cardinality__: expr.__cardinality__,
     __refs__: refs,
-    __expr__: expr as any,
+    __expr__: (unwrapped ?? expr) as any,
   }) as any;
+
+  return unwrapped ? $assert_single(withExpr) : withExpr;
 }
 
 export { _with as with };
