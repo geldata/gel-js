@@ -1739,4 +1739,26 @@ SELECT __scope_0_defaultPerson {
 
     await query2.run(client);
   });
+
+  test("assert_single wrapped select as expr in e.with", async () => {
+    const movies = e.select(e.Movie, () => ({
+      title: true,
+    }));
+
+    const query = e.with(
+      [movies],
+      e.select(e.User, (user) => ({
+        // use filter_single with e.op to force select to be wrapped in assert_single
+        filter_single: e.op(
+          user.id,
+          "=",
+          e.uuid("4d0f90b1-de94-4c79-ba56-3e0acdfbd06d"),
+        ),
+        username: true,
+        some_movies: movies,
+      })),
+    );
+
+    await query.run(client);
+  });
 });
