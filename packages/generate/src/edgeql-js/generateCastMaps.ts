@@ -62,9 +62,24 @@ export const generateCastMaps = (params: GeneratorParams) => {
 
   const staticMap = new CodeBuffer();
   staticMap.writeln([dts`declare `, t`type getSharedParentScalar<A, B> =`]);
+  staticMap.writeln([t`  IsEqual<A, B> extends true ? A :`]);
+
   const runtimeMap = new CodeBuffer();
 
   const returnTypes = new Set<string>();
+
+  const uncastables = new Set(
+    materialScalars.filter((outer) => {
+      return (
+        // can't be cast into something else
+        casting(outer.id).length === 0 &&
+        // nothing else can be cast into this
+        materialScalars.filter((inner) => {
+          return casting(inner.id).includes(outer.id);
+        }).length === 0
+      );
+    }),
+  );
 
   for (const outer of materialScalars) {
     assignableMap.writeln([
@@ -87,7 +102,9 @@ export const generateCastMaps = (params: GeneratorParams) => {
     ]);
 
     const outerCastableTo = casting(outer.id);
-    staticMap.writeln([t`  A extends ${getRef(outer.name)} ?`]);
+    if (!uncastables.has(outer)) {
+      staticMap.writeln([t`  A extends ${getRef(outer.name)} ?`]);
+    }
     runtimeMap.writeln([r`  if (a.__name__ === ${quote(outer.name)}) {`]);
 
     for (const inner of materialScalars) {
@@ -109,11 +126,15 @@ export const generateCastMaps = (params: GeneratorParams) => {
         sameType || aCastableToB || bCastableToA || sharedParent;
 
       if (validCast) {
-        staticMap.writeln([t`    B extends ${getRef(inner.name)} ?`]);
+        if (!uncastables.has(inner)) {
+          staticMap.writeln([t`    B extends ${getRef(inner.name)} ?`]);
+        }
         runtimeMap.writeln([r`    if(b.__name__ === ${quote(inner.name)}) {`]);
 
         if (sameType) {
-          staticMap.writeln([t`    B`]);
+          if (!uncastables.has(inner)) {
+            staticMap.writeln([t`    B`]);
+          }
           runtimeMap.writeln([r`      return b;`]);
         } else if (aCastableToB) {
           staticMap.writeln([t`    B`]);
@@ -131,17 +152,20 @@ export const generateCastMaps = (params: GeneratorParams) => {
             r`      throw new Error(\`Types are not castable: \${a.__name__}, \${b.__name__}\`);`,
           ]);
         }
-        staticMap.writeln([t`    :`]);
+        if (!uncastables.has(inner)) {
+          staticMap.writeln([t`    :`]);
+        }
         runtimeMap.writeln([r`    }`]);
       }
     }
 
-    staticMap.writeln([t`    never`]);
+    if (!uncastables.has(outer)) {
+      staticMap.writeln([t`    never`]);
+      staticMap.writeln([t`  :`]);
+    }
     runtimeMap.writeln([
       r`    throw new Error(\`Types are not castable: \${a.__name__}, \${b.__name__}\`);`,
     ]);
-
-    staticMap.writeln([t`  :`]);
     runtimeMap.writeln([r`    }`]);
   }
   assignableMap.writeln([t`  never\n`]);
@@ -400,4 +424,8 @@ export const generateCastMaps = (params: GeneratorParams) => {
   ]);
   f.writeln([r`}`]);
   f.addExport("literalToTypeSet");
+
+  f.writeln([t`type IsEqual<A, B> =`]);
+  f.writeln([t`  (<G>() => G extends A & G | G ? 1 : 2) extends`]);
+  f.writeln([t`  (<G>() => G extends B & G | G ? 1 : 2) ? true : false`]);
 };
