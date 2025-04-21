@@ -51,45 +51,65 @@ export const generateCastMaps = (params: GeneratorParams) => {
   assignableMap.writeln([
     t`export `,
     dts`declare `,
-    t`type scalarAssignableBy<T extends $.ScalarType> =`,
+    t`interface ScalarAssignableByMap {`,
   ]);
   const castableMap = new CodeBuffer();
   castableMap.writeln([
     t`export `,
     dts`declare `,
-    t`type scalarCastableFrom<T extends $.ScalarType> =`,
+    t`interface ScalarCastableFromMap {`,
   ]);
 
   const staticMap = new CodeBuffer();
   staticMap.writeln([dts`declare `, t`type getSharedParentScalar<A, B> =`]);
+  staticMap.increaseIndent();
+  staticMap.writeln([t`A extends $.ScalarType<infer AName> ?`]);
+  staticMap.writeln([t`B extends $.ScalarType<infer BName> ?`]);
+  staticMap.increaseIndent();
+
   const runtimeMap = new CodeBuffer();
 
   const returnTypes = new Set<string>();
 
+  const uncastables = new Set(
+    materialScalars.filter(
+      (outer) =>
+        // can't be cast into something else
+        casting(outer.id).length === 0 &&
+        // nothing else can be cast into this
+        materialScalars.filter((inner) => {
+          return casting(inner.id).includes(outer.id);
+        }).length === 0,
+    ),
+  );
+
   for (const outer of materialScalars) {
     assignableMap.writeln([
-      t`  T extends ${getRef(outer.name)} ? ${
+      t`  "${outer.name}": ${
         getStringRepresentation(types.get(outer.id), {
           types,
           casts: casts.assignableByMap,
           castSuffix: "λIAssignableBy",
         }).staticType
-      } : `,
+      };`,
     ]);
     castableMap.writeln([
-      t`  T extends ${getRef(outer.name)} ? ${
+      t`  "${outer.name}": ${
         getStringRepresentation(types.get(outer.id), {
           types,
           casts: casts.implicitCastFromMap,
           castSuffix: "λICastableTo",
         }).staticType
-      } : `,
+      };`,
     ]);
 
     const outerCastableTo = casting(outer.id);
-    staticMap.writeln([t`  A extends ${getRef(outer.name)} ?`]);
+    if (!uncastables.has(outer)) {
+      staticMap.writeln([t`AName extends "${outer.name}" ?`]);
+    }
     runtimeMap.writeln([r`  if (a.__name__ === ${quote(outer.name)}) {`]);
 
+    staticMap.increaseIndent();
     for (const inner of materialScalars) {
       const innerCastableTo = casting(inner.id);
       const sameType = inner.name === outer.name;
@@ -109,52 +129,78 @@ export const generateCastMaps = (params: GeneratorParams) => {
         sameType || aCastableToB || bCastableToA || sharedParent;
 
       if (validCast) {
-        staticMap.writeln([t`    B extends ${getRef(inner.name)} ?`]);
+        if (!uncastables.has(inner)) {
+          staticMap.writeln([t`BName extends "${inner.name}" ?`]);
+        }
         runtimeMap.writeln([r`    if(b.__name__ === ${quote(inner.name)}) {`]);
 
         if (sameType) {
-          staticMap.writeln([t`    B`]);
+          if (!uncastables.has(inner)) {
+            staticMap.writeln([t`  B`]);
+          }
           runtimeMap.writeln([r`      return b;`]);
         } else if (aCastableToB) {
-          staticMap.writeln([t`    B`]);
+          staticMap.writeln([t`  B`]);
           runtimeMap.writeln([r`      return b;`]);
         } else if (bCastableToA) {
-          staticMap.writeln([t`    A`]);
+          staticMap.writeln([t`  A`]);
           runtimeMap.writeln([r`      return a;`]);
         } else if (sharedParent) {
           staticMap.writeln([t`    ${getRef(sharedParent)}`]);
           runtimeMap.writeln([r`      return ${getRuntimeRef(sharedParent)};`]);
           returnTypes.add(sharedParent);
         } else {
-          staticMap.writeln([t`    never`]);
+          staticMap.writeln([t`never`]);
           runtimeMap.writeln([
             r`      throw new Error(\`Types are not castable: \${a.__name__}, \${b.__name__}\`);`,
           ]);
         }
-        staticMap.writeln([t`    :`]);
+        if (!uncastables.has(inner)) {
+          staticMap.writeln([t`:`]);
+        }
         runtimeMap.writeln([r`    }`]);
       }
     }
+    staticMap.decreaseIndent();
 
-    staticMap.writeln([t`    never`]);
+    if (!uncastables.has(outer)) {
+      staticMap.writeln([t`  never`]);
+      staticMap.writeln([t`:`]);
+    }
     runtimeMap.writeln([
       r`    throw new Error(\`Types are not castable: \${a.__name__}, \${b.__name__}\`);`,
     ]);
-
-    staticMap.writeln([t`  :`]);
     runtimeMap.writeln([r`    }`]);
   }
-  assignableMap.writeln([t`  never\n`]);
-  castableMap.writeln([t`  never\n`]);
-  staticMap.writeln([t`never\n`]);
+  assignableMap.writeln([t`}\n`]);
+  castableMap.writeln([t`}\n`]);
+  staticMap.writeln([t`AName extends BName ? A : never`]);
+  staticMap.decreaseIndent();
+  staticMap.writeln([t`: never : never;\n`]);
   runtimeMap.writeln([
     r`  throw new Error(\`Types are not castable: \${a.__name__}, \${b.__name__}\`);`,
   ]);
   runtimeMap.writeln([r`}\n`]);
 
   f.writeBuf(assignableMap);
+  f.writeln([
+    t`export `,
+    dts`declare `,
+    t`type scalarAssignableBy<T extends $.ScalarType> =
+  T extends $.ScalarType<infer N extends keyof ScalarAssignableByMap>
+    ? ScalarAssignableByMap[N]
+    : never\n`,
+  ]);
   f.nl();
   f.writeBuf(castableMap);
+  f.writeln([
+    t`export `,
+    dts`declare `,
+    t`type scalarCastableFrom<T extends $.ScalarType> =
+  T extends $.ScalarType<infer N extends keyof ScalarCastableFromMap>
+    ? ScalarCastableFromMap[N]
+    : never\n`,
+  ]);
   f.nl();
   f.writeBuf(staticMap);
   f.nl();
