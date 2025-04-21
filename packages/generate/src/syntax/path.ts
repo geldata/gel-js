@@ -32,6 +32,7 @@ import type {
   ScalarType,
 } from "./typesystem";
 import type { future } from "./future";
+import type { $expr_Function } from "./funcops";
 // import {typeutil} from "./typeutil";
 // import {cardutil} from "./cardinality";
 
@@ -391,6 +392,16 @@ export function $assert_single(expr: Expression) {
     __args__: [expr],
     __namedargs__: {},
   }) as any;
+}
+
+export function $unwrap_assert_single(expr: Expression) {
+  if (
+    (expr as any).__kind__ === ExpressionKind.Function &&
+    (expr as $expr_Function).__name__ === "std::assert_single"
+  ) {
+    return (expr as $expr_Function).__args__[0] as Expression;
+  }
+  return null;
 }
 
 const jsonDestructureProxyHandlers: ProxyHandler<ExpressionRoot> = {
