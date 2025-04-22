@@ -86,8 +86,8 @@ jobs:
         if: ${{ matrix.gel-version == '4' || matrix.gel-version == '5' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-lts
-          turbo run bench:types --filter=@gel/integration-lts || echo "Benchmark types script failed, proceeding anyway."
-          turbo run bench:runtime --filter=@gel/integration-lts || echo "Benchmark types script failed, proceeding anyway."
+          yarn workspace @gel/integration-lts run bench:types || echo "Benchmark types script failed, proceeding anyway."
+          yarn workspace @gel/integration-lts run bench:runtime || echo "Benchmark types script failed, proceeding anyway."
 
       - name: Run query builder integration tests stable
         if: ${{ matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
