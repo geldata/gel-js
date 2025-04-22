@@ -23,7 +23,7 @@ import { sleep } from "../src/utils";
 import Event from "../src/primitives/event";
 import { getClient, getGelVersion } from "./testbase";
 
-const typename = "TransactionTest";
+const typename = "test::Tmp";
 
 async function run(test: (con: Client) => Promise<void>): Promise<void> {
   const client = getClient();
@@ -45,13 +45,25 @@ beforeAll(async () => {
       CREATE TYPE ${typename} {
         CREATE REQUIRED PROPERTY name -> std::str;
       };
+
+      CREATE TYPE ${typename}Conflict {
+          CREATE REQUIRED PROPERTY tmp -> std::str {
+              CREATE CONSTRAINT exclusive;
+          }
+      };
+
+      CREATE TYPE ${typename}ConflictChild extending ${typename}Conflict;
     `);
   });
 }, 10_000);
 
 afterAll(async () => {
   await run(async (con) => {
-    await con.execute(`DROP TYPE ${typename};`);
+    await con.execute(`
+      DROP TYPE ${typename};
+      DROP TYPE ${typename}Conflict;
+      DROP TYPE ${typename}ConflictChild;
+    `);
   });
 }, 50_000);
 
@@ -110,15 +122,26 @@ test("transaction: kinds", async () => {
     for (const [isolation, readonly, defer] of all_options()) {
       const partial = { isolation, readonly, defer };
       const opt = new TransactionOptions(partial); // class api
-      await con
-        .withTransactionOptions(opt)
+      const withOpts = con.withTransactionOptions(opt)
+      const result = await withOpts
         .withRetryOptions({ attempts: 1 })
-        .transaction(async () => {
+        .transaction(async (tx) => {
           /* no-op */
+          return tx.querySingle<{ ins: { id: string }, level: IsolationLevel }>(`
+            select {
+              ins := (insert ${typename}Conflict { tmp := 'test' }),
+              level := sys::get_transaction_isolation(),
+            }
+          `)
         });
-      await con.withTransactionOptions(opt).transaction(async () => {
-        /* no-op */
-      });
+      expect(result?.level).toBe(isolation);
+      const implicitTxResult = await withOpts.querySingle<{ ins: { id: string }, level: IsolationLevel }>(`
+        select {
+          ins := (insert ${typename}Conflict { tmp := 'test' }),
+          level := sys::get_transaction_isolation(),
+        }
+      `)
+      expect(implicitTxResult?.level).toBe(isolation);
     }
   });
 

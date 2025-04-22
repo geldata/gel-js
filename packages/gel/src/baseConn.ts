@@ -482,6 +482,19 @@ export class BaseRawConnection {
     throw new errors.ProtocolError("invalid input codec");
   }
 
+  private isInTransaction(): boolean {
+    return (
+      this.serverXactStatus === TransactionStatus.TRANS_INTRANS ||
+      this.serverXactStatus === TransactionStatus.TRANS_ACTIVE
+    );
+  }
+
+  private _setStateCodec(state: Options): Uint8Array {
+    const buf = new WriteBuffer();
+    this.stateCodec.encode(buf, state._serialise(), NOOP_CODEC_CONTEXT);
+    return buf.unwrap();
+  }
+
   private _encodeParseParams(
     wb: WriteMessageBuffer,
     query: string,
@@ -491,6 +504,7 @@ export class BaseRawConnection {
     capabilitiesFlags: number,
     options: QueryOptions | undefined,
     language: Language,
+    isExecute: boolean,
   ) {
     if (versionGreaterThanOrEqual(this.protocolVersion, [3, 0])) {
       if (state.annotations.size >= 1 << 16) {
@@ -537,12 +551,30 @@ export class BaseRawConnection {
       if (this.stateCodec === INVALID_CODEC || this.stateCodec === NULL_CODEC) {
         wb.writeInt32(0);
       } else {
-        if (!this.stateCache.has(state)) {
-          const buf = new WriteBuffer();
-          this.stateCodec.encode(buf, state._serialise(), NOOP_CODEC_CONTEXT);
-          this.stateCache.set(state, buf.unwrap());
+        let encodedState: Uint8Array | null = null;
+
+        // Handle explicit transaction options isolation level, which should be
+        // set as the default isolation level for this query if it is not already
+        // in a transaction. If they match, do nothing.
+        if (
+          state.transactionOptions.isolation !==
+          state.config.get("default_transaction_isolation")
+        ) {
+          if (isExecute && !this.isInTransaction()) {
+            state = state.withConfig({
+              default_transaction_isolation: state.transactionOptions.isolation,
+            });
+          }
+          encodedState = this._setStateCodec(state);
+        } else {
+          encodedState = this.stateCache.get(state) ?? null;
+          if (encodedState === null) {
+            encodedState = this._setStateCodec(state);
+            this.stateCache.set(state, encodedState);
+          }
         }
-        wb.writeBuffer(this.stateCache.get(state)!);
+
+        wb.writeBuffer(encodedState);
       }
     }
   }
@@ -568,6 +600,7 @@ export class BaseRawConnection {
       capabilitiesFlags,
       options,
       language,
+      false,
     );
 
     wb.endMessage();
@@ -700,6 +733,7 @@ export class BaseRawConnection {
       capabilitiesFlags,
       options,
       language,
+      true,
     );
 
     wb.writeBuffer(inCodec.tidBuffer);

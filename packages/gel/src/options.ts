@@ -14,8 +14,8 @@ export function defaultBackoff(attempt: number): number {
 }
 
 export enum IsolationLevel {
-  Serializable = "SERIALIZABLE",
-  RepeatableRead = "REPEATABLE READ",
+  Serializable = "Serializable",
+  RepeatableRead = "RepeatableRead",
 }
 
 export enum RetryCondition {
