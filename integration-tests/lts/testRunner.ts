@@ -30,6 +30,13 @@ import {
     console.log(`\nRunning tests...`);
     await runCommand("yarn", ["test:ts"], configToEnv(config));
     await runCommand("yarn", ["test:non_ts"], configToEnv(config));
+    try {
+      await runCommand("yarn", ["bench:types"], configToEnv(config));
+      await runCommand("yarn", ["bench:runtime"], configToEnv(config));
+    } catch (err) {
+      console.error("Benchmarking failed, proceeding anyway.");
+      console.error(err);
+    }
   } catch (err) {
     console.error(err);
     process.exit(1);
