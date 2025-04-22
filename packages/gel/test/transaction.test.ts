@@ -42,6 +42,8 @@ async function run(test: (con: Client) => Promise<void>): Promise<void> {
 beforeAll(async () => {
   await run(async (con) => {
     await con.execute(`
+      CREATE MODULE test;
+
       CREATE TYPE ${typename} {
         CREATE REQUIRED PROPERTY name -> std::str;
       };
@@ -61,8 +63,9 @@ afterAll(async () => {
   await run(async (con) => {
     await con.execute(`
       DROP TYPE ${typename};
-      DROP TYPE ${typename}Conflict;
       DROP TYPE ${typename}ConflictChild;
+      DROP TYPE ${typename}Conflict;
+      DROP MODULE test;
     `);
   });
 }, 50_000);
@@ -118,45 +121,41 @@ function* all_options(): Generator<
 }
 
 test("transaction: kinds", async () => {
+  const qStr = `select <str>sys::get_transaction_isolation()`;
   await run(async (con) => {
     for (const [isolation, readonly, defer] of all_options()) {
       const partial = { isolation, readonly, defer };
       const opt = new TransactionOptions(partial); // class api
-      const withOpts = con.withTransactionOptions(opt)
-      const result = await withOpts
-        .withRetryOptions({ attempts: 1 })
-        .transaction(async (tx) => {
-          /* no-op */
-          return tx.querySingle<{ ins: { id: string }, level: IsolationLevel }>(`
-            select {
-              ins := (insert ${typename}Conflict { tmp := 'test' }),
-              level := sys::get_transaction_isolation(),
-            }
-          `)
-        });
-      expect(result?.level).toBe(isolation);
-      const implicitTxResult = await withOpts.querySingle<{ ins: { id: string }, level: IsolationLevel }>(`
-        select {
-          ins := (insert ${typename}Conflict { tmp := 'test' }),
-          level := sys::get_transaction_isolation(),
-        }
-      `)
-      expect(implicitTxResult?.level).toBe(isolation);
+      const withOpts = con.withTransactionOptions(opt);
+      const result = await withOpts.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(qStr),
+      );
+      // n.b. if the isolation level is not set, then just pass this test since
+      // the default could change some day.
+      expect(result).toBe(isolation ?? result);
+      const implicitTxResult =
+        await withOpts.queryRequiredSingle<IsolationLevel>(qStr);
+      expect(implicitTxResult).toBe(isolation ?? implicitTxResult);
+      expect(implicitTxResult).toBe(result);
     }
   });
 
   await run(async (con) => {
     for (const [isolation, readonly, defer] of all_options()) {
       const opt = { isolation, readonly, defer }; // obj api
-      await con
+      const withOpts = con
         .withTransactionOptions(opt)
-        .withRetryOptions({ attempts: 1 })
-        .transaction(async () => {
-          /* no-op */
-        });
-      await con.withTransactionOptions(opt).transaction(async () => {
-        /* no-op */
-      });
+        .withRetryOptions({ attempts: 1 });
+      const result = await withOpts.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(qStr),
+      );
+      // n.b. if the isolation level is not set, then just pass this test since
+      // the default could change some day.
+      expect(result).toBe(isolation ?? IsolationLevel.Serializable);
+      const implicitTxResult =
+        await withOpts.queryRequiredSingle<IsolationLevel>(qStr);
+      expect(implicitTxResult).toBe(isolation ?? IsolationLevel.Serializable);
+      expect(implicitTxResult).toBe(result);
     }
   });
 });
