@@ -560,12 +560,13 @@ export class BaseRawConnection {
           state.transactionOptions.isolation !==
           state.config.get("default_transaction_isolation")
         ) {
+          let newState = state;
           if (isExecute && !this.isInTransaction()) {
-            state = state.withConfig({
+            newState = state.withConfig({
               default_transaction_isolation: state.transactionOptions.isolation,
             });
           }
-          encodedState = this._setStateCodec(state);
+          encodedState = this._setStateCodec(newState);
         } else {
           encodedState = this.stateCache.get(state) ?? null;
           if (encodedState === null) {
