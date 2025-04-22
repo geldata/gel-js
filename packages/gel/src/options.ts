@@ -432,7 +432,9 @@ export class Options {
       this.config.size === 0 &&
       this.globals.size === 0 &&
       this.moduleAliases.size === 0 &&
-      this.module === "default"
+      this.module === "default" &&
+      this.transactionOptions === TransactionOptions.defaults() &&
+      this.retryOptions === RetryOptions.defaults()
     );
   }
 
