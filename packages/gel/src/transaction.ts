@@ -27,6 +27,7 @@ import {
   type SQLQueryArgs,
 } from "./ifaces";
 import type { Options } from "./options";
+import { IsolationLevelMap } from "./options";
 
 export enum TransactionState {
   ACTIVE = 0,
@@ -62,8 +63,14 @@ export class TransactionImpl {
     await rawConn.resetState();
 
     const options = holder.options.transactionOptions;
+    const isolationLevelStr = IsolationLevelMap[options.isolation];
+    if (!isolationLevelStr) {
+      throw new errors.InterfaceError(
+        `Invalid isolation level: ${options.isolation}`,
+      );
+    }
     await rawConn.fetch(
-      `START TRANSACTION ISOLATION ${options.isolation}, ${
+      `START TRANSACTION ISOLATION ${isolationLevelStr}, ${
         options.readonly ? "READ ONLY" : "READ WRITE"
       }, ${options.deferrable ? "" : "NOT "}DEFERRABLE;`,
       undefined,

@@ -18,6 +18,11 @@ export enum IsolationLevel {
   RepeatableRead = "RepeatableRead",
 }
 
+export const IsolationLevelMap = {
+  [IsolationLevel.Serializable]: "SERIALIZABLE",
+  [IsolationLevel.RepeatableRead]: "REPEATABLE READ",
+} as const;
+
 export enum RetryCondition {
   TransactionConflict,
   NetworkError,
