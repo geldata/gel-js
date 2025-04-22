@@ -14,7 +14,7 @@
     "test:cjs": "yarn generate queries --target cjs --file cjs/queries && yarn generate edgeql-js --target cjs --output-dir cjs/edgeql-js && cd cjs && node test.js",
     "test:mts": "yarn generate queries --target mts --file mts/queries && yarn generate edgeql-js --target mts --output-dir mts/edgeql-js && cd mts && yarn build && node dist/test.js",
     "ci:integration-test": "tsx ./testRunner.ts",
-    "bench:types": "cd ../.. && tsx integration-tests/lts/bench.ts",
+    "bench:types": "tsx ./bench.ts",
     "bench:runtime": "yarn generate edgeql-js --target mts --output-dir mts/edgeql-js && tsx ./throughput.bench.mts"
   },
   "devDependencies": {
