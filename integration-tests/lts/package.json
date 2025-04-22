@@ -14,11 +14,12 @@
     "test:cjs": "yarn generate queries --target cjs --file cjs/queries && yarn generate edgeql-js --target cjs --output-dir cjs/edgeql-js && cd cjs && node test.js",
     "test:mts": "yarn generate queries --target mts --file mts/queries && yarn generate edgeql-js --target mts --output-dir mts/edgeql-js && cd mts && yarn build && node dist/test.js",
     "ci:integration-test": "tsx ./testRunner.ts",
-    "bench:types": "cd ../.. && tsx integration-tests/lts/bench.ts"
+    "bench:types": "tsx ./bench.ts",
+    "bench:runtime": "yarn generate edgeql-js --target mts --output-dir mts/edgeql-js && tsx ./throughput.bench.mts"
   },
   "devDependencies": {
     "@arktype/attest": "^0.7.8",
-    "@gel/generate": "^0.6.0-rc",
+    "@gel/generate": "*",
     "@tsconfig/node-lts": "^20.1.3",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
@@ -29,7 +30,8 @@
     "typescript": "^5.5.2"
   },
   "dependencies": {
-    "gel": "^2.0.0-rc",
-    "fast-check": "^3.19.0"
+    "fast-check": "^3.19.0",
+    "gel": "*",
+    "tinybench": "^4.0.1"
   }
 }
