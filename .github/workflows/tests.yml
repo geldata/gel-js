@@ -16,7 +16,7 @@ jobs:
     continue-on-error: ${{ matrix.gel-version == 'nightly' }}
     strategy:
       matrix:
-        node-version: ["18", "20", "22", "23"]
+        node-version: ["20", "22", "23"]
         os: [ubuntu-latest]
         gel-version: ["stable"]
         include:
