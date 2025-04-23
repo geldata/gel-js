@@ -129,6 +129,14 @@ export class TransactionOptions {
     this.deferrable = deferrable;
   }
 
+  isDefault(): boolean {
+    return (
+      this.isolation === undefined &&
+      this.readonly === undefined &&
+      this.deferrable === undefined
+    );
+  }
+
   static defaults(): TransactionOptions {
     return _defaultTransactionOptions;
   }
@@ -433,7 +441,7 @@ export class Options {
       this.globals.size === 0 &&
       this.moduleAliases.size === 0 &&
       this.module === "default" &&
-      this.transactionOptions === TransactionOptions.defaults()
+      this.transactionOptions.isDefault()
     );
   }
 
