@@ -553,28 +553,43 @@ export class BaseRawConnection {
       } else {
         let encodedState: Uint8Array | null = null;
 
-        // Handle explicit transaction options isolation level, which should be
-        // set as the default isolation level for this query if it is not already
-        // in a transaction. If they match, do nothing.
         if (
           versionGreaterThanOrEqual(this.protocolVersion, [3, 0]) &&
-          state.transactionOptions.isolation !==
-            state.config.get("default_transaction_isolation")
+          isExecute &&
+          !this._isInTransaction()
         ) {
-          let newState = state;
-          if (isExecute && !this._isInTransaction()) {
-            newState = state.withConfig({
+          // Handle explicit transaction options isolation level and access mode,
+          // which should be set as the default transaction settings for this
+          // query if it is not already in a transaction. If they match, do
+          // nothing.
+          if (
+            state.transactionOptions.isolation !==
+            state.config.get("default_transaction_isolation")
+          ) {
+            state = state.withConfig({
               default_transaction_isolation: state.transactionOptions.isolation,
             });
           }
-          encodedState = this._setStateCodec(newState);
-        } else {
-          encodedState = this.stateCache.get(state) ?? null;
-          if (encodedState === null) {
-            encodedState = this._setStateCodec(state);
-            this.stateCache.set(state, encodedState);
+
+          if (
+            state.transactionOptions.readonly !==
+            state.config.get("default_transaction_access_mode")
+          ) {
+            state = state.withConfig({
+              default_transaction_access_mode: state.transactionOptions.readonly
+                ? "ReadOnly"
+                : "ReadWrite",
+            });
           }
         }
+
+        encodedState = this.stateCache.get(state) ?? null;
+
+        if (encodedState === null) {
+          encodedState = this._setStateCodec(state);
+        }
+
+        this.stateCache.set(state, encodedState);
 
         wb.writeBuffer(encodedState);
       }
