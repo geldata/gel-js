@@ -116,13 +116,13 @@ export interface SimpleTransactionOptions {
 export class TransactionOptions {
   // This type is immutable.
 
-  readonly isolation: IsolationLevel;
-  readonly readonly: boolean;
-  readonly deferrable: boolean;
+  readonly isolation: IsolationLevel | undefined;
+  readonly readonly: boolean | undefined;
+  readonly deferrable: boolean | undefined;
   constructor({
-    isolation = IsolationLevel.Serializable,
-    readonly = false,
-    deferrable = false,
+    isolation,
+    readonly,
+    deferrable,
   }: SimpleTransactionOptions = {}) {
     this.isolation = isolation;
     this.readonly = readonly;
@@ -433,8 +433,7 @@ export class Options {
       this.globals.size === 0 &&
       this.moduleAliases.size === 0 &&
       this.module === "default" &&
-      this.transactionOptions === TransactionOptions.defaults() &&
-      this.retryOptions === RetryOptions.defaults()
+      this.transactionOptions === TransactionOptions.defaults()
     );
   }
 

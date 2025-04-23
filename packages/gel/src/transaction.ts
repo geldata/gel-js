@@ -63,16 +63,24 @@ export class TransactionImpl {
     await rawConn.resetState();
 
     const options = holder.options.transactionOptions;
-    const isolationLevelStr = IsolationLevelMap[options.isolation];
-    if (!isolationLevelStr) {
-      throw new errors.InterfaceError(
-        `Invalid isolation level: ${options.isolation}`,
-      );
+    const txOptions = [];
+
+    if (options.isolation !== undefined) {
+      if (!IsolationLevelMap[options.isolation]) {
+        throw new errors.InterfaceError(
+          `Invalid isolation level: ${options.isolation}`,
+        );
+      }
+      txOptions.push(`ISOLATION ${IsolationLevelMap[options.isolation]}`);
+    }
+    if (options.readonly !== undefined) {
+      txOptions.push(options.readonly ? "READ ONLY" : "READ WRITE");
+    }
+    if (options.deferrable !== undefined) {
+      txOptions.push(options.deferrable ? "DEFERRABLE" : "NOT DEFERRABLE");
     }
     await rawConn.fetch(
-      `START TRANSACTION ISOLATION ${isolationLevelStr}, ${
-        options.readonly ? "READ ONLY" : "READ WRITE"
-      }, ${options.deferrable ? "" : "NOT "}DEFERRABLE;`,
+      `START TRANSACTION ${txOptions.join(", ")};`,
       undefined,
       OutputFormat.NONE,
       Cardinality.NO_RESULT,
