@@ -557,8 +557,9 @@ export class BaseRawConnection {
         // set as the default isolation level for this query if it is not already
         // in a transaction. If they match, do nothing.
         if (
+          versionGreaterThanOrEqual(this.protocolVersion, [3, 0]) &&
           state.transactionOptions.isolation !==
-          state.config.get("default_transaction_isolation")
+            state.config.get("default_transaction_isolation")
         ) {
           let newState = state;
           if (isExecute && !this._isInTransaction()) {
