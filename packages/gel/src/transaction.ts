@@ -66,12 +66,13 @@ export class TransactionImpl {
     const txOptions = [];
 
     if (options.isolation !== undefined) {
-      if (!IsolationLevelMap[options.isolation]) {
+      const maybeLevelText = IsolationLevelMap[options.isolation];
+      if (!maybeLevelText) {
         throw new errors.InterfaceError(
           `Invalid isolation level: ${options.isolation}`,
         );
       }
-      txOptions.push(`ISOLATION ${IsolationLevelMap[options.isolation]}`);
+      txOptions.push(`ISOLATION ${maybeLevelText}`);
     }
     if (options.readonly !== undefined) {
       txOptions.push(options.readonly ? "READ ONLY" : "READ WRITE");
