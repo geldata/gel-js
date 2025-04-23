@@ -482,7 +482,7 @@ export class BaseRawConnection {
     throw new errors.ProtocolError("invalid input codec");
   }
 
-  private isInTransaction(): boolean {
+  private _isInTransaction(): boolean {
     return (
       this.serverXactStatus === TransactionStatus.TRANS_INTRANS ||
       this.serverXactStatus === TransactionStatus.TRANS_ACTIVE
@@ -561,7 +561,7 @@ export class BaseRawConnection {
           state.config.get("default_transaction_isolation")
         ) {
           let newState = state;
-          if (isExecute && !this.isInTransaction()) {
+          if (isExecute && !this._isInTransaction()) {
             newState = state.withConfig({
               default_transaction_isolation: state.transactionOptions.isolation,
             });
