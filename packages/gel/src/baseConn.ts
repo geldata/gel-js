@@ -43,7 +43,7 @@ import * as chars from "./primitives/chars";
 import Event from "./primitives/event";
 import LRU from "./primitives/lru";
 import type { SerializedSessionState } from "./options";
-import { Options } from "./options";
+import { IsolationLevel, Options } from "./options";
 
 export const PROTO_VER: ProtocolVersion = [3, 0];
 export const PROTO_VER_MIN: ProtocolVersion = [0, 9];
@@ -512,6 +512,7 @@ export class BaseRawConnection {
     language: Language,
     isExecute: boolean,
   ) {
+    const dangers = ["FIXME"];
     if (versionGreaterThanOrEqual(this.protocolVersion, [3, 0])) {
       if (state.annotations.size >= 1 << 16) {
         throw new errors.InternalClientError("too many annotations");
@@ -566,13 +567,25 @@ export class BaseRawConnection {
           // which should be set as the default transaction settings for this
           // query if it is not already in a transaction. If they match, do
           // nothing.
-          if (
-            state.transactionOptions.isolation !==
-            state.config.get("default_transaction_isolation")
-          ) {
-            state = state.withConfig({
-              default_transaction_isolation: state.transactionOptions.isolation,
-            });
+          const isolation =
+            state.transactionOptions.isolation ===
+            IsolationLevel.PreferRepeatableRead
+              ? // If the server does not return any repeatable read dangers,
+                // we can set the default transaction isolation to repeatable
+                // read. Otherwise, we set it to serializable.
+                dangers.length === 0
+                ? IsolationLevel.RepeatableRead
+                : IsolationLevel.Serializable
+              : state.transactionOptions.isolation;
+
+          if (isolation !== state.config.get("default_transaction_isolation")) {
+            state = state
+              .withConfig({
+                default_transaction_isolation: isolation,
+              })
+              .withTransactionOptions({
+                isolation,
+              });
           }
 
           if (
