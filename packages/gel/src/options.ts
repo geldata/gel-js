@@ -16,11 +16,13 @@ export function defaultBackoff(attempt: number): number {
 export enum IsolationLevel {
   Serializable = "Serializable",
   RepeatableRead = "RepeatableRead",
+  PreferRepeatableRead = "PreferRepeatableRead",
 }
 
 export const IsolationLevelMap = {
   [IsolationLevel.Serializable]: "SERIALIZABLE",
   [IsolationLevel.RepeatableRead]: "REPEATABLE READ",
+  [IsolationLevel.PreferRepeatableRead]: "SERIALIZABLE",
 } as const;
 
 export enum RetryCondition {
