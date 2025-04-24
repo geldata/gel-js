@@ -14,9 +14,14 @@ export function defaultBackoff(attempt: number): number {
 }
 
 export enum IsolationLevel {
-  Serializable = "SERIALIZABLE",
-  RepeatableRead = "REPEATABLE READ",
+  Serializable = "Serializable",
+  RepeatableRead = "RepeatableRead",
 }
+
+export const IsolationLevelMap = {
+  [IsolationLevel.Serializable]: "SERIALIZABLE",
+  [IsolationLevel.RepeatableRead]: "REPEATABLE READ",
+} as const;
 
 export enum RetryCondition {
   TransactionConflict,
@@ -111,17 +116,25 @@ export interface SimpleTransactionOptions {
 export class TransactionOptions {
   // This type is immutable.
 
-  readonly isolation: IsolationLevel;
-  readonly readonly: boolean;
-  readonly deferrable: boolean;
+  readonly isolation: IsolationLevel | undefined;
+  readonly readonly: boolean | undefined;
+  readonly deferrable: boolean | undefined;
   constructor({
-    isolation = IsolationLevel.Serializable,
-    readonly = false,
-    deferrable = false,
+    isolation,
+    readonly,
+    deferrable,
   }: SimpleTransactionOptions = {}) {
     this.isolation = isolation;
     this.readonly = readonly;
     this.deferrable = deferrable;
+  }
+
+  isDefault(): boolean {
+    return (
+      this.isolation === undefined &&
+      this.readonly === undefined &&
+      this.deferrable === undefined
+    );
   }
 
   static defaults(): TransactionOptions {
@@ -427,7 +440,8 @@ export class Options {
       this.config.size === 0 &&
       this.globals.size === 0 &&
       this.moduleAliases.size === 0 &&
-      this.module === "default"
+      this.module === "default" &&
+      this.transactionOptions.isDefault()
     );
   }
 
