@@ -490,9 +490,15 @@ export class BaseRawConnection {
   }
 
   private _setStateCodec(state: Options): Uint8Array {
+    let encodedState = this.stateCache.get(state);
+    if (encodedState) {
+      return encodedState;
+    }
     const buf = new WriteBuffer();
     this.stateCodec.encode(buf, state._serialise(), NOOP_CODEC_CONTEXT);
-    return buf.unwrap();
+    encodedState = buf.unwrap();
+    this.stateCache.set(state, encodedState);
+    return encodedState;
   }
 
   private _encodeParseParams(
@@ -551,8 +557,6 @@ export class BaseRawConnection {
       if (this.stateCodec === INVALID_CODEC || this.stateCodec === NULL_CODEC) {
         wb.writeInt32(0);
       } else {
-        let encodedState: Uint8Array | null = null;
-
         if (
           versionGreaterThanOrEqual(this.protocolVersion, [3, 0]) &&
           isExecute &&
@@ -583,13 +587,7 @@ export class BaseRawConnection {
           }
         }
 
-        encodedState = this.stateCache.get(state) ?? null;
-
-        if (encodedState === null) {
-          encodedState = this._setStateCodec(state);
-        }
-
-        this.stateCache.set(state, encodedState);
+        const encodedState = this._setStateCodec(state);
 
         wb.writeBuffer(encodedState);
       }
