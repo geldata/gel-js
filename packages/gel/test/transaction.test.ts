@@ -127,38 +127,35 @@ test("transaction: kinds", async () => {
   await run(async (con) => {
     for (const [isolation, readonly, defer] of all_options()) {
       const partial = { isolation, readonly, defer };
-      const opt = new TransactionOptions(partial); // class api
-      const withOpts = con.withTransactionOptions(opt);
-      const result = await withOpts.transaction(async (tx) =>
-        tx.queryRequiredSingle<IsolationLevel>(qStr),
-      );
-      // n.b. if the isolation level is not set, then just pass this test since
-      // the default could change some day.
       const effectiveIsolation =
         isolation && isolation === IsolationLevel.PreferRepeatableRead
           ? IsolationLevel.Serializable
           : isolation;
-      expect(result).toBe(effectiveIsolation ?? result);
-      const implicitTxResult =
-        await withOpts.queryRequiredSingle<IsolationLevel>(qStr);
-      expect(implicitTxResult).toBe(effectiveIsolation ?? implicitTxResult);
-      expect(implicitTxResult).toBe(result);
-
+      const opt = new TransactionOptions(partial); // class api
+      const withOpts = con.withTransactionOptions(opt);
       const withObjectOpts = con
         .withTransactionOptions(opt)
         .withRetryOptions({ attempts: 1 });
+
+      const result = await withOpts.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(qStr),
+      );
       const objResult = await withObjectOpts.transaction(async (tx) =>
         tx.queryRequiredSingle<IsolationLevel>(qStr),
       );
+
       // n.b. if the isolation level is not set, then just pass this test since
       // the default could change some day.
-      expect(objResult).toBe(effectiveIsolation ?? objResult);
+      expect(result).toBe(effectiveIsolation ?? result);
+      expect(objResult).toBe(result);
+
+      const implicitTxResult =
+        await withOpts.queryRequiredSingle<IsolationLevel>(qStr);
       const objImplicitTxResult =
         await withObjectOpts.queryRequiredSingle<IsolationLevel>(qStr);
-      expect(objImplicitTxResult).toBe(
-        effectiveIsolation ?? objImplicitTxResult,
-      );
-      expect(objImplicitTxResult).toBe(objResult);
+      expect(implicitTxResult).toBe(effectiveIsolation ?? implicitTxResult);
+      expect(implicitTxResult).toBe(result);
+      expect(objImplicitTxResult).toBe(implicitTxResult);
     }
   });
 });
