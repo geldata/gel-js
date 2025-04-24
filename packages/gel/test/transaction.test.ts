@@ -122,10 +122,58 @@ function* all_options(): Generator<
   }
 }
 
-test("transaction: kinds", async () => {
-  const qStr = `select <str>sys::get_transaction_isolation()`;
+test("transaction: isolation levels", async () => {
   await run(async (con) => {
+    const mutation = `
+      with ins := (insert ${typename}Conflict {tmp := <str>uuid_generate_v4()})
+      select <str>sys::get_transaction_isolation()
+    `;
+    const read = `
+      select <str>sys::get_transaction_isolation()
+    `;
     for (const [isolation, readonly, defer] of all_options()) {
+      const partial = { isolation, readonly, defer };
+      const effectiveIsolation =
+        isolation && isolation === IsolationLevel.PreferRepeatableRead
+          ? IsolationLevel.RepeatableRead
+          : isolation;
+      const opt = new TransactionOptions(partial); // class api
+      const withOpts = con.withTransactionOptions(opt);
+      const withObjectOpts = con
+        .withTransactionOptions(opt)
+        .withRetryOptions({ attempts: 1 });
+
+      const result = await withOpts.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation),
+      );
+      const objResult = await withObjectOpts.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation),
+      );
+
+      // n.b. if the isolation level is not set, then just pass this test since
+      // the default could change some day.
+      expect(result).toBe(effectiveIsolation ?? result);
+      expect(objResult).toBe(result);
+
+      const implicitTxResult =
+        await withOpts.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation);
+      const objImplicitTxResult =
+        await withObjectOpts.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation);
+      expect(implicitTxResult).toBe(effectiveIsolation ?? implicitTxResult);
+      expect(implicitTxResult).toBe(result);
+      expect(objImplicitTxResult).toBe(implicitTxResult);
+    }
+  });
+
+  await run(async (con) => {
+    const mutation = `
+      with ins := (insert ${typename}ConflictChild {tmp := <str>uuid_generate_v4()})
+      select <str>sys::get_transaction_isolation()
+    `;
+    for (const [isolation, readonly, defer] of all_options()) {
+      if (readonly) {
+        continue;
+      }
       const partial = { isolation, readonly, defer };
       const effectiveIsolation =
         isolation && isolation === IsolationLevel.PreferRepeatableRead
@@ -138,10 +186,10 @@ test("transaction: kinds", async () => {
         .withRetryOptions({ attempts: 1 });
 
       const result = await withOpts.transaction(async (tx) =>
-        tx.queryRequiredSingle<IsolationLevel>(qStr),
+        tx.queryRequiredSingle<IsolationLevel>(mutation),
       );
       const objResult = await withObjectOpts.transaction(async (tx) =>
-        tx.queryRequiredSingle<IsolationLevel>(qStr),
+        tx.queryRequiredSingle<IsolationLevel>(mutation),
       );
 
       // n.b. if the isolation level is not set, then just pass this test since
@@ -150,9 +198,9 @@ test("transaction: kinds", async () => {
       expect(objResult).toBe(result);
 
       const implicitTxResult =
-        await withOpts.queryRequiredSingle<IsolationLevel>(qStr);
+        await withOpts.queryRequiredSingle<IsolationLevel>(mutation);
       const objImplicitTxResult =
-        await withObjectOpts.queryRequiredSingle<IsolationLevel>(qStr);
+        await withObjectOpts.queryRequiredSingle<IsolationLevel>(mutation);
       expect(implicitTxResult).toBe(effectiveIsolation ?? implicitTxResult);
       expect(implicitTxResult).toBe(result);
       expect(objImplicitTxResult).toBe(implicitTxResult);

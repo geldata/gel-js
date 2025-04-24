@@ -103,6 +103,7 @@ export type ParseResult = [
   inCodecBuffer: Uint8Array | null,
   outCodecBuffer: Uint8Array | null,
   warnings: errors.GelError[],
+  unsafeIsolationDangers: errors.GelError[],
 ];
 
 export type connConstructor = new (
@@ -115,7 +116,10 @@ export class BaseRawConnection {
   protected lastStatus: string | null;
 
   protected codecsRegistry: CodecsRegistry;
-  protected queryCodecCache: LRU<string, [number, ICodec, ICodec, number]>;
+  protected queryCodecCache: LRU<
+    string,
+    [number, ICodec, ICodec, number, errors.GelError[]]
+  >;
 
   protected serverSecret: Uint8Array | null;
   /** @internal */ serverSettings: ServerSettings;
@@ -235,9 +239,11 @@ export class BaseRawConnection {
     Uint8Array,
     Uint8Array,
     errors.GelError[],
+    errors.GelError[],
   ] {
     let capabilities = -1;
     let warnings: errors.GelError[] = [];
+    let unsafeIsolationDangers: errors.GelError[] = [];
 
     const headers = this._readHeaders();
     if (headers.warnings != null) {
@@ -246,6 +252,15 @@ export class BaseRawConnection {
         (err as any)._query = query;
         return err;
       });
+    }
+    if (headers.unsafe_isolation_dangers != null) {
+      unsafeIsolationDangers = JSON.parse(headers.unsafe_isolation_dangers).map(
+        (danger: any) => {
+          const err = errorFromJSON(danger);
+          (err as any)._query = query;
+          return err;
+        },
+      );
     }
     capabilities = Number(this.buffer.readBigInt64());
 
@@ -283,6 +298,7 @@ export class BaseRawConnection {
       inTypeData,
       outTypeData,
       warnings,
+      unsafeIsolationDangers,
     ];
   }
 
@@ -511,8 +527,8 @@ export class BaseRawConnection {
     options: QueryOptions | undefined,
     language: Language,
     isExecute: boolean,
+    unsafeIsolationDangers: errors.GelError[],
   ) {
-    const dangers = ["FIXME"];
     if (versionGreaterThanOrEqual(this.protocolVersion, [3, 0])) {
       if (state.annotations.size >= 1 << 16) {
         throw new errors.InternalClientError("too many annotations");
@@ -573,7 +589,7 @@ export class BaseRawConnection {
               ? // If the server does not return any repeatable read dangers,
                 // we can set the default transaction isolation to repeatable
                 // read. Otherwise, we set it to serializable.
-                dangers.length === 0
+                unsafeIsolationDangers.length === 0
                 ? IsolationLevel.RepeatableRead
                 : IsolationLevel.Serializable
               : state.transactionOptions.isolation;
@@ -615,6 +631,7 @@ export class BaseRawConnection {
     state: Options,
     capabilitiesFlags: number = RESTRICTED_CAPABILITIES,
     options?: QueryOptions,
+    unsafeIsolationDangers: errors.GelError[] = [],
   ): Promise<ParseResult> {
     const wb = new WriteMessageBuffer();
     wb.beginMessage(chars.$P);
@@ -629,6 +646,7 @@ export class BaseRawConnection {
       options,
       language,
       false,
+      unsafeIsolationDangers,
     );
 
     wb.endMessage();
@@ -664,6 +682,7 @@ export class BaseRawConnection {
               inCodecBuf,
               outCodecBuf,
               warnings,
+              unsafeIsolationDangers,
             ] = this._parseDescribeTypeMessage(query);
             const key = this._getQueryCacheKey(
               query,
@@ -675,6 +694,7 @@ export class BaseRawConnection {
               inCodec,
               outCodec,
               capabilities,
+              unsafeIsolationDangers,
             ]);
           } catch (e: any) {
             error = e;
@@ -718,6 +738,7 @@ export class BaseRawConnection {
           state,
           capabilitiesFlags,
           options,
+          unsafeIsolationDangers,
         );
       }
       throw error;
@@ -731,6 +752,7 @@ export class BaseRawConnection {
       inCodecBuf,
       outCodecBuf,
       warnings,
+      unsafeIsolationDangers,
     ];
   }
 
@@ -746,7 +768,9 @@ export class BaseRawConnection {
     result: any[] | WriteBuffer,
     capabilitiesFlags: number = RESTRICTED_CAPABILITIES,
     options?: QueryOptions,
-  ): Promise<errors.GelError[]> {
+    unsafeIsolationDangers: errors.GelError[] = [],
+  ): Promise<[errors.GelError[], errors.GelError[]]> {
+    let currentUnsafeIsolationDangers = unsafeIsolationDangers;
     let ctx = state.makeCodecContext();
 
     const wb = new WriteMessageBuffer();
@@ -762,6 +786,7 @@ export class BaseRawConnection {
       options,
       language,
       true,
+      currentUnsafeIsolationDangers,
     );
 
     wb.writeBuffer(inCodec.tidBuffer);
@@ -780,7 +805,7 @@ export class BaseRawConnection {
 
     let error: Error | null = null;
     let parsing = true;
-    let warnings: errors.GelError[] = [];
+    let currentWarnings: errors.GelError[] = [];
 
     while (parsing) {
       if (!this.buffer.takeMessage()) {
@@ -827,6 +852,7 @@ export class BaseRawConnection {
               _,
               __,
               _warnings,
+              _dangers,
             ] = this._parseDescribeTypeMessage(query);
 
             /* Quoting the docs:
@@ -869,9 +895,11 @@ export class BaseRawConnection {
               newInCodec,
               newOutCodec,
               capabilities,
+              _dangers,
             ]);
             outCodec = newOutCodec;
-            warnings = _warnings;
+            currentWarnings = _warnings;
+            currentUnsafeIsolationDangers = _dangers;
           } catch (e: any) {
             // An error happened, so we don't know if we did bump the internal
             // schema tracker or not, so let's do it again to be on the safe
@@ -926,12 +954,13 @@ export class BaseRawConnection {
           result,
           capabilitiesFlags,
           options,
+          currentUnsafeIsolationDangers,
         );
       }
       throw error;
     }
 
-    return warnings;
+    return [currentWarnings, currentUnsafeIsolationDangers];
   }
 
   private _getQueryCacheKey(
@@ -971,7 +1000,11 @@ export class BaseRawConnection {
     state: Options,
     privilegedMode = false,
     language: Language = Language.EDGEQL,
-  ): Promise<{ result: any; warnings: errors.GelError[] }> {
+  ): Promise<{
+    result: any;
+    warnings: errors.GelError[];
+    unsafeIsolationDangers: errors.GelError[];
+  }> {
     if (
       language !== Language.EDGEQL &&
       versionGreaterThan([3, 0], this.protocolVersion)
@@ -995,11 +1028,10 @@ export class BaseRawConnection {
       language,
     );
     const ret: any[] = [];
-    // @ts-ignore
-    let _;
     let warnings: errors.GelError[] = [];
 
-    let [card, inCodec, outCodec] = this.queryCodecCache.get(key) ?? [];
+    let [card, inCodec, outCodec, , unsafeIsolationDangers] =
+      this.queryCodecCache.get(key) ?? [];
 
     if (card) {
       this._validateFetchCardinality(card, outputFormat, expectedCardinality);
@@ -1009,19 +1041,22 @@ export class BaseRawConnection {
       (!inCodec && args !== null) ||
       (this.stateCodec === INVALID_CODEC && !state.isDefaultSession())
     ) {
-      [card, inCodec, outCodec, _, _, _, warnings] = await this._parse(
-        language,
-        query,
-        outputFormat,
-        expectedCardinality,
-        state,
-        privilegedMode ? Capabilities.ALL : undefined,
-      );
+      [card, inCodec, outCodec, , , , warnings, unsafeIsolationDangers] =
+        await this._parse(
+          language,
+          query,
+          outputFormat,
+          expectedCardinality,
+          state,
+          privilegedMode ? Capabilities.ALL : undefined,
+          undefined,
+          unsafeIsolationDangers,
+        );
       this._validateFetchCardinality(card, outputFormat, expectedCardinality);
     }
 
     try {
-      warnings = await this._executeFlow(
+      [warnings, unsafeIsolationDangers] = await this._executeFlow(
         language,
         query,
         args,
@@ -1032,11 +1067,14 @@ export class BaseRawConnection {
         outCodec ?? NULL_CODEC,
         ret,
         privilegedMode ? Capabilities.ALL : undefined,
+        undefined,
+        unsafeIsolationDangers,
       );
     } catch (e) {
       if (e instanceof errors.ParameterTypeMismatchError) {
-        [card, inCodec, outCodec] = this.queryCodecCache.get(key)!;
-        warnings = await this._executeFlow(
+        [card, inCodec, outCodec, , unsafeIsolationDangers] =
+          this.queryCodecCache.get(key)!;
+        [warnings, unsafeIsolationDangers] = await this._executeFlow(
           language,
           query,
           args,
@@ -1054,26 +1092,30 @@ export class BaseRawConnection {
     }
 
     if (outputFormat === OutputFormat.NONE) {
-      return { result: null, warnings };
+      return { result: null, warnings, unsafeIsolationDangers };
     }
     if (expectOne) {
       if (requiredOne && !ret.length) {
         throw new errors.NoDataError("query returned no data");
       } else {
-        return { result: ret[0] ?? (asJson ? "null" : null), warnings };
+        return {
+          result: ret[0] ?? (asJson ? "null" : null),
+          warnings,
+          unsafeIsolationDangers,
+        };
       }
     } else {
       if (ret && ret.length) {
         if (asJson) {
-          return { result: ret[0], warnings };
+          return { result: ret[0], warnings, unsafeIsolationDangers };
         } else {
-          return { result: ret, warnings };
+          return { result: ret, warnings, unsafeIsolationDangers };
         }
       } else {
         if (asJson) {
-          return { result: "[]", warnings };
+          return { result: "[]", warnings, unsafeIsolationDangers };
         } else {
-          return { result: ret, warnings };
+          return { result: ret, warnings, unsafeIsolationDangers };
         }
       }
     }
