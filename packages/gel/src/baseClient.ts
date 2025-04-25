@@ -132,7 +132,10 @@ export class ClientConnectionHolder {
     let result: T | void;
     let optimisticRepeatableRead = true;
     for (let iteration = 0; ; ++iteration) {
-      const transaction = await TransactionImpl._startTransaction(this, optimisticRepeatableRead);
+      const transaction = await TransactionImpl._startTransaction(
+        this,
+        optimisticRepeatableRead,
+      );
       const clientTx = new Transaction(transaction, this.options);
 
       let commitFailed = false;
@@ -160,7 +163,7 @@ export class ClientConnectionHolder {
           }
         }
         if (
-          (err instanceof errors.CapabilityError) &&
+          err instanceof errors.CapabilityError &&
           err.message &&
           err.message.includes("REPEATABLE READ") && // XXX
           optimisticRepeatableRead

@@ -147,13 +147,18 @@ test("transaction: isolation levels", async () => {
       select <str>sys::get_transaction_isolation()
     `;
 
-    async function doTest(client: Client, query: string, expected: IsolationLevel) {
+    async function doTest(
+      client: Client,
+      query: string,
+      expected: IsolationLevel,
+    ) {
       const result = await client.transaction(async (tx) =>
         tx.queryRequiredSingle<IsolationLevel>(query),
       );
       expect(result).toBe(expected);
 
-      const implicitTxResult = await client.queryRequiredSingle<IsolationLevel>(query);
+      const implicitTxResult =
+        await client.queryRequiredSingle<IsolationLevel>(query);
       expect(implicitTxResult).toBe(expected);
     }
 
@@ -172,8 +177,16 @@ test("transaction: isolation levels", async () => {
         } else {
           await doTest(withOpts, mutation, IsolationLevel.RepeatableRead);
           await doTest(withObjectOpts, mutation, IsolationLevel.RepeatableRead);
-          await doTest(withOpts, mutationReqSerializable, IsolationLevel.Serializable);
-          await doTest(withObjectOpts, mutationReqSerializable, IsolationLevel.Serializable);
+          await doTest(
+            withOpts,
+            mutationReqSerializable,
+            IsolationLevel.Serializable,
+          );
+          await doTest(
+            withObjectOpts,
+            mutationReqSerializable,
+            IsolationLevel.Serializable,
+          );
         }
       } else if (isolation != null) {
         await doTest(withOpts, readonly ? read : mutation, isolation);

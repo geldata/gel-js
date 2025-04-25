@@ -242,7 +242,7 @@ export class AdminUIFetchConnection extends BaseFetchConnection {
     this.abortSignal = abortSignal ?? null;
 
     const result = new WriteBuffer();
-    const [warnings,] = await this._executeFlow(
+    const [warnings] = await this._executeFlow(
       language,
       query,
       args,

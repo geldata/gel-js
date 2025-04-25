@@ -79,7 +79,9 @@ export class TransactionImpl {
     } else if (options.isolation != null) {
       // If it's `null` we can just issue `START TRANSACTION` and rely on
       // whatever the server defaults to.
-      throw new errors.InterfaceError(`Invalid isolation level: ${options.isolation}`);
+      throw new errors.InterfaceError(
+        `Invalid isolation level: ${options.isolation}`,
+      );
     }
 
     if (options.readonly !== undefined) {
