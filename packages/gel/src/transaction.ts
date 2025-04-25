@@ -27,7 +27,7 @@ import {
   type SQLQueryArgs,
 } from "./ifaces";
 import type { Options } from "./options";
-import { IsolationLevelMap } from "./options";
+import { IsolationLevel } from "./options";
 
 export enum TransactionState {
   ACTIVE = 0,
@@ -57,6 +57,7 @@ export class TransactionImpl {
   /** @internal */
   static async _startTransaction(
     holder: ClientConnectionHolder,
+    optimisticRepeatableRead: boolean,
   ): Promise<TransactionImpl> {
     const rawConn = await holder._getConnection();
 
@@ -65,15 +66,24 @@ export class TransactionImpl {
     const options = holder.options.transactionOptions;
     const txOptions = [];
 
-    if (options.isolation !== undefined) {
-      const maybeLevelText = IsolationLevelMap[options.isolation];
-      if (!maybeLevelText) {
-        throw new errors.InterfaceError(
-          `Invalid isolation level: ${options.isolation}`,
-        );
+    if (options.isolation === IsolationLevel.RepeatableRead) {
+      txOptions.push(`ISOLATION REPEATABLE READ`);
+    } else if (options.isolation === IsolationLevel.Serializable) {
+      txOptions.push(`ISOLATION SERIALIZABLE`);
+    } else if (options.isolation === IsolationLevel.PreferRepeatableRead) {
+      if (optimisticRepeatableRead) {
+        txOptions.push(`ISOLATION REPEATABLE READ`);
+      } else {
+        txOptions.push(`ISOLATION SERIALIZABLE`);
       }
-      txOptions.push(`ISOLATION ${maybeLevelText}`);
+    } else if (options.isolation != null) {
+      // If it's `null` we can just issue `START TRANSACTION` and rely on
+      // whatever the server defaults to.
+      throw new errors.InterfaceError(
+        `Invalid isolation level: ${options.isolation}`,
+      );
     }
+
     if (options.readonly !== undefined) {
       txOptions.push(options.readonly ? "READ ONLY" : "READ WRITE");
     }

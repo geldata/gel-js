@@ -110,6 +110,12 @@ export class DisabledCapabilityError extends CapabilityError {
   }
 }
 
+export class UnsafeIsolationLevelError extends CapabilityError {
+  override get code(): number {
+    return 0x03_04_03_00;
+  }
+}
+
 export class QueryError extends GelError {
   get code(): number {
     return 0x04_00_00_00;
@@ -564,6 +570,18 @@ export class LogMessage extends GelError {
 export class WarningMessage extends LogMessage {
   override get code(): number {
     return 0xf0_01_00_00;
+  }
+}
+
+export class StatusMessage extends LogMessage {
+  override get code(): number {
+    return 0xf0_02_00_00;
+  }
+}
+
+export class MigrationStatusMessage extends StatusMessage {
+  override get code(): number {
+    return 0xf0_02_00_01;
   }
 }
 
