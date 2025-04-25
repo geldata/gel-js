@@ -27,7 +27,7 @@ import {
   type SQLQueryArgs,
 } from "./ifaces";
 import type { Options } from "./options";
-import { IsolationLevelMap } from "./options";
+import { IsolationLevel, IsolationLevelMap } from "./options";
 
 export enum TransactionState {
   ACTIVE = 0,
@@ -42,21 +42,25 @@ export class TransactionImpl {
 
   private _state: TransactionState;
   private _opInProgress: boolean;
+  private _optimisticRepeatableRead: boolean;
 
   private constructor(
     holder: ClientConnectionHolder,
     rawConn: BaseRawConnection,
+    optimisticRepeatableRead: boolean,
   ) {
     this._holder = holder;
     this._rawConn = rawConn;
 
     this._state = TransactionState.ACTIVE;
     this._opInProgress = false;
+    this._optimisticRepeatableRead = optimisticRepeatableRead;
   }
 
   /** @internal */
   static async _startTransaction(
     holder: ClientConnectionHolder,
+    optimisticRepeatableRead: boolean,
   ): Promise<TransactionImpl> {
     const rawConn = await holder._getConnection();
 
@@ -66,7 +70,13 @@ export class TransactionImpl {
     const txOptions = [];
 
     if (options.isolation !== undefined) {
-      const maybeLevelText = IsolationLevelMap[options.isolation];
+      // TODO: check if this is optimistic
+      const maybeLevelText =
+        IsolationLevelMap[
+          optimisticRepeatableRead
+            ? IsolationLevel.RepeatableRead
+            : IsolationLevel.Serializable
+        ];
       if (!maybeLevelText) {
         throw new errors.InterfaceError(
           `Invalid isolation level: ${options.isolation}`,
@@ -89,7 +99,7 @@ export class TransactionImpl {
       true,
     );
 
-    return new TransactionImpl(holder, rawConn);
+    return new TransactionImpl(holder, rawConn, optimisticRepeatableRead);
   }
 
   /** @internal */
@@ -187,6 +197,15 @@ export class TransactionImpl {
       },
       "A query is still in progress after transaction block has returned.",
     );
+  }
+
+  retryOptimisticRepeatableRead(): boolean {
+    if (this._optimisticRepeatableRead) {
+      this._optimisticRepeatableRead = false;
+      return true;
+    }
+
+    return false;
   }
 }
 

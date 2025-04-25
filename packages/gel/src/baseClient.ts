@@ -158,6 +158,14 @@ export class ClientConnectionHolder {
             throw rollback_err;
           }
         }
+        if (err instanceof errors.CapabilityError) {
+          if (transaction.retryOptimisticRepeatableRead()) {
+            // We should not count this attempt against the general retry
+            // iterations.
+            iteration--;
+            continue;
+          }
+        }
         if (
           err instanceof errors.GelError &&
           err.hasTag(errors.SHOULD_RETRY) &&
