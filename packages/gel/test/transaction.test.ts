@@ -55,6 +55,14 @@ beforeAll(async () => {
       };
 
       CREATE TYPE ${typename}ConflictChild extending ${typename}Conflict;
+
+      CREATE TYPE ${typename}ConflictChildless {
+          # DO NOT INHERIT FROM THIS TYPE!
+
+          CREATE REQUIRED PROPERTY tmp -> std::str {
+              CREATE CONSTRAINT exclusive;
+          }
+      };
     `);
   });
 }, 10_000);
@@ -65,6 +73,7 @@ afterAll(async () => {
       DROP TYPE ${typename};
       DROP TYPE ${typename}ConflictChild;
       DROP TYPE ${typename}Conflict;
+      DROP TYPE ${typename}ConflictChildless;
       DROP MODULE test;
     `);
   });
@@ -124,44 +133,52 @@ function* all_options(): Generator<
 
 test("transaction: isolation levels", async () => {
   await run(async (con) => {
+    // This mutation query is OK to run with REPEATABLE READ:
     const mutation = `
+      with ins := (insert ${typename}ConflictChildless {tmp := <str>uuid_generate_v4()})
+      select <str>sys::get_transaction_isolation()
+    `;
+    // This mutation query requires SERIALIZABLE:
+    const mutationReqSerializable = `
       with ins := (insert ${typename}Conflict {tmp := <str>uuid_generate_v4()})
       select <str>sys::get_transaction_isolation()
     `;
     const read = `
       select <str>sys::get_transaction_isolation()
     `;
+
+    async function doTest(client: Client, query: string, expected: IsolationLevel) {
+      const result = await client.transaction(async (tx) =>
+        tx.queryRequiredSingle<IsolationLevel>(query),
+      );
+      expect(result).toBe(expected);
+
+      const implicitTxResult = await client.queryRequiredSingle<IsolationLevel>(query);
+      expect(implicitTxResult).toBe(expected);
+    }
+
     for (const [isolation, readonly, defer] of all_options()) {
       const partial = { isolation, readonly, defer };
-      const effectiveIsolation =
-        isolation && isolation === IsolationLevel.PreferRepeatableRead
-          ? IsolationLevel.RepeatableRead
-          : isolation;
       const opt = new TransactionOptions(partial); // class api
       const withOpts = con.withTransactionOptions(opt);
       const withObjectOpts = con
         .withTransactionOptions(opt)
         .withRetryOptions({ attempts: 1 });
 
-      const result = await withOpts.transaction(async (tx) =>
-        tx.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation),
-      );
-      const objResult = await withObjectOpts.transaction(async (tx) =>
-        tx.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation),
-      );
-
-      // n.b. if the isolation level is not set, then just pass this test since
-      // the default could change some day.
-      expect(result).toBe(effectiveIsolation ?? result);
-      expect(objResult).toBe(result);
-
-      const implicitTxResult =
-        await withOpts.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation);
-      const objImplicitTxResult =
-        await withObjectOpts.queryRequiredSingle<IsolationLevel>(readonly ? read : mutation);
-      expect(implicitTxResult).toBe(effectiveIsolation ?? implicitTxResult);
-      expect(implicitTxResult).toBe(result);
-      expect(objImplicitTxResult).toBe(implicitTxResult);
+      if (isolation === IsolationLevel.PreferRepeatableRead) {
+        if (readonly) {
+          await doTest(withOpts, read, IsolationLevel.RepeatableRead);
+          await doTest(withObjectOpts, read, IsolationLevel.RepeatableRead);
+        } else {
+          await doTest(withOpts, mutation, IsolationLevel.RepeatableRead);
+          await doTest(withObjectOpts, mutation, IsolationLevel.RepeatableRead);
+          await doTest(withOpts, mutationReqSerializable, IsolationLevel.Serializable);
+          await doTest(withObjectOpts, mutationReqSerializable, IsolationLevel.Serializable);
+        }
+      } else if (isolation != null) {
+        await doTest(withOpts, readonly ? read : mutation, isolation);
+        await doTest(withObjectOpts, readonly ? read : mutation, isolation);
+      }
     }
   });
 

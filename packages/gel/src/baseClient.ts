@@ -130,8 +130,9 @@ export class ClientConnectionHolder {
     action: (transaction: Transaction) => Promise<T>,
   ): Promise<T> {
     let result: T | void;
+    let optimisticRepeatableRead = true;
     for (let iteration = 0; ; ++iteration) {
-      const transaction = await TransactionImpl._startTransaction(this);
+      const transaction = await TransactionImpl._startTransaction(this, optimisticRepeatableRead);
       const clientTx = new Transaction(transaction, this.options);
 
       let commitFailed = false;
@@ -158,13 +159,17 @@ export class ClientConnectionHolder {
             throw rollback_err;
           }
         }
-        if (err instanceof errors.CapabilityError) {
-          if (transaction.retryOptimisticRepeatableRead()) {
-            // We should not count this attempt against the general retry
-            // iterations.
-            iteration--;
-            continue;
-          }
+        if (
+          (err instanceof errors.CapabilityError) &&
+          err.message &&
+          err.message.includes("REPEATABLE READ") && // XXX
+          optimisticRepeatableRead
+        ) {
+          optimisticRepeatableRead = false;
+          // We should not count this attempt against the general retry
+          // iterations.
+          iteration--;
+          continue;
         }
         if (
           err instanceof errors.GelError &&

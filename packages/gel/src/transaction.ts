@@ -27,7 +27,7 @@ import {
   type SQLQueryArgs,
 } from "./ifaces";
 import type { Options } from "./options";
-import { IsolationLevel, IsolationLevelMap } from "./options";
+import { IsolationLevel } from "./options";
 
 export enum TransactionState {
   ACTIVE = 0,
@@ -42,19 +42,16 @@ export class TransactionImpl {
 
   private _state: TransactionState;
   private _opInProgress: boolean;
-  private _optimisticRepeatableRead: boolean;
 
   private constructor(
     holder: ClientConnectionHolder,
     rawConn: BaseRawConnection,
-    optimisticRepeatableRead: boolean,
   ) {
     this._holder = holder;
     this._rawConn = rawConn;
 
     this._state = TransactionState.ACTIVE;
     this._opInProgress = false;
-    this._optimisticRepeatableRead = optimisticRepeatableRead;
   }
 
   /** @internal */
@@ -69,21 +66,22 @@ export class TransactionImpl {
     const options = holder.options.transactionOptions;
     const txOptions = [];
 
-    if (options.isolation !== undefined) {
-      // TODO: check if this is optimistic
-      const maybeLevelText =
-        IsolationLevelMap[
-          optimisticRepeatableRead
-            ? IsolationLevel.RepeatableRead
-            : IsolationLevel.Serializable
-        ];
-      if (!maybeLevelText) {
-        throw new errors.InterfaceError(
-          `Invalid isolation level: ${options.isolation}`,
-        );
+    if (options.isolation === IsolationLevel.RepeatableRead) {
+      txOptions.push(`ISOLATION REPEATABLE READ`);
+    } else if (options.isolation === IsolationLevel.Serializable) {
+      txOptions.push(`ISOLATION SERIALIZABLE`);
+    } else if (options.isolation === IsolationLevel.PreferRepeatableRead) {
+      if (optimisticRepeatableRead) {
+        txOptions.push(`ISOLATION REPEATABLE READ`);
+      } else {
+        txOptions.push(`ISOLATION SERIALIZABLE`);
       }
-      txOptions.push(`ISOLATION ${maybeLevelText}`);
+    } else if (options.isolation != null) {
+      // If it's `null` we can just issue `START TRANSACTION` and rely on
+      // whatever the server defaults to.
+      throw new errors.InterfaceError(`Invalid isolation level: ${options.isolation}`);
     }
+
     if (options.readonly !== undefined) {
       txOptions.push(options.readonly ? "READ ONLY" : "READ WRITE");
     }
@@ -99,7 +97,7 @@ export class TransactionImpl {
       true,
     );
 
-    return new TransactionImpl(holder, rawConn, optimisticRepeatableRead);
+    return new TransactionImpl(holder, rawConn);
   }
 
   /** @internal */
@@ -197,15 +195,6 @@ export class TransactionImpl {
       },
       "A query is still in progress after transaction block has returned.",
     );
-  }
-
-  retryOptimisticRepeatableRead(): boolean {
-    if (this._optimisticRepeatableRead) {
-      this._optimisticRepeatableRead = false;
-      return true;
-    }
-
-    return false;
   }
 }
 
