@@ -16,7 +16,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const isSignedIn = await session.isSignedIn();
 
   const builtinUIEnabled = await client.queryRequiredSingle<boolean>(
-    `select exists ext::auth::UIConfig`
+    `select exists ext::auth::UIConfig`,
   );
 
   return json({

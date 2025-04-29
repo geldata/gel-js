@@ -77,8 +77,6 @@ const recipe: Recipe<NextjsOptions> = {
             files: [
               "tsconfig.json",
               "jsconfig.json",
-              "tailwind.config.ts",
-              "tailwind.config.js",
               "src/app/page.tsx",
               "src/app/page.jsx",
               "src/pages/index.tsx",
