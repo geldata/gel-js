@@ -3,7 +3,12 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
-import { baseRecipe, recipes, finalizeRecipe, runRecipe } from "./recipes/index.js";
+import {
+  baseRecipe,
+  recipes,
+  finalizeRecipe,
+  runRecipe,
+} from "./recipes/index.js";
 
 async function main() {
   p.intro("Welcome to the Gel Create CLI 🚀");
@@ -21,9 +26,7 @@ async function main() {
   p.outro(`\
 Your Gel project has been initialized! 🚀
 
-Enter your project directory using: ${pc.green(
-    `cd ${baseOptions.projectName}`,
-  )}
+Enter your project directory using: ${pc.green(`cd ${baseOptions.projectName}`)}
 Follow the instructions in the ${pc.green("README.md")} file to get started.
 
 Need help? Join our community at ${pc.green("https://geldata.com/community")}`);

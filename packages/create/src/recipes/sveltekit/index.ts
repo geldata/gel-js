@@ -40,10 +40,7 @@ const recipe: Recipe<SveltekitOptions> = {
         }),
     });
   },
-  async apply(
-    { projectDir }: BaseOptions,
-    { lang }: SveltekitOptions,
-  ) {
+  async apply({ projectDir }: BaseOptions, { lang }: SveltekitOptions) {
     logger("Running Sveltekit recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
