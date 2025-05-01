@@ -11,39 +11,21 @@ const recipe: Recipe = {
   skip(opts: BaseOptions) {
     return opts.framework !== "next";
   },
-  async apply({ projectDir }: BaseOptions) {
+  async apply({ projectDir, packageManager }: BaseOptions) {
     logger("Running nextjs recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
-    const tags = new Set<string>(["app", "tw"]);
-
-    await copyTemplateFiles(
-      path.resolve(dirname, "./template/ts"),
-      projectDir,
-      {
-        tags,
-        injectVars: [
-          {
-            varname: "srcDir",
-            value: "",
-            files: [
-              "tsconfig.json",
-              "jsconfig.json",
-              "tailwind.config.ts",
-              "src/app/page.tsx",
-              "src/pages/index.tsx",
-            ],
-          },
-        ],
-      },
-    );
+    await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir);
 
     await updatePackage(projectDir, {
       scripts: {
         "dev:next": "next dev",
         "dev:gel": "gel watch --migrate",
         dev: "run-p --print-label dev:*",
+        "db:generate": "run-s --print-label db:generate:*",
+        "db:generate:qb": `${packageManager.runner} generate edgeql-js`,
+        "db:generate:queries": `${packageManager.runner} generate queries`,
         build: "next build",
         start: "next start",
         lint: "next lint",
