@@ -1,103 +1,62 @@
 import * as p from "@clack/prompts";
 import fs from "node:fs/promises";
+import TOML from "smol-toml";
 import path from "node:path";
 import debug from "debug";
 
 import type { BaseOptions, Recipe } from "../types.js";
-import { copyTemplateFiles } from "../../utils.js";
 
 const logger = debug("@gel/create:recipe:gel");
 
-interface GelOptions {
-  initializeProject: boolean;
-}
-
-const recipe: Recipe<GelOptions> = {
-  getOptions() {
-    return p.group({
-      initializeProject: () =>
-        p.confirm({
-          message: "Initialize a new Gel project with gel project init?",
-          initialValue: true,
-        }),
-    });
-  },
-
-  async apply(
-    { projectDir, useGelAuth, packageManager }: BaseOptions,
-    { initializeProject }: GelOptions,
-  ) {
+const recipe: Recipe = {
+  async apply({ projectDir, packageManager }: BaseOptions) {
     logger("Running gel recipe");
 
     const spinner = p.spinner();
 
-    if (initializeProject) {
-      spinner.start("Initializing Gel project");
-      try {
-        await packageManager.runPackageBin(
-          "gel",
-          ["project", "init", "--non-interactive"],
-          {
-            cwd: projectDir,
+    spinner.start("Initializing Gel project");
+    try {
+      await packageManager.runPackageBin(
+        "gel",
+        ["project", "init", "--non-interactive"],
+        {
+          cwd: projectDir,
+        },
+      );
+
+      const configPath = path.resolve(projectDir, "gel.toml");
+      const config = TOML.parse(await fs.readFile(configPath, "utf8"));
+      config.hooks = {
+        schema: {
+          update: {
+            after: `${packageManager.runScript} db:generate`,
           },
+        },
+      };
+      await fs.writeFile(configPath, TOML.stringify(config));
+
+      const { stdout, stderr } = await packageManager.runPackageBin(
+        "gel",
+        ["query", "select sys::get_version_as_str()"],
+        { cwd: projectDir },
+      );
+      const serverVersion = JSON.parse(stdout.trim());
+      logger(`Gel server version: ${serverVersion}`);
+
+      if (serverVersion === "") {
+        const err = new Error(
+          "There was a problem initializing the Gel project",
         );
-        const { stdout, stderr } = await packageManager.runPackageBin(
-          "gel",
-          ["query", "select sys::get_version_as_str()"],
-          { cwd: projectDir },
-        );
-        const serverVersion = JSON.parse(stdout.trim());
-        logger(`Gel server version: ${serverVersion}`);
-
-        if (serverVersion === "") {
-          const err = new Error(
-            "There was a problem initializing the Gel project",
-          );
-          spinner.stop(err.message);
-          logger({ stdout, stderr });
-          throw err;
-        }
-
-        spinner.stop(`Gel v${serverVersion} project initialized`);
-      } catch (error) {
-        logger(error);
-        spinner.stop("Failed to initialize Gel project");
-        throw error;
+        spinner.stop(err.message);
+        logger({ stdout, stderr });
+        throw err;
       }
-    } else {
-      logger("Skipping gel project init");
-      logger("Copying basic Gel project files");
 
-      const dirname = path.dirname(new URL(import.meta.url).pathname);
-      await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir);
-    }
-
-    if (useGelAuth) {
-      logger("Adding auth extension to project");
-
-      spinner.start("Enabling auth extension in Gel schema");
-      const filePath = path.resolve(projectDir, "./dbschema/default.gel");
-      const data = await fs.readFile(filePath, "utf8");
-      await fs.writeFile(filePath, `using extension auth;\n\n${data}`);
-      spinner.stop("Auth extension enabled in Gel schema");
-
-      if (initializeProject) {
-        logger("Creating and applying initial migration");
-        spinner.start("Creating and applying initial migration");
-        try {
-          await packageManager.runPackageBin("gel", ["migration", "create"], {
-            cwd: projectDir,
-          });
-          await packageManager.runPackageBin("gel", ["migrate"], {
-            cwd: projectDir,
-          });
-          spinner.stop("Initial migration created and applied");
-        } catch (error) {
-          logger(error);
-          spinner.stop("Failed to create and apply migration");
-          throw error;
-        }
-      }
+      spinner.stop(`Gel v${serverVersion} project initialized`);
+    } catch (error) {
+      logger(error);
+      spinner.stop("Failed to initialize Gel project");
+      throw error;
     }
   },
 };

@@ -40,22 +40,12 @@ const recipe: Recipe<SveltekitOptions> = {
         }),
     });
   },
-  async apply(
-    { projectDir, useGelAuth }: BaseOptions,
-    { lang }: SveltekitOptions,
-  ) {
+  async apply({ projectDir }: BaseOptions, { lang }: SveltekitOptions) {
     logger("Running Sveltekit recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
-    let tags;
-    if (useGelAuth) {
-      tags = new Set<string>(["auth"]);
-    }
-
-    await copyTemplateFiles(path.resolve(dirname, template[lang]), projectDir, {
-      tags,
-    });
+    await copyTemplateFiles(path.resolve(dirname, template[lang]), projectDir);
 
     const isTS = lang === "ts";
     const isJSDoc = lang === "jsdoc";
@@ -77,11 +67,7 @@ const recipe: Recipe<SveltekitOptions> = {
             "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         }),
       },
-      dependencies: {
-        ...(useGelAuth && {
-          "@gel/auth-sveltekit": "^0.3.0",
-        }),
-      },
+      dependencies: {},
       devDependencies: {
         "@sveltejs/adapter-auto": "^3.0.0",
         "@sveltejs/kit": "^2.0.0",

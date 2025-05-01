@@ -1,5 +1,4 @@
 import path from "node:path";
-import * as p from "@clack/prompts";
 import debug from "debug";
 import { updatePackage } from "write-package";
 
@@ -8,117 +7,44 @@ import { copyTemplateFiles } from "../../utils.js";
 
 const logger = debug("@gel/create:recipe:nextjs");
 
-interface NextjsOptions {
-  useTS: boolean;
-  router: "app" | "pages";
-  useTailwind: boolean;
-  useSrcDir: boolean;
-}
-
-const recipe: Recipe<NextjsOptions> = {
+const recipe: Recipe = {
   skip(opts: BaseOptions) {
     return opts.framework !== "next";
   },
-  getOptions() {
-    return p.group({
-      useTS: () =>
-        p.confirm({
-          message: "Would you like to use TypeScript?",
-          initialValue: true,
-        }),
-      router: () =>
-        p.select<
-          { value: NextjsOptions["router"]; label: string }[],
-          NextjsOptions["router"]
-        >({
-          message: "Use App router or Pages router?",
-          options: [
-            { value: "app", label: "App Router" },
-            { value: "pages", label: "Pages Router" },
-          ],
-        }),
-      useTailwind: () =>
-        p.confirm({
-          message: "Use Tailwind CSS?",
-        }),
-      useSrcDir: () =>
-        p.confirm({
-          message: "Use `src/` directory?",
-          initialValue: false,
-        }),
-    });
-  },
-  async apply(
-    { projectDir, useGelAuth }: BaseOptions,
-    { useTS, router, useTailwind, useSrcDir }: NextjsOptions,
-  ) {
+  async apply({ projectDir, packageManager }: BaseOptions) {
     logger("Running nextjs recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
-    const tags = new Set<string>([router, useTailwind ? "tw" : "no-tw"]);
-
-    if (useGelAuth) {
-      tags.add("auth");
-    }
-
-    await copyTemplateFiles(
-      path.resolve(dirname, useTS ? "./template/ts" : "./template/js"),
-      projectDir,
-      {
-        tags,
-        rewritePath: !useSrcDir
-          ? (p) => (p === path.join(projectDir, "src") ? projectDir : p)
-          : undefined,
-        injectVars: [
-          {
-            varname: "srcDir",
-            value: useSrcDir ? "src/" : "",
-            files: [
-              "tsconfig.json",
-              "jsconfig.json",
-              "tailwind.config.ts",
-              "tailwind.config.js",
-              "src/app/page.tsx",
-              "src/app/page.jsx",
-              "src/pages/index.tsx",
-              "src/pages/index.jsx",
-            ],
-          },
-        ],
-      },
-    );
+    await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir);
 
     await updatePackage(projectDir, {
       scripts: {
-        dev: "next dev",
+        "dev:next": "next dev",
+        "dev:gel": "gel watch --migrate",
+        dev: "run-p --print-label dev:*",
+        "db:generate": "run-s --print-label db:generate:*",
+        "db:generate:qb": `${packageManager.runner} generate edgeql-js`,
+        "db:generate:queries": `${packageManager.runner} generate queries`,
         build: "next build",
         start: "next start",
         lint: "next lint",
       },
       dependencies: {
-        ...(useGelAuth ? { "@gel/auth-nextjs": "^0.4.0" } : {}),
-        gel: "^2.0.0",
-        react: "^19.0.0",
-        "react-dom": "^19.0.0",
-        next: "^15.1.0",
+        gel: "^2",
+        react: "^19.1.0",
+        "react-dom": "^19.1.0",
+        next: "^15",
       },
       devDependencies: {
-        ...(useTS
-          ? {
-              typescript: "^5",
-              "@types/node": "^20",
-              "@types/react": "^18",
-              "@types/react-dom": "^18",
-            }
-          : {}),
-        ...(useTailwind
-          ? {
-              postcss: "^8.5.0",
-              tailwindcss: "^4.0.0",
-              "@tailwindcss/postcss": "^4.0.0",
-            }
-          : {}),
+        typescript: "^5",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "npm-run-all": "^4",
+        postcss: "^8",
+        tailwindcss: "^4",
+        "@tailwindcss/postcss": "^4",
       },
     });
   },
