@@ -13,7 +13,6 @@ export interface BaseOptions {
   projectName: string;
   framework: Framework;
   projectDir: string;
-  useGelAuth: boolean;
 }
 
 export interface Recipe<RecipeOptions = undefined> {

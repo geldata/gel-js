@@ -30,7 +30,6 @@ const recipe: Recipe = {
         typecheck: "tsc --noEmit",
       },
       dependencies: {
-        ...(baseOptions.useGelAuth ? { "@gel/auth-express": "^0.3.0" } : {}),
         "cookie-parser": "^1.4.6",
         express: "^4.18.2",
       },

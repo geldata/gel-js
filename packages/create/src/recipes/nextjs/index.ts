@@ -11,16 +11,12 @@ const recipe: Recipe = {
   skip(opts: BaseOptions) {
     return opts.framework !== "next";
   },
-  async apply({ projectDir, useGelAuth }: BaseOptions) {
+  async apply({ projectDir }: BaseOptions) {
     logger("Running nextjs recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
     const tags = new Set<string>(["app", "tw"]);
-
-    if (useGelAuth) {
-      tags.add("auth");
-    }
 
     await copyTemplateFiles(
       path.resolve(dirname, "./template/ts"),
@@ -53,7 +49,6 @@ const recipe: Recipe = {
         lint: "next lint",
       },
       dependencies: {
-        ...(useGelAuth ? { "@gel/auth-nextjs": "^0.4.0" } : {}),
         gel: "^2",
         react: "^19.1.0",
         "react-dom": "^19.1.0",

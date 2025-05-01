@@ -11,20 +11,12 @@ const recipe: Recipe = {
   skip(opts: BaseOptions) {
     return opts.framework !== "remix";
   },
-  async apply({ projectDir, useGelAuth }: BaseOptions) {
+  async apply({ projectDir }: BaseOptions) {
     logger("Running remix recipe");
 
     const dirname = path.dirname(new URL(import.meta.url).pathname);
 
-    let tags;
-
-    if (useGelAuth) {
-      tags = new Set<string>(["auth"]);
-    }
-
-    await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir, {
-      tags,
-    });
+    await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir);
 
     await updatePackage(projectDir, {
       sideEffects: false,
@@ -37,7 +29,6 @@ const recipe: Recipe = {
         typecheck: "tsc",
       },
       dependencies: {
-        ...(useGelAuth ? { "@gel/auth-remix": "^0.3.0" } : {}),
         react: "^18",
         "react-dom": "^18",
         "@remix-run/css-bundle": "*",

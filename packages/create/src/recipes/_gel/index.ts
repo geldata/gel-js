@@ -25,7 +25,7 @@ const recipe: Recipe<GelOptions> = {
   },
 
   async apply(
-    { projectDir, useGelAuth, packageManager }: BaseOptions,
+    { projectDir, packageManager }: BaseOptions,
     { initializeProject }: GelOptions,
   ) {
     logger("Running gel recipe");
@@ -83,34 +83,6 @@ const recipe: Recipe<GelOptions> = {
 
       const dirname = path.dirname(new URL(import.meta.url).pathname);
       await copyTemplateFiles(path.resolve(dirname, "./template"), projectDir);
-    }
-
-    if (useGelAuth) {
-      logger("Adding auth extension to project");
-
-      spinner.start("Enabling auth extension in Gel schema");
-      const filePath = path.resolve(projectDir, "./dbschema/default.gel");
-      const data = await fs.readFile(filePath, "utf8");
-      await fs.writeFile(filePath, `using extension auth;\n\n${data}`);
-      spinner.stop("Auth extension enabled in Gel schema");
-
-      if (initializeProject) {
-        logger("Creating and applying initial migration");
-        spinner.start("Creating and applying initial migration");
-        try {
-          await packageManager.runPackageBin("gel", ["migration", "create"], {
-            cwd: projectDir,
-          });
-          await packageManager.runPackageBin("gel", ["migrate"], {
-            cwd: projectDir,
-          });
-          spinner.stop("Initial migration created and applied");
-        } catch (error) {
-          logger(error);
-          spinner.stop("Failed to create and apply migration");
-          throw error;
-        }
-      }
     }
   },
 };

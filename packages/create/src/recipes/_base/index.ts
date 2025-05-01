@@ -34,11 +34,6 @@ const recipe: BaseRecipe = {
               { value: "none", label: "None" },
             ],
           }),
-        useGelAuth: () =>
-          p.confirm({
-            message: "Use the Gel Auth extension?",
-            initialValue: true,
-          }),
       },
       {
         onCancel: () => {
