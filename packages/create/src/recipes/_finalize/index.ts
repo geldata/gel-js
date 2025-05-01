@@ -1,6 +1,5 @@
 import debug from "debug";
 import * as p from "@clack/prompts";
-import pc from "picocolors";
 
 import type { BaseOptions, Recipe } from "../types.js";
 import { execInLoginShell } from "../../utils.js";
@@ -49,17 +48,7 @@ const recipe: Recipe = {
       spinner.stop("Failed to stage changes");
       throw err;
     }
-
-  p.outro(`\
-Your Gel project has been initialized! 🚀
-
-Enter your project directory using: ${pc.green(
-    `cd ${baseOptions.projectName}`,
-  )}
-Follow the instructions in the ${pc.green("README.md")} file to get started.
-
-Need help? Join our community at ${pc.green("https://geldata.com/community")}`);
-  }
-}
+  },
+};
 
 export default recipe;

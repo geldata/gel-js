@@ -27,5 +27,5 @@ export async function runRecipe(recipe: Recipe<any>, baseOptions: BaseOptions) {
   }
 
   const recipeOptions = await recipe.getOptions?.(baseOptions);
-  recipe.apply(baseOptions, recipeOptions);
+  await recipe.apply(baseOptions, recipeOptions);
 }
