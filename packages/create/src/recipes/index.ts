@@ -1,6 +1,6 @@
 import baseRecipe from "./_base/index.js";
 import _gelInit from "./_gel/index.js";
-import _install from "./_install/index.js";
+import finalizeRecipe from "./_finalize/index.js";
 
 import express from "./express/index.js";
 import nextjs from "./nextjs/index.js";
@@ -9,7 +9,7 @@ import sveltekit from "./sveltekit/index.js";
 
 import { type Recipe } from "./types.js";
 
-export { baseRecipe };
+export { baseRecipe, finalizeRecipe };
 
 export const recipes: Recipe<any>[] = [
   // frameworks
@@ -19,5 +19,4 @@ export const recipes: Recipe<any>[] = [
   sveltekit,
   // init
   _gelInit,
-  _install,
 ];
