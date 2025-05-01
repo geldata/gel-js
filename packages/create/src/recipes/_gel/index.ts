@@ -1,5 +1,6 @@
 import * as p from "@clack/prompts";
 import fs from "node:fs/promises";
+import TOML from "smol-toml";
 import path from "node:path";
 import debug from "debug";
 
@@ -41,6 +42,18 @@ const recipe: Recipe<GelOptions> = {
             cwd: projectDir,
           },
         );
+
+        const configPath = path.resolve(projectDir, "gel.toml");
+        const config = TOML.parse(await fs.readFile(configPath, "utf8"));
+        config.hooks = {
+          schema: {
+            update: {
+              after: `${packageManager.runScript} db:generate`,
+            },
+          },
+        };
+        await fs.writeFile(configPath, TOML.stringify(config));
+
         const { stdout, stderr } = await packageManager.runPackageBin(
           "gel",
           ["query", "select sys::get_version_as_str()"],

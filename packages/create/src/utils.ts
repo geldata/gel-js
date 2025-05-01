@@ -28,6 +28,13 @@ const PM_TO_RUNNER_MAP = {
   bun: "bunx",
 } as const;
 
+const PM_TO_RUN_SCRIPT_MAP = {
+  npm: "npm run",
+  yarn: "yarn run",
+  pnpm: "pnpm run",
+  bun: "bun run",
+} as const;
+
 interface CopyTemplateFilesOpts {
   tags?: Set<string>;
   rewritePath?: (path: string) => string;
@@ -164,9 +171,11 @@ stdout: ${stdout}`,
 
 export class PackageManager {
   readonly runner: string;
+  readonly runScript: string;
 
   constructor(readonly packageManager = getPackageManager()) {
     this.runner = PM_TO_RUNNER_MAP[packageManager];
+    this.runScript = PM_TO_RUN_SCRIPT_MAP[packageManager];
   }
 
   toString() {
