@@ -187,7 +187,7 @@ export class PackageManager {
     args: string[] = [],
     options?: SpawnOptionsWithoutStdio,
   ): Promise<{ stdout: string; stderr: string }> {
-    const command = quote([this.runner, binName, ...args]);
+    const command = `${this.runner} ${quote([binName, ...args])}`;
     return execInLoginShell(command, options);
   }
 }
