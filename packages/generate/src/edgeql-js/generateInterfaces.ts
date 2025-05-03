@@ -121,10 +121,10 @@ export const generateInterfaces = (params: GenerateInterfacesParams) => {
         Boolean(targetType.union_of?.length);
 
       if (isUnion) {
-        return targetType.union_of
+        return `(${targetType.union_of
           .map(({ id }) => types.get(id))
           .map((member) => getTypeName(member.name))
-          .join(" | ");
+          .join(" | ")})`;
       } else if (isLink) {
         return getTypeName(targetType.name);
       } else {
