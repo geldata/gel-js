@@ -141,15 +141,16 @@ describe("insert", () => {
   });
 
   test("with wrapping insert .unlessConflict()", async () => {
-    const dep = e.float64(1.23);
+    const dep = e.insert(e.Character, {
+      name: "dependency",
+    });
 
     const query = e.with(
       [dep], // dependency used inside the insert expression
       e
         .insert(e.Movie, {
           title: "WithUnlessConflict – test",
-          // use `dep` so the WITH variable is referenced
-          rating: dep,
+          characters: dep,
         })
         .unlessConflict((movie) => ({
           on: movie.title,
