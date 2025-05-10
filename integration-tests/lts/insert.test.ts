@@ -140,6 +140,40 @@ describe("insert", () => {
     tc.assert<tc.IsExact<typeof r3, { id: string }[]>>(true);
   });
 
+  test("with wrapping insert .unlessConflict()", async () => {
+    const dep = e
+      .insert(e.Character, {
+        name: "dependency",
+      })
+      .unlessConflict((character) => ({
+        on: character.name,
+        else: character,
+      }));
+
+    const query = e.with(
+      [dep], // dependency used inside the insert expression
+      e
+        .insert(e.Movie, {
+          title: "WithUnlessConflict – test",
+          characters: dep,
+        })
+        .unlessConflict((movie) => ({
+          on: movie.title,
+        })),
+    );
+
+    // The presence of `.unlessConflict()` should make the result AtMostOne
+    assert.deepEqual(query.__cardinality__, $.Cardinality.AtMostOne);
+    tc.assert<
+      tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.AtMostOne>
+    >(true);
+
+    const result = await query.run(client);
+    // Type of the result should be `{id: string} | null`
+    tc.assert<tc.IsExact<typeof result, { id: string } | null>>(true);
+    assert.ok(result?.id);
+  });
+
   test("nested insert", async () => {
     const q1 = e.insert(e.Villain, {
       name: e.str("villain"),

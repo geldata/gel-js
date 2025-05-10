@@ -2,7 +2,7 @@ import { type Cardinality, ExpressionKind } from "gel/dist/reflection/index";
 import type { BaseType, Expression, TypeSet } from "./typesystem";
 import type { $expr_Select } from "./select";
 import type { $expr_For } from "./for";
-import type { $expr_Insert } from "./insert";
+import type { $expr_Insert, $expr_InsertUnlessConflict } from "./insert";
 import type { $expr_Update } from "./update";
 import type { $expr_Group } from "./group";
 import { $assert_single, $expressionify, $unwrap_assert_single } from "./path";
@@ -32,6 +32,7 @@ export type WithableExpression =
   | $expr_Select
   | $expr_For
   | $expr_Insert
+  | $expr_InsertUnlessConflict
   | $expr_Update
   | $expr_Group;
 
