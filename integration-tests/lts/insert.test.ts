@@ -141,12 +141,14 @@ describe("insert", () => {
   });
 
   test("with wrapping insert .unlessConflict()", async () => {
-    const dep = e.insert(e.Character, {
-      name: "dependency",
-    }).unlessConflict((character) => ({
-      on: character.name,
-      else: character
-    }));
+    const dep = e
+      .insert(e.Character, {
+        name: "dependency",
+      })
+      .unlessConflict((character) => ({
+        on: character.name,
+        else: character,
+      }));
 
     const query = e.with(
       [dep], // dependency used inside the insert expression
