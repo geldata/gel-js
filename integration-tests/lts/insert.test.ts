@@ -142,12 +142,12 @@ describe("insert", () => {
 
   test("with wrapping insert .unlessConflict()", async () => {
     const dep = e
-      .insert(e.Character, {
+      .insert(e.Person, {
         name: "dependency",
       })
-      .unlessConflict((character) => ({
-        on: character.name,
-        else: character,
+      .unlessConflict((person) => ({
+        on: person.name,
+        else: person,
       }));
 
     const query = e.with(
@@ -155,7 +155,7 @@ describe("insert", () => {
       e
         .insert(e.Movie, {
           title: "WithUnlessConflict – test",
-          characters: dep,
+          actors: dep,
         })
         .unlessConflict((movie) => ({
           on: movie.title,
