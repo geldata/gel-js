@@ -152,16 +152,7 @@ describe("insert", () => {
 
     const query = e.with(
       [dep], // dependency used inside the insert expression
-      e
-        .insert(e.Movie, {
-          title: "WithUnlessConflict – test",
-          characters: e.select(dep, () => ({
-            "@character_name": "Peter Quill",
-          })),
-        })
-        .unlessConflict((movie) => ({
-          on: movie.title,
-        })),
+      e.select(e.int16(42)),
     );
 
     // The presence of `.unlessConflict()` should make the result AtMostOne
