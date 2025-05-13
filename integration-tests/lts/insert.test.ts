@@ -155,7 +155,6 @@ describe("insert", () => {
       e.select(e.int16(42)),
     );
 
-    // The presence of `.unlessConflict()` should make the result AtMostOne
     assert.deepEqual(query.__cardinality__, $.Cardinality.AtMostOne);
     tc.assert<
       tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.AtMostOne>
