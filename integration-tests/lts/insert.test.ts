@@ -142,12 +142,11 @@ describe("insert", () => {
 
   test("with wrapping insert .unlessConflict()", async () => {
     const dep = e
-      .insert(e.Person, {
+      .insert(e.Hero, {
         name: "dependency",
       })
-      .unlessConflict((person) => ({
-        on: person.name,
-        else: person,
+      .unlessConflict((hero) => ({
+        on: hero.name,
       }));
 
     const query = e.with(
@@ -155,14 +154,14 @@ describe("insert", () => {
       e.select(e.int16(42)),
     );
 
-    assert.deepEqual(query.__cardinality__, $.Cardinality.AtMostOne);
+    assert.deepEqual(query.__cardinality__, $.Cardinality.One);
     tc.assert<
-      tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.AtMostOne>
+      tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.One>
     >(true);
 
     const result = await query.run(client);
 
-    tc.assert<tc.IsExact<typeof result, number>>(true);
+    tc.assert<tc.IsExact<typeof result, 42>>(true);
     assert.equal(result, 42);
   });
 
