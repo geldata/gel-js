@@ -151,7 +151,7 @@ describe("insert", () => {
       }));
 
     const query = e.with(
-      [dep], // dependency used inside the insert expression
+      [dep], // test dependency with an unlessConflict() inside it
       e.select(e.int16(42)),
     );
 
