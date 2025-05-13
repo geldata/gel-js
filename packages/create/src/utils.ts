@@ -23,8 +23,8 @@ export function getPackageManager(): PkgManager {
 
 const PM_TO_RUNNER_MAP = {
   npm: "npx",
-  yarn: "yarn dlx",
-  pnpm: "pnpm dlx",
+  yarn: "yarn",
+  pnpm: "pnpm",
   bun: "bunx",
 } as const;
 
