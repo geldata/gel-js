@@ -155,7 +155,9 @@ describe("insert", () => {
       e
         .insert(e.Movie, {
           title: "WithUnlessConflict – test",
-          movie_characters: dep,
+          characters: e.select(dep, () => ({
+            "@character_name": "Peter Quill",
+          })),
         })
         .unlessConflict((movie) => ({
           on: movie.title,
