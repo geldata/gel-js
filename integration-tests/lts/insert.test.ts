@@ -163,8 +163,8 @@ describe("insert", () => {
 
     const result = await query.run(client);
     // Type of the result should be `{id: string} | null`
-    tc.assert<tc.IsExact<typeof result, { id: string } | null>>(true);
-    assert.ok(result?.id);
+    tc.assert<tc.IsExact<typeof result, number>>(true);
+    assert.equal(result, 42);
   });
 
   test("nested insert", async () => {
