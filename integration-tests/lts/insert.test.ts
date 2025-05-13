@@ -155,9 +155,9 @@ describe("insert", () => {
     );
 
     assert.deepEqual(query.__cardinality__, $.Cardinality.One);
-    tc.assert<
-      tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.One>
-    >(true);
+    tc.assert<tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.One>>(
+      true,
+    );
 
     const result = await query.run(client);
 
