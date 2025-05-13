@@ -161,7 +161,7 @@ describe("insert", () => {
     >(true);
 
     const result = await query.run(client);
-    
+
     tc.assert<tc.IsExact<typeof result, number>>(true);
     assert.equal(result, 42);
   });
