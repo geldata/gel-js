@@ -1,6 +1,6 @@
 {
   "name": "@gel/create",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "Create a new Gel-based project",
   "homepage": "https://geldata.com/docs",
