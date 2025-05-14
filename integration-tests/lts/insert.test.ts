@@ -140,6 +140,31 @@ describe("insert", () => {
     tc.assert<tc.IsExact<typeof r3, { id: string }[]>>(true);
   });
 
+  test("with wrapping insert .unlessConflict()", async () => {
+    const dep = e
+      .insert(e.Hero, {
+        name: "dependency",
+      })
+      .unlessConflict((hero) => ({
+        on: hero.name,
+      }));
+
+    const query = e.with(
+      [dep], // test dependency with an unlessConflict() inside it
+      e.select(e.int16(42)),
+    );
+
+    assert.deepEqual(query.__cardinality__, $.Cardinality.One);
+    tc.assert<tc.IsExact<(typeof query)["__cardinality__"], $.Cardinality.One>>(
+      true,
+    );
+
+    const result = await query.run(client);
+
+    tc.assert<tc.IsExact<typeof result, 42>>(true);
+    assert.equal(result, 42);
+  });
+
   test("nested insert", async () => {
     const q1 = e.insert(e.Villain, {
       name: e.str("villain"),
