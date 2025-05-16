@@ -1,7 +1,7 @@
 {
   "name": "@gel/auth-core",
   "description": "Core helper library for the Gel Auth extension",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Gel <info@geldata.com>",
   "repository": {
     "type": "git",
