@@ -61,8 +61,14 @@ export class Auth {
     return new AuthPCKESession(this, challenge, verifier);
   }
 
-  getToken(code: string, verifier: string): Promise<TokenData> {
-    return this._get<TokenData>(`token`, { code, verifier });
+  async getToken(code: string, verifier: string): Promise<TokenData> {
+    const tokenData = await this._get<TokenData>(`token`, { code, verifier });
+    // n.b. Versions before v6 did not return the provider_id_token or identity_id
+    return {
+      ...tokenData,
+      identity_id: tokenData.identity_id ?? null,
+      provider_id_token: tokenData.provider_id_token ?? null,
+    };
   }
 
   getWebAuthnSignupOptionsUrl(email: string) {

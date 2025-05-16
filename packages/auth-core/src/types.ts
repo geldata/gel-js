@@ -75,6 +75,7 @@ export interface TokenData {
   identity_id: string | null;
   provider_token: string | null;
   provider_refresh_token: string | null;
+  provider_id_token: string | null;
 }
 
 export type RegistrationResponse =
