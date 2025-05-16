@@ -185,7 +185,7 @@ export abstract class NextAuth extends NextAuthHelpers {
 
       const authorizeUrl =
         req.nextUrl.searchParams.get("authorize_url") ??
-        new URL("authorize", authBasePath).toString();
+        new URL("oauth/authorize", authBasePath).toString();
 
       const pkceSession = await (await this.core).createPKCESession();
       await this.setVerifierCookie(pkceSession.verifier);
