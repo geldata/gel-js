@@ -161,8 +161,9 @@ export abstract class NextAuth extends NextAuthHelpers {
      * @param {string=} req.nextUrl.searchParams.provider_name The name of the
      * OAuth provider to use.
      * @param {string=} req.nextUrl.searchParams.authorize_url The URL to
-     * redirect to to start the OAuth flow. If not provided, will default to
-     * the auth extension server's authorize endpoint.
+     * redirect to to start the OAuth flow. Will default to calling through to
+     * the auth extension server's authorize endpoint from the registered
+     * endpoint at `/oauth/authorize`.
      * @param {string=} req.nextUrl.searchParams.callback_url The URL to
      * redirect to within the OAuth flow once the user has authorized the OAuth
      * client.
@@ -184,7 +185,7 @@ export abstract class NextAuth extends NextAuthHelpers {
 
       const authorizeUrl =
         req.nextUrl.searchParams.get("authorize_url") ??
-        new URL("authorize", this.options.baseUrl).toString();
+        new URL("authorize", authBasePath).toString();
 
       const pkceSession = await (await this.core).createPKCESession();
       await this.setVerifierCookie(pkceSession.verifier);
@@ -281,6 +282,9 @@ export abstract class NextAuth extends NextAuthHelpers {
               );
             }
             return this.oAuth.handleOAuth(req);
+          }
+          case "oauth/authorize": {
+            return this.oAuth.handleAuthorize(req);
           }
           case "oauth/callback": {
             if (!onOAuthCallback) {
