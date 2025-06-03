@@ -157,11 +157,26 @@ export function params<
     returnExpr = select(returnExpr) as any;
   }
 
-  return $expressionify({
+  const withParamsExpr = $expressionify({
     __kind__: ExpressionKind.WithParams,
     __element__: returnExpr.__element__,
     __cardinality__: returnExpr.__cardinality__,
     __expr__: returnExpr,
     __params__: Object.values(paramExprs),
   }) as any;
+
+  const callableExpr = function (args: paramsToInputArgs<Params>) {
+    return $expressionify({
+      __kind__: ExpressionKind.WithParams,
+      __element__: returnExpr.__element__,
+      __cardinality__: returnExpr.__cardinality__,
+      __expr__: returnExpr,
+      __params__: Object.values(paramExprs),
+      __args__: args,
+    }) as any;
+  };
+
+  Object.assign(callableExpr, withParamsExpr);
+
+  return callableExpr as any;
 }
