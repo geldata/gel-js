@@ -606,7 +606,10 @@ function walkExprTree(
         );
       }
 
-      walkExprTree(expr.__expr__, parentScope, ctx);
+      childExprs.push(
+        ...walkExprTree(expr.__expr__, parentScope, ctx),
+        ...insertChildExprs,
+      );
       ctx.seen
         .get(expr.__expr__ as $expr_Insert)!
         .childExprs.push(...insertChildExprs);
