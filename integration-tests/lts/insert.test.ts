@@ -165,6 +165,51 @@ describe("insert", () => {
     assert.equal(result, 42);
   });
 
+  test("with block on insert with unless conflict", async () => {
+    // test that the 'bulk inserts with conflict handling' query we show in
+    // the docs works in the query builder
+    // https://docs.geldata.com/reference/using/js/querybuilder#handling-conflicts-in-bulk-inserts
+    const query = e.params(
+      {
+        movies: e.array(
+          e.tuple({
+            title: e.str,
+            directors: e.array(e.str),
+          }),
+        ),
+      },
+      ($) => {
+        const directors = e.for(
+          e.op("distinct", e.array_unpack(e.array_unpack($.movies).directors)),
+          (director_name) =>
+            e
+              .insert(e.Director, { name: director_name })
+              .unlessConflict((d) => ({ on: d.name, else: d })),
+        );
+
+        return e.with(
+          [directors],
+          e.for(e.array_unpack($.movies), (movie) =>
+            e
+              .insert(e.Movie, {
+                title: movie.title,
+                directors: e.select(directors, (director) => ({
+                  filter: e.op(
+                    director.name,
+                    "in",
+                    e.array_unpack(movie.directors),
+                  ),
+                })),
+              })
+              .unlessConflict((m) => ({ on: m.title, else: m })),
+          ),
+        );
+      },
+    );
+
+    await query.run(client, { movies: [] });
+  });
+
   test("nested insert", async () => {
     const q1 = e.insert(e.Villain, {
       name: e.str("villain"),

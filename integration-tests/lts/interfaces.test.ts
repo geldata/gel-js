@@ -27,8 +27,12 @@ export interface test_Person extends BaseObject {
   height?: string | null;
   isAdult?: boolean | null;
 }
+export interface test_Director extends BaseObject {
+  name: string;
+}
 export interface test_Movie extends BaseObject {
   characters: test_Person[];
+  directors: test_Director[];
   profile?: test_Profile | null;
   genre?: Genre | null;
   rating?: number | null;

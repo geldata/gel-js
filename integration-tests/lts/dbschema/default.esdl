@@ -50,6 +50,12 @@ module default {
     multi link villains := .<nemesis[IS Villain];
   }
 
+  type Director {
+    required property name -> str {
+      constraint exclusive;
+    };
+  }
+
   scalar type year extending int16 {
     constraint min_value(1878);
   }
@@ -67,6 +73,7 @@ module default {
     link profile -> Profile {
       constraint exclusive;
     }
+    multi link directors -> Director;
     constraint exclusive on ((.title, .release_year));
   }
 
