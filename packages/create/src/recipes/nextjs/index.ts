@@ -22,7 +22,7 @@ const recipe: Recipe = {
       scripts: {
         "dev:next": "next dev",
         "dev:gel": "gel watch --migrate",
-        dev: "run-p --print-label dev:*",
+        dev: "run-p dev:*",
         "db:generate": "run-s --print-label db:generate:*",
         "db:generate:qb": `${packageManager.runner} generate edgeql-js`,
         "db:generate:queries": `${packageManager.runner} generate queries`,
