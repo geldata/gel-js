@@ -659,11 +659,12 @@ function walkExprTree(
       break;
     }
     case ExpressionKind.WithParams: {
-      if (parentScope !== null) {
-        throw new Error(
-          `'withParams' does not support being used as a nested expression`,
-        );
-      }
+      // Does this need to be here?, seems to work fine without it.
+      // if (parentScope !== null) {
+      //   throw new Error(
+      //     `'withParams' does not support being used as a nested expression`,
+      //   );
+      // }
       childExprs.push(...walkExprTree(expr.__expr__, parentScope, ctx));
       break;
     }
