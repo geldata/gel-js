@@ -127,6 +127,39 @@ const genDef = <Codec extends CodecLike>(
   [codecType as AbstractClass<CodecLike>, generator as CodecGenerator] as const;
 export { genDef as defineCodecGeneratorTuple };
 
+type FieldDef = {
+  name: string;
+  cardinality: Cardinality;
+  codec: ICodec;
+};
+
+const getSortPriority = (field: FieldDef) => {
+  if (!(field.codec instanceof ObjectCodec)) {
+    switch (field.cardinality) {
+      case Cardinality.One:
+        return 0;
+      case Cardinality.AtLeastOne:
+        return 1;
+      case Cardinality.AtMostOne:
+        return 2;
+      case Cardinality.Many:
+        return 3;
+    }
+  } else {
+    switch (field.cardinality) {
+      case Cardinality.One:
+        return 4;
+      case Cardinality.AtLeastOne:
+        return 5;
+      case Cardinality.AtMostOne:
+        return 6;
+      case Cardinality.Many:
+        return 7;
+    }
+  }
+  return 8;
+};
+
 export const defaultCodecGenerators: CodecGeneratorMap = new Map([
   genDef(NullCodec, () => "null"),
   genDef(EnumCodec, (codec) => {
@@ -140,12 +173,27 @@ export const defaultCodecGenerators: CodecGeneratorMap = new Map([
   }),
   genDef(ObjectCodec, (codec, ctx) => {
     const subCodecs = codec.getSubcodecs();
-    const fields = codec.getFields().map((field, i) => ({
+    const originalFields = codec.getFields();
+
+    const fieldsWithCodecs = originalFields.map((field, i) => ({
       name: field.name,
-      codec: subCodecs[i],
       cardinality: util.parseCardinality(field.cardinality),
+      codec: subCodecs[i],
     }));
-    return generateTsObject(fields, ctx);
+
+    const sortedFieldsWithCodecs = fieldsWithCodecs.sort((a, b) => {
+      const aPriority = getSortPriority(a);
+      const bPriority = getSortPriority(b);
+
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+
+      // Within the same group, sort by name
+      return a.name.localeCompare(b.name);
+    });
+
+    return generateTsObject(sortedFieldsWithCodecs, ctx);
   }),
   genDef(NamedTupleCodec, (codec, ctx) => {
     const subCodecs = codec.getSubcodecs();
@@ -185,7 +233,7 @@ export const defaultCodecGenerators: CodecGeneratorMap = new Map([
 ]);
 
 export const generateTsObject = (
-  fields: Parameters<typeof generateTsObjectField>[0][],
+  fields: FieldDef[],
   ctx: CodecGeneratorContext,
 ) => {
   const properties = fields.map((field) => generateTsObjectField(field, ctx));
@@ -193,10 +241,10 @@ export const generateTsObject = (
 };
 
 export const generateTsObjectField = (
-  field: { name: string; cardinality: Cardinality; codec: ICodec },
+  field: FieldDef,
   ctx: CodecGeneratorContext,
 ) => {
-  const codec = unwrapSetCodec(field.codec, field.cardinality);
+  const codec = unwrapSetCodec(field);
 
   const name = JSON.stringify(field.name);
   const value = ctx.applyCardinality(
@@ -210,15 +258,15 @@ export const generateTsObjectField = (
   return `${ctx.indent}  ${isReadonly}${name}${questionMark}: ${value};`;
 };
 
-function unwrapSetCodec(codec: ICodec, cardinality: Cardinality) {
-  if (!(codec instanceof SetCodec)) {
-    return codec;
+function unwrapSetCodec(field: FieldDef) {
+  if (!(field.codec instanceof SetCodec)) {
+    return field.codec;
   }
   if (
-    cardinality === Cardinality.Many ||
-    cardinality === Cardinality.AtLeastOne
+    field.cardinality === Cardinality.Many ||
+    field.cardinality === Cardinality.AtLeastOne
   ) {
-    return codec.getSubcodecs()[0];
+    return field.codec.getSubcodecs()[0];
   }
   throw new Error("Sub-codec is SetCodec, but upper cardinality is one");
 }
