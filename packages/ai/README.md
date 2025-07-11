@@ -86,7 +86,13 @@ The `@gel/ai` package supports tool calls, allowing you to extend the capabiliti
 ### Example
 
 ```typescript
-import type { SystemMessage, UserMessage, ToolMessage, AssistantMessage } from "@gel/ai";
+import type {
+  Message,
+  SystemMessage,
+  UserMessage,
+  ToolMessage,
+  AssistantMessage,
+} from "@gel/ai";
 
 // 1. Define the tool in a system message
 const systemMessage: SystemMessage = {
@@ -118,8 +124,10 @@ const userMessage: UserMessage = {
   content: [{ type: "text", text: "What's the weather like in London?" }],
 };
 
+const messages: Message[] = [systemMessage, userMessage];
+
 const response = await ragClient.queryRag({
-  messages: [systemMessage, userMessage],
+  messages,
 });
 
 // 3. Handle the tool call (this is a simplified example)
@@ -164,7 +172,7 @@ When using `streamRag`, you can handle tool calls as they arrive in the stream. 
 // Function to handle the streaming response
 async function handleStreamingResponse() {
   const stream = ragClient.streamRag({
-    messages: [systemMessage, userMessage],
+    messages,
   });
 
   let toolCallId: string | null = null;
