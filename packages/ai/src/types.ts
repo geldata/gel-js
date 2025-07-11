@@ -12,7 +12,7 @@ export interface UserMessage {
 
 export interface AssistantMessage {
   role: "assistant";
-  content: string;
+  content: string | null;
   tool_calls?: {
     id: string;
     type: "function";
@@ -49,6 +49,22 @@ export interface QueryContext {
   max_object_count?: number;
 }
 
+export interface OpenAIToolDefinition {
+  type: "function";
+  name: string;
+  description: string;
+  parameters: unknown;
+  strict?: boolean;
+}
+
+export interface AnthropicToolDefinition {
+  name: string;
+  description: string;
+  input_schema: unknown;
+}
+
+export type ToolDefinition = OpenAIToolDefinition | AnthropicToolDefinition;
+
 export interface RagRequestPrompt {
   prompt: string;
   [key: string]: unknown;
@@ -56,6 +72,8 @@ export interface RagRequestPrompt {
 
 export interface RagRequestMessages {
   messages: Message[];
+  tools?: ToolDefinition[];
+  tool_choice?: "auto" | "none" | "required";
   [key: string]: unknown;
 }
 
@@ -70,7 +88,7 @@ export function isPromptRequest(
 export interface MessageStart {
   type: "message_start";
   message: {
-    id: string;
+    id:string;
     model: string;
     role: "assistant" | "system" | "user"; //todo check this;
     usage?: {
@@ -80,20 +98,22 @@ export interface MessageStart {
   };
 }
 
+export type ContentBlock =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "tool_use";
+      id?: string | null;
+      name: string;
+      input?: Record<string, unknown> | null;
+    };
+
 export interface ContentBlockStart {
   type: "content_block_start";
   index: number;
-  content_block:
-    | {
-        type: "text";
-        text: string;
-      }
-    | {
-        type: "tool_use";
-        id?: string | null;
-        name: string;
-        args?: string | null;
-      };
+  content_block: ContentBlock;
 }
 
 export interface ContentBlockDelta {
@@ -103,6 +123,10 @@ export interface ContentBlockDelta {
     | {
         type: "text_delta";
         text: string;
+      }
+    | {
+        type: "input_json_delta";
+        partial_json: string;
       }
     | {
         type: "tool_call_delta";

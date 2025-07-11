@@ -43,24 +43,69 @@ const defaultChatCompletionResponse = {
   system_fingerprint: "fp_test",
 };
 
+const openAIFunctionCallingResponse = {
+  id: "chatcmpl-test-fn-calling",
+  object: "chat.completion",
+  created: Math.floor(Date.now() / 1000),
+  model: "gpt-3.5-turbo-0125",
+  choices: [
+    {
+      index: 0,
+      message: {
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            id: "call_123",
+            type: "function",
+            function: {
+              name: "get_planet_diameter",
+              arguments: '{"planet_name":"Mars"}',
+            },
+          },
+        ],
+      },
+      logprobs: null,
+      finish_reason: "tool_calls",
+    },
+  ],
+  usage: {
+    prompt_tokens: 10,
+    completion_tokens: 5,
+    total_tokens: 15,
+  },
+  system_fingerprint: "fp_test",
+};
+
 export function createMockHttpServer(): MockHttpServer {
   let chatCompletionsRequests: RecordedRequest[] = [];
   let embeddingsRequests: RecordedRequest[] = [];
   let otherRequests: RecordedRequest[] = [];
 
   const server = http.createServer((req, res) => {
+    console.log("Mock server: Request received.");
+    console.log(`Mock server: Request URL: ${req.url}, Method: ${req.method}`);
+    console.log("Mock server: Request headers:", req.headers);
+
     let bodyChunks: Buffer[] = [];
     req.on("data", (chunk) => {
+      console.log("Mock server: Receiving data chunk.");
       bodyChunks.push(chunk);
     });
 
     req.on("end", () => {
+      console.log("Mock server: Request data fully received.");
       const bodyString = Buffer.concat(bodyChunks).toString();
+      console.log("Mock server: Request body (raw):", bodyString);
       let parsedBody: any = null;
       try {
         parsedBody = bodyString ? JSON.parse(bodyString) : null;
+        console.log("Mock server: Request body (parsed):", parsedBody);
       } catch (error) {
         console.error("Mock server failed to parse request body:", error);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to parse request body" }));
+        return;
       }
 
       const recordedRequest: RecordedRequest = {
@@ -73,13 +118,12 @@ export function createMockHttpServer(): MockHttpServer {
       res.setHeader("Content-Type", "application/json");
 
       if (req.method === "POST" && req.url === "/v1/chat/completions") {
-        console.log(
-          `Mock server received /v1/chat/completions request: ${bodyString}`,
-        );
+        console.log("Mock server: Handling /v1/chat/completions request.");
         chatCompletionsRequests = [...chatCompletionsRequests, recordedRequest];
 
         const acceptHeader = req.headers["accept"];
         if (acceptHeader && acceptHeader.includes("text/event-stream")) {
+          console.log("Mock server: Handling streaming chat completion.");
           res.writeHead(200, { "Content-Type": "text/event-stream" });
           const completionId = "chatcmpl-e7f8e220-656c-4455-a132-dacfc1370798";
           const model = parsedBody.model;
@@ -90,52 +134,66 @@ export function createMockHttpServer(): MockHttpServer {
             defaultChatCompletionResponse.choices[0].message.content;
           const contentChunks = content.match(/.{1,50}/g) || []; // Split content into chunks of 50 characters
 
-          res.write(
-            `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
-              `"system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}\n\n`,
-          );
+          const firstChunk = `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}","system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":null},"finish_reason":null}]}\n\n`;
+          console.log("Mock server: Writing stream chunk:", firstChunk);
+          res.write(firstChunk);
 
           contentChunks.forEach((text, index) => {
-            res.write(
-              `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
-                `"system_fingerprint":null,"choices":[{"index":${index + 1},"delta":{"content":"${text}"},"finish_reason":null}]}\n\n`,
-            );
+            const chunk = `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}","system_fingerprint":null,"choices":[{"index":${index + 1},"delta":{"content":"${text}"},"finish_reason":null}]}\n\n`;
+            console.log("Mock server: Writing stream chunk:", chunk);
+            res.write(chunk);
           });
 
-          res.write(
-            `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
-              `"system_fingerprint":null,"choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}]}\n\n`,
-          );
+          const penultimateChunk = `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}","system_fingerprint":null,"choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}]}\n\n`;
+          console.log("Mock server: Writing stream chunk:", penultimateChunk);
+          res.write(penultimateChunk);
 
-          res.write(
-            `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}",` +
-              `"system_fingerprint":"fp_10c08bf97d","choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}],` +
-              `"usage":{"queue_time":0.061348671,"prompt_tokens":18,"prompt_time":0.000211569,` +
-              `"completion_tokens":439,"completion_time":0.798181818,"total_tokens":457,"total_time":0.798393387}}\n\n`,
+          const finalChunkBeforeDone = `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}","system_fingerprint":"fp_10c08bf97d","choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}],"usage":{"queue_time":0.061348671,"prompt_tokens":18,"prompt_time":0.000211569,"completion_tokens":439,"completion_time":0.798181818,"total_tokens":457,"total_time":0.798393387}}\n\n`;
+          console.log(
+            "Mock server: Writing stream chunk:",
+            finalChunkBeforeDone,
           );
+          res.write(finalChunkBeforeDone);
 
+          console.log("Mock server: Writing [DONE] chunk.");
           res.write("data: [DONE]\n\n");
           res.end();
+          console.log("Mock server: Stream ended.");
         } else {
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify(defaultChatCompletionResponse));
+          console.log("Mock server: Handling non-streaming chat completion.");
+          if (parsedBody.tools) {
+            console.log(
+              "Mock server: 'tools' detected, sending function calling response.",
+            );
+            const responseBody = JSON.stringify(openAIFunctionCallingResponse);
+            console.log("Mock server: Response body:", responseBody);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(responseBody);
+          } else {
+            console.log(
+              "Mock server: No 'tools' detected, sending default chat response.",
+            );
+            const responseBody = JSON.stringify(
+              defaultChatCompletionResponse,
+            );
+            console.log("Mock server: Response body:", responseBody);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(responseBody);
+          }
         }
       } else if (req.method === "POST" && req.url === "/v1/embeddings") {
-        console.log(
-          `Mock server received /v1/embeddings request: ${bodyString}`,
-        );
+        console.log("Mock server: Handling /v1/embeddings request.");
         embeddingsRequests = [...embeddingsRequests, recordedRequest];
         if (
           parsedBody &&
           "input" in parsedBody &&
           Array.isArray(parsedBody.input)
         ) {
+          console.log("Mock server: Valid embeddings request body.");
           const inputs: string[] = parsedBody.input;
           const responseData = inputs.map((input, index) => ({
             object: "embedding",
             index: index,
-            // Produce a dummy embedding as the number of occurences of the first ten
-            // letters of the alphabet.
             embedding: Array.from(
               { length: 10 },
               (_, c) => input.split(String.fromCharCode(97 + c)).length - 1,
@@ -146,18 +204,27 @@ export function createMockHttpServer(): MockHttpServer {
             data: responseData,
           };
           res.writeHead(200);
-          res.end(JSON.stringify(response));
+          const responseBody = JSON.stringify(response);
+          console.log("Mock server: Response body:", responseBody);
+          res.end(responseBody);
         } else {
+          console.log("Mock server: Invalid embeddings request body.");
           res.writeHead(400);
-          res.end(JSON.stringify({ error: "Invalid request body" }));
+          const responseBody = JSON.stringify({
+            error: "Invalid request body",
+          });
+          console.log("Mock server: Response body:", responseBody);
+          res.end(responseBody);
         }
       } else {
         console.log(
-          `Mock server received unhandled request: ${req.method} ${req.url}`,
+          `Mock server: Handling unhandled request: ${req.method} ${req.url}`,
         );
         otherRequests = [...otherRequests, recordedRequest];
         res.writeHead(404);
-        res.end(JSON.stringify({ error: "Not Found" }));
+        const responseBody = JSON.stringify({ error: "Not Found" });
+        console.log("Mock server: Response body:", responseBody);
+        res.end(responseBody);
       }
     });
   });

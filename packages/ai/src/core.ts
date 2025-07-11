@@ -13,6 +13,7 @@ import {
   type RagRequest,
   type EmbeddingRequest,
   isPromptRequest,
+  type AssistantMessage,
 } from "./types.js";
 import { getHTTPSCRAMAuth } from "gel/dist/httpScram.js";
 import { cryptoUtils } from "gel/dist/browserCrypto.js";
@@ -124,7 +125,10 @@ export class RAGClient {
     return response;
   }
 
-  async queryRag(request: RagRequest, context = this.context): Promise<string> {
+  async queryRag(
+    request: RagRequest,
+    context = this.context,
+  ): Promise<AssistantMessage> {
     const res = await this.fetchRag(
       {
         ...request,
@@ -217,42 +221,48 @@ export class RAGClient {
   }
 }
 
-async function parseRagResponse(response: Response): Promise<string> {
+async function parseRagResponse(response: Response): Promise<AssistantMessage> {
   if (!response.headers.get("content-type")?.includes("application/json")) {
     throw new Error("Expected response to have content-type: application/json");
   }
 
   const data: unknown = await response.json();
 
-  if (!data) {
+  if (!data || typeof data !== "object") {
     throw new Error(`Expected JSON data, but got ${JSON.stringify(data)}`);
   }
 
-  if (typeof data !== "object") {
-    throw new Error(
-      `Expected response to be an object, but got ${JSON.stringify(data)}`,
-    );
+  // Handle the new tool call format from the AI extension
+  if ("tool_calls" in data && Array.isArray(data.tool_calls)) {
+    return {
+      role: "assistant",
+      content: "text" in data ? data.text as string : null,
+      tool_calls: data.tool_calls.map((tc: any) => ({
+        id: tc.id,
+        type: tc.type,
+        function: {
+          name: tc.name,
+          arguments: JSON.stringify(tc.args),
+        },
+      })),
+    };
   }
 
-  if ("text" in data) {
-    if (typeof data.text !== "string") {
-      throw new Error(
-        `Expected data.text to be a string, but got ${typeof data.text}: ${JSON.stringify(data.text)}`,
-      );
-    }
-    return data.text;
+  if ("role" in data && data.role === "assistant") {
+    return data as AssistantMessage;
   }
 
-  if ("response" in data) {
-    if (typeof data.response !== "string") {
-      throw new Error(
-        `Expected data.response to be a string, but got ${typeof data.response}: ${JSON.stringify(data.response)}`,
-      );
-    }
-    return data.response;
+  if ("text" in data && typeof data.text === "string") {
+    return { role: "assistant", content: data.text };
+  }
+
+  if ("response" in data && typeof data.response === "string") {
+    return { role: "assistant", content: data.response };
   }
 
   throw new Error(
-    `Expected response to include a non-empty string for either the 'text' or 'response' key, but got: ${JSON.stringify(data)}`,
+    `Expected response to be a message object or include a 'text' or 'response' key, but got: ${JSON.stringify(
+      data,
+    )}`,
   );
 }
