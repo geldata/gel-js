@@ -181,12 +181,18 @@ async function handleStreamingResponse() {
   let assistantResponse: AssistantMessage | null = null;
 
   for await (const chunk of stream) {
-    if (chunk.type === 'content_block_start' && chunk.content_block.type === 'tool_use') {
+    if (
+      chunk.type === "content_block_start" &&
+      chunk.content_block.type === "tool_use"
+    ) {
       toolCallId = chunk.content_block.id;
       functionName = chunk.content_block.name;
-    } else if (chunk.type === 'content_block_delta' && chunk.delta.type === 'tool_call_delta') {
+    } else if (
+      chunk.type === "content_block_delta" &&
+      chunk.delta.type === "tool_call_delta"
+    ) {
       functionArguments += chunk.delta.args;
-    } else if (chunk.type === 'message_stop') {
+    } else if (chunk.type === "message_stop") {
       // The model has finished its turn
       if (functionName && toolCallId) {
         // We have a tool call to execute
@@ -201,7 +207,17 @@ async function handleStreamingResponse() {
 
         // Add the assistant's response and the tool message to the history
         // A complete assistant message would be constructed from the stream
-        assistantResponse = { role: 'assistant', content: '', tool_calls: [{ id: toolCallId, type: 'function', function: { name: functionName, arguments: functionArguments } }] };
+        assistantResponse = {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              id: toolCallId,
+              type: "function",
+              function: { name: functionName, arguments: functionArguments },
+            },
+          ],
+        };
         messages.push(assistantResponse);
         messages.push(toolMessage);
 
@@ -213,7 +229,10 @@ async function handleStreamingResponse() {
         // Call the function again to get the final response
         await handleStreamingResponse();
       }
-    } else if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+    } else if (
+      chunk.type === "content_block_delta" &&
+      chunk.delta.type === "text_delta"
+    ) {
       // Handle text responses from the model
       process.stdout.write(chunk.delta.text);
     }
