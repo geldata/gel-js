@@ -31,7 +31,10 @@ const gpt4Rag = createRAGClient(client, {
 const astronomyRag = gpt4Rag.withContext({ query: "Astronomy" });
 
 console.time("gpt-4 Time");
-console.log((await astronomyRag.queryRag({ prompt: "What color is the sky on Mars?" })).content);
+console.log(
+  (await astronomyRag.queryRag({ prompt: "What color is the sky on Mars?" }))
+    .content,
+);
 console.timeEnd("gpt-4 Time");
 
 const fastAstronomyRag = astronomyRag.withConfig({
@@ -39,25 +42,35 @@ const fastAstronomyRag = astronomyRag.withConfig({
 });
 
 console.time("gpt-4o Time");
-console.log((await fastAstronomyRag.queryRag({ prompt: "What color is the sky on Mars?" })).content);
+console.log(
+  (
+    await fastAstronomyRag.queryRag({
+      prompt: "What color is the sky on Mars?",
+    })
+  ).content,
+);
 console.timeEnd("gpt-4o Time");
 
 const fastChemistryRag = fastAstronomyRag.withContext({ query: "Chemistry" });
 
 console.log(
-  (await fastChemistryRag.queryRag({ prompt: "What is the atomic number of gold?" })).content,
+  (
+    await fastChemistryRag.queryRag({
+      prompt: "What is the atomic number of gold?",
+    })
+  ).content,
 );
 
 // handle the Response object
-const response = await fastChemistryRag.streamRag(
-  { prompt: "What is the atomic number of gold?" },
-);
+const response = await fastChemistryRag.streamRag({
+  prompt: "What is the atomic number of gold?",
+});
 handleReadableStream(response); // custom function that reads the stream
 
 // handle individual chunks as they arrive
-for await (const chunk of fastChemistryRag.streamRag(
-  { prompt: "What is the atomic number of gold?" },
-)) {
+for await (const chunk of fastChemistryRag.streamRag({
+  prompt: "What is the atomic number of gold?",
+})) {
   console.log("chunk", chunk);
 }
 
@@ -77,10 +90,10 @@ The `@gel/ai` package supports tool calls, allowing you to extend the capabiliti
 1.  **Define your tools**: Create an array of `ToolDefinition` objects that describe your functions, their parameters, and what they do.
 2.  **Send the request**: Call `queryRag` or `streamRag` with the user's prompt and the `tools` array. You can also use the `tool_choice` parameter to control how the model uses your tools.
 3.  **Handle the tool call**: If the model decides to use a tool, it will return an `AssistantMessage` with a `tool_calls` array. Your code needs to:
-    a.  Parse the `tool_calls` array to identify the tool and its arguments.
-    b.  Execute the tool and get the result.
-    c.  Create a `ToolMessage` with the result.
-    d.  Send the `ToolMessage` back to the model in a new request.
+    a. Parse the `tool_calls` array to identify the tool and its arguments.
+    b. Execute the tool and get the result.
+    c. Create a `ToolMessage` with the result.
+    d. Send the `ToolMessage` back to the model in a new request.
 4.  **Receive the final response**: The model will use the tool's output to generate a final response.
 
 ### Example
