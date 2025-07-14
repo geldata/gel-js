@@ -87,14 +87,14 @@ console.log(
 
 The `@gel/ai` package supports tool calls, allowing you to extend the capabilities of the AI model with your own functions. Here's how to use them:
 
-1.  **Define your tools**: Create an array of `ToolDefinition` objects that describe your functions, their parameters, and what they do.
-2.  **Send the request**: Call `queryRag` or `streamRag` with the user's prompt and the `tools` array. You can also use the `tool_choice` parameter to control how the model uses your tools.
-3.  **Handle the tool call**: If the model decides to use a tool, it will return an `AssistantMessage` with a `tool_calls` array. Your code needs to:
-    a. Parse the `tool_calls` array to identify the tool and its arguments.
-    b. Execute the tool and get the result.
-    c. Create a `ToolMessage` with the result.
-    d. Send the `ToolMessage` back to the model in a new request.
-4.  **Receive the final response**: The model will use the tool's output to generate a final response.
+1. **Define your tools**: Create an array of `ToolDefinition` objects that describe your functions, their parameters, and what they do.
+2. **Send the request**: Call `queryRag` or `streamRag` with the user's prompt and the `tools` array. You can also use the `tool_choice` parameter to control how the model uses your tools.
+3. **Handle the tool call**: If the model decides to use a tool, it will return an `AssistantMessage` with a `tool_calls` array. Your code needs to:
+  a. Parse the `tool_calls` array to identify the tool and its arguments.
+  b. Execute the tool and get the result.
+  c. Create a `ToolMessage` with the result.
+  d. Send the `ToolMessage` back to the model in a new request.
+4. **Receive the final response**: The model will use the tool's output to generate a final response.
 
 ### Example
 
@@ -200,14 +200,14 @@ async function handleStreamingResponse(initialMessages: Message[]) {
       currentToolCall = {
         id: chunk.content_block.id!,
         name: chunk.content_block.name,
-        arguments: "",
+        arguments: chunk.content_block.args,
       };
     } else if (
       chunk.type === "content_block_delta" &&
-      chunk.delta.type === "input_json_delta"
+      chunk.delta.type === "tool_call_delta"
     ) {
       if (currentToolCall) {
-        currentToolCall.arguments += chunk.delta.partial_json;
+        currentToolCall.arguments += chunk.delta.args;
       }
     } else if (chunk.type === "content_block_stop") {
       if (currentToolCall) {

@@ -125,10 +125,6 @@ export interface ContentBlockDelta {
         text: string;
       }
     | {
-        type: "input_json_delta";
-        partial_json: string;
-      }
-    | {
         type: "tool_call_delta";
         args: string;
       };
