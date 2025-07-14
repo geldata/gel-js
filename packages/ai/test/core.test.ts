@@ -1,84 +1,37 @@
 import { type Client } from "gel";
 import { createRAGClient } from "../dist/index.js";
-import { getClient, waitFor, getAvailableExtensions } from "@repo/test-utils";
-import { createMockHttpServer, type MockHttpServer } from "./mockHttpServer";
+import { waitFor, getAvailableExtensions } from "@repo/test-utils";
+import { type MockHttpServer } from "./mockHttpServer";
+import { setupTestEnvironment } from "./test-setup";
 
 const availableExtensions = getAvailableExtensions();
 
 if (availableExtensions.has("ai")) {
   let mockServer: MockHttpServer;
+  let client: Client;
 
   beforeAll(async () => {
-    // Start the mock server
-    mockServer = createMockHttpServer();
-
-    const client = getClient();
-    await client.ensureConnected();
-    try {
-      await client.execute(`
-create extension pgvector;
-create extension ai;
-
-create type TestEmbeddingModel extending ext::ai::EmbeddingModel {
-  alter annotation ext::ai::model_name := "text-embedding-test";
-  alter annotation ext::ai::model_provider := "custom::test";
-  alter annotation ext::ai::embedding_model_max_input_tokens := "8191";
-  alter annotation ext::ai::embedding_model_max_batch_tokens := "16384";
-  alter annotation ext::ai::embedding_model_max_output_dimensions := "10";
-  alter annotation ext::ai::embedding_model_supports_shortening := "true";
-};
-
-create type TestTextGenerationModel extending ext::ai::TextGenerationModel {
-  alter annotation ext::ai::model_name := "text-generation-test";
-  alter annotation ext::ai::model_provider := "custom::test";
-  alter annotation ext::ai::text_gen_model_context_window := "16385";
-};
-
-create type Astronomy {
-  create required property content: str;
-
-  create deferred index ext::ai::index(embedding_model := "text-embedding-test") on (.content);
-};
-
-configure current branch insert ext::ai::CustomProviderConfig {
-    name := "custom::test",
-    secret := "dummy-key",
-    api_url := "${mockServer.url}/v1",
-    api_style := ext::ai::ProviderAPIStyle.OpenAI,
-};
-
-configure current branch set ext::ai::Config::indexer_naptime := <duration>"100ms";
+    ({ mockServer, client } = await setupTestEnvironment());
+    await client.execute(`
+insert Astronomy { content := 'Skies on Mars are red' };
+insert Astronomy { content := 'Skies on Earth are blue' };
     `);
-    } finally {
-      await client.close();
-    }
-  }, 25_000);
+  }, 60_000);
 
   afterAll(async () => {
     // Stop the mock server
     if (mockServer) {
       await mockServer.close();
     }
+    await client.close();
   });
 
   describe("@gel/ai", () => {
-    let client: Client;
     beforeEach(() => {
       mockServer.resetRequests();
     });
 
-    afterEach(async () => {
-      await client?.close();
-    });
-
     test("RAG query", async () => {
-      client = getClient({
-        tlsSecurity: "insecure",
-      });
-      await client.execute(`
-insert Astronomy { content := 'Skies on Mars are red' };
-insert Astronomy { content := 'Skies on Earth are blue' };
-      `);
       await waitFor(async () =>
         expect(mockServer.getEmbeddingsRequests().length).toBe(1),
       );
@@ -93,7 +46,7 @@ insert Astronomy { content := 'Skies on Earth are blue' };
         prompt: "What color are the skies on Mars?",
       });
 
-      expect(result).toEqual("This is a mock response.");
+      expect(result.content).toEqual("This is a mock response.");
 
       const streamedResult = ragClient.streamRag({
         prompt: "What color are the skies on Mars?",
@@ -115,12 +68,9 @@ insert Astronomy { content := 'Skies on Earth are blue' };
       }
 
       expect(streamedResultString).toEqual("This is a mock response.");
-    }, 25_000);
+    });
 
     test("embedding request", async () => {
-      client = getClient({
-        tlsSecurity: "insecure",
-      });
       const ragClient = createRAGClient(client, {
         model: "text-generation-test",
       });
@@ -141,6 +91,110 @@ insert Astronomy { content := 'Skies on Earth are blue' };
         // two 'b's and two 'e's.
         [0, 2, 0, 0, 2, 0, 0, 0, 0, 0],
       );
+    });
+
+    test("OpenAI style function calling", async () => {
+      const ragClient = createRAGClient(client, {
+        model: "text-generation-test",
+      }).withContext({
+        query: "select Astronomy",
+      });
+
+      const result = await ragClient.queryRag({
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "What is the diameter of Mars?" }],
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            name: "get_planet_diameter",
+            description: "Get the diameter of a given planet.",
+            parameters: {
+              type: "object",
+              properties: {
+                planet_name: {
+                  type: "string",
+                  description: "The name of the planet, e.g. Mars",
+                },
+              },
+              required: ["planet_name"],
+            },
+          },
+        ],
+        tool_choice: "auto",
+      });
+
+      expect(result.tool_calls).toBeDefined();
+      expect(result.tool_calls?.[0].function.name).toEqual(
+        "get_planet_diameter",
+      );
+      expect(result.tool_calls?.[0].function.arguments).toEqual(
+        '{"planet_name":"Mars"}',
+      );
+    });
+
+    test("OpenAI style streaming tool calling", async () => {
+      const ragClient = createRAGClient(client, {
+        model: "text-generation-test",
+      }).withContext({
+        query: "select Astronomy",
+      });
+
+      const streamedResult = ragClient.streamRag({
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "What is the diameter of Mars?" }],
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            name: "get_planet_diameter",
+            description: "Get the diameter of a given planet.",
+            parameters: {
+              type: "object",
+              properties: {
+                planet_name: {
+                  type: "string",
+                  description: "The name of the planet, e.g. Mars",
+                },
+              },
+              required: ["planet_name"],
+            },
+          },
+        ],
+        tool_choice: "auto",
+      });
+
+      let functionName = "";
+      let functionArguments = "";
+
+      for await (const message of streamedResult) {
+        if (
+          message.type === "content_block_start" &&
+          message.content_block.type === "tool_use"
+        ) {
+          if (message.content_block.name) {
+            functionName += message.content_block.name;
+          }
+          if (message.content_block.args) {
+            functionArguments += message.content_block.args;
+          }
+        }
+        if (
+          message.type === "content_block_delta" &&
+          message.delta.type === "tool_call_delta"
+        ) {
+          functionArguments += message.delta.args;
+        }
+      }
+
+      expect(functionName).toEqual("get_planet_diameter");
+      expect(functionArguments).toEqual('{"planet_name":"Mars"}');
     });
   });
 }

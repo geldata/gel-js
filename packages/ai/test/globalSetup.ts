@@ -9,17 +9,20 @@ import {
 } from "@repo/test-utils";
 
 export default async () => {
-  // tslint:disable-next-line
   console.log("\nStarting Gel test cluster...");
 
   const statusFile = generateStatusFileName("node");
   console.log("Node status file:", statusFile);
 
   const { args, availableFeatures } = getServerCommand(getWSLPath(statusFile));
-  console.log(`Starting server...`);
+  console.time("server");
+  console.time("server-start");
   const { proc, config } = await startServer(args, statusFile);
+  console.timeEnd("server-start");
 
+  console.time("server-connect");
   const { client, version } = await connectToServer(config);
+  console.timeEnd("server-connect");
 
   const jestConfig: ConnectConfig = {
     ...config,
@@ -36,6 +39,7 @@ export default async () => {
   global.gelConn = client;
   process.env._JEST_GEL_VERSION = JSON.stringify(version);
 
+  console.time("server-extension-list");
   const availableExtensions = (
     await client.query<{
       name: string;
@@ -44,7 +48,8 @@ export default async () => {
   ).map(({ name, version }) => [name, version]);
   process.env._JEST_GEL_AVAILABLE_EXTENSIONS =
     JSON.stringify(availableExtensions);
+  console.timeEnd("server-extension-list");
 
-  // tslint:disable-next-line
+  console.timeEnd("server");
   console.log(`Gel test cluster is up [port: ${jestConfig.port}]...`);
 };
