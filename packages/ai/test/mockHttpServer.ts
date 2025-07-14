@@ -244,41 +244,30 @@ export function createMockHttpServer(): MockHttpServer {
           const finalChunkBeforeDone = `data: {"id":"${completionId}","object":"chat.completion.chunk","created":${created},"model":"${model}","system_fingerprint":"fp_10c08bf97d","choices":[{"index":0,"delta":{},"finish_reason":"${finishReason}"}],"usage":{"queue_time":0.061348671,"prompt_tokens":18,"prompt_time":0.000211569,"completion_tokens":439,"completion_time":0.798181818,"total_tokens":457,"total_time":0.798393387}}
 
 `;
-          debug(
-            "Writing stream chunk:",
-            finalChunkBeforeDone,
-          );
+          debug("Writing stream chunk:", finalChunkBeforeDone);
           res.write(finalChunkBeforeDone);
 
           debug("Writing [DONE] chunk.");
           res.write("data: [DONE]\n\n");
           res.end();
           debug("Stream ended.");
-        }
-        else {
+        } else {
           debug("Handling non-streaming chat completion.");
           if (parsedBody.tools) {
-            debug(
-              "'tools' detected, sending function calling response.",
-            );
+            debug("'tools' detected, sending function calling response.");
             const responseBody = JSON.stringify(openAIFunctionCallingResponse);
             debug("Response body:", responseBody);
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(responseBody);
           } else {
-            debug(
-              "No 'tools' detected, sending default chat response.",
-            );
-            const responseBody = JSON.stringify(
-              defaultChatCompletionResponse,
-            );
+            debug("No 'tools' detected, sending default chat response.");
+            const responseBody = JSON.stringify(defaultChatCompletionResponse);
             debug("Response body:", responseBody);
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(responseBody);
           }
         }
-      }
-      else if (req.method === "POST" && req.url === "/v1/embeddings") {
+      } else if (req.method === "POST" && req.url === "/v1/embeddings") {
         debug("Handling /v1/embeddings request.");
         embeddingsRequests = [...embeddingsRequests, recordedRequest];
         if (
@@ -313,11 +302,8 @@ export function createMockHttpServer(): MockHttpServer {
           debug("Response body:", responseBody);
           res.end(responseBody);
         }
-      }
-      else {
-        debug(
-          `Handling unhandled request: ${req.method} ${req.url}`,
-        );
+      } else {
+        debug(`Handling unhandled request: ${req.method} ${req.url}`);
         otherRequests = [...otherRequests, recordedRequest];
         res.writeHead(404);
         const responseBody = JSON.stringify({ error: "Not Found" });

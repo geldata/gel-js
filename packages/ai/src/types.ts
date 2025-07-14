@@ -88,7 +88,7 @@ export function isPromptRequest(
 export interface MessageStart {
   type: "message_start";
   message: {
-    id:string;
+    id: string;
     model: string;
     role: "assistant" | "system" | "user"; //todo check this;
     usage?: {

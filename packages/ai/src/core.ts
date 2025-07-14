@@ -236,7 +236,7 @@ async function parseRagResponse(response: Response): Promise<AssistantMessage> {
   if ("tool_calls" in data && Array.isArray(data.tool_calls)) {
     return {
       role: "assistant",
-      content: "text" in data ? data.text as string : null,
+      content: "text" in data ? (data.text as string) : null,
       tool_calls: data.tool_calls.map((tc: any) => ({
         id: tc.id,
         type: tc.type,

@@ -3,8 +3,8 @@ import { getClient } from "@repo/test-utils";
 import { createMockHttpServer, type MockHttpServer } from "./mockHttpServer";
 
 export async function setupTestEnvironment(): Promise<{
-  mockServer: MockHttpServer,
-  client: Client,
+  mockServer: MockHttpServer;
+  client: Client;
 }> {
   const mockServer = createMockHttpServer();
 

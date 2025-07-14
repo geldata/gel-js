@@ -11,10 +11,7 @@ if (availableExtensions.has("ai")) {
   let client: Client;
 
   beforeAll(async () => {
-    ({
-      mockServer,
-      client,
-    } = await setupTestEnvironment());
+    ({ mockServer, client } = await setupTestEnvironment());
     await client.execute(`
 insert Astronomy { content := 'Skies on Mars are red' };
 insert Astronomy { content := 'Skies on Earth are blue' };
@@ -107,9 +104,7 @@ insert Astronomy { content := 'Skies on Earth are blue' };
         messages: [
           {
             role: "user",
-            content: [
-              { type: "text", text: "What is the diameter of Mars?" },
-            ],
+            content: [{ type: "text", text: "What is the diameter of Mars?" }],
           },
         ],
         tools: [
@@ -152,9 +147,7 @@ insert Astronomy { content := 'Skies on Earth are blue' };
         messages: [
           {
             role: "user",
-            content: [
-              { type: "text", text: "What is the diameter of Mars?" },
-            ],
+            content: [{ type: "text", text: "What is the diameter of Mars?" }],
           },
         ],
         tools: [
@@ -181,7 +174,10 @@ insert Astronomy { content := 'Skies on Earth are blue' };
       let functionArguments = "";
 
       for await (const message of streamedResult) {
-        if (message.type === "content_block_start" && message.content_block.type === "tool_use") {
+        if (
+          message.type === "content_block_start" &&
+          message.content_block.type === "tool_use"
+        ) {
           if (message.content_block.name) {
             functionName += message.content_block.name;
           }
@@ -189,7 +185,10 @@ insert Astronomy { content := 'Skies on Earth are blue' };
             functionArguments += message.content_block.args;
           }
         }
-        if (message.type === "content_block_delta" && message.delta.type === "tool_call_delta") {
+        if (
+          message.type === "content_block_delta" &&
+          message.delta.type === "tool_call_delta"
+        ) {
           functionArguments += message.delta.args;
         }
       }
