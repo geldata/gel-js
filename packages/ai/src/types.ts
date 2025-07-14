@@ -107,7 +107,7 @@ export type ContentBlock =
       type: "tool_use";
       id?: string | null;
       name: string;
-      input?: Record<string, unknown> | null;
+      args?: Record<string, unknown> | null;
     };
 
 export interface ContentBlockStart {
@@ -166,6 +166,19 @@ export interface MessageError {
   };
 }
 
+export interface ToolCallChunk {
+  type: "tool_call_chunk";
+  tool_call_chunk: {
+    index: number;
+    id?: string;
+    type?: "function";
+    function: {
+      name?: string;
+      arguments?: string;
+    };
+  };
+}
+
 export type StreamingMessage =
   | MessageStart
   | ContentBlockStart
@@ -173,7 +186,8 @@ export type StreamingMessage =
   | ContentBlockStop
   | MessageDelta
   | MessageStop
-  | MessageError;
+  | MessageError
+  | ToolCallChunk;
 
 export interface EmbeddingRequest {
   inputs: string[];

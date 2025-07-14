@@ -1,6 +1,6 @@
 import { type Client } from "gel";
 import { createRAGClient } from "../dist/index.js";
-import { getClient, waitFor, getAvailableExtensions } from "@repo/test-utils";
+import { waitFor, getAvailableExtensions } from "@repo/test-utils";
 import { type MockHttpServer } from "./mockHttpServer";
 import { setupTestEnvironment } from "./test-setup";
 
@@ -8,9 +8,17 @@ const availableExtensions = getAvailableExtensions();
 
 if (availableExtensions.has("ai")) {
   let mockServer: MockHttpServer;
+  let client: Client;
 
   beforeAll(async () => {
-    mockServer = await setupTestEnvironment();
+    ({
+      mockServer,
+      client,
+    } = await setupTestEnvironment());
+    await client.execute(`
+insert Astronomy { content := 'Skies on Mars are red' };
+insert Astronomy { content := 'Skies on Earth are blue' };
+    `);
   }, 60_000);
 
   afterAll(async () => {
@@ -18,26 +26,15 @@ if (availableExtensions.has("ai")) {
     if (mockServer) {
       await mockServer.close();
     }
+    await client.close();
   });
 
   describe("@gel/ai", () => {
-    let client: Client;
     beforeEach(() => {
       mockServer.resetRequests();
     });
 
-    afterEach(async () => {
-      await client?.close();
-    });
-
     test("RAG query", async () => {
-      client = getClient({
-        tlsSecurity: "insecure",
-      });
-      await client.execute(`
-insert Astronomy { content := 'Skies on Mars are red' };
-insert Astronomy { content := 'Skies on Earth are blue' };
-      `);
       await waitFor(async () =>
         expect(mockServer.getEmbeddingsRequests().length).toBe(1),
       );
@@ -74,12 +71,9 @@ insert Astronomy { content := 'Skies on Earth are blue' };
       }
 
       expect(streamedResultString).toEqual("This is a mock response.");
-    }, 25_000);
+    });
 
     test("embedding request", async () => {
-      client = getClient({
-        tlsSecurity: "insecure",
-      });
       const ragClient = createRAGClient(client, {
         model: "text-generation-test",
       });
@@ -103,19 +97,6 @@ insert Astronomy { content := 'Skies on Earth are blue' };
     });
 
     test("OpenAI style function calling", async () => {
-      client = getClient({
-        tlsSecurity: "insecure",
-      });
-
-      await client.execute(`
-insert Astronomy { content := 'Skies on Mars are red' };
-insert Astronomy { content := 'Skies on Earth are blue' };
-      `);
-      await waitFor(async () =>
-        expect(mockServer.getEmbeddingsRequests().length).toBe(1),
-      );
-      mockServer.resetRequests();
-
       const ragClient = createRAGClient(client, {
         model: "text-generation-test",
       }).withContext({
@@ -158,6 +139,63 @@ insert Astronomy { content := 'Skies on Earth are blue' };
       expect(result.tool_calls?.[0].function.arguments).toEqual(
         '{"planet_name":"Mars"}',
       );
-    }, 60_000);
+    });
+
+    test("OpenAI style streaming tool calling", async () => {
+      const ragClient = createRAGClient(client, {
+        model: "text-generation-test",
+      }).withContext({
+        query: "select Astronomy",
+      });
+
+      const streamedResult = ragClient.streamRag({
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "What is the diameter of Mars?" },
+            ],
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            name: "get_planet_diameter",
+            description: "Get the diameter of a given planet.",
+            parameters: {
+              type: "object",
+              properties: {
+                planet_name: {
+                  type: "string",
+                  description: "The name of the planet, e.g. Mars",
+                },
+              },
+              required: ["planet_name"],
+            },
+          },
+        ],
+        tool_choice: "auto",
+      });
+
+      let functionName = "";
+      let functionArguments = "";
+
+      for await (const message of streamedResult) {
+        if (message.type === "content_block_start" && message.content_block.type === "tool_use") {
+          if (message.content_block.name) {
+            functionName += message.content_block.name;
+          }
+          if (message.content_block.args) {
+            functionArguments += message.content_block.args;
+          }
+        }
+        if (message.type === "content_block_delta" && message.delta.type === "tool_call_delta") {
+          functionArguments += message.delta.args;
+        }
+      }
+
+      expect(functionName).toEqual("get_planet_diameter");
+      expect(functionArguments).toEqual('{"planet_name":"Mars"}');
+    });
   });
 }

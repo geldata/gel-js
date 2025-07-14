@@ -1,13 +1,19 @@
+import type { Client } from "gel";
 import { getClient } from "@repo/test-utils";
 import { createMockHttpServer, type MockHttpServer } from "./mockHttpServer";
 
-export async function setupTestEnvironment(): Promise<MockHttpServer> {
+export async function setupTestEnvironment(): Promise<{
+  mockServer: MockHttpServer,
+  client: Client,
+}> {
   const mockServer = createMockHttpServer();
 
-  const client = getClient();
+  const client = getClient({
+    tlsSecurity: "insecure",
+  });
+
   await client.ensureConnected();
-  try {
-    await client.execute(`
+  await client.execute(`
 reset schema to initial;
 create extension pgvector;
 create extension ai;
@@ -41,10 +47,10 @@ configure current branch insert ext::ai::CustomProviderConfig {
 };
 
 configure current branch set ext::ai::Config::indexer_naptime := <duration>"100ms";
-    `);
-  } finally {
-    await client.close();
-  }
+  `);
 
-  return mockServer;
+  return {
+    mockServer,
+    client,
+  };
 }
