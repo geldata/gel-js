@@ -614,7 +614,7 @@ export abstract class NextAuth extends NextAuthHelpers {
                 `'onSignout' auth route handler not configured`,
               );
             }
-            this.deleteAuthCookie();
+            await this.deleteAuthCookie();
             return onSignout(req);
           }
           default:
