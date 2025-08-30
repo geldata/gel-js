@@ -48,7 +48,7 @@ Consider the following file tree.
       └── getUser.edgeql
 
 
-The following command will run the ``queries`` generator.
+The following command will run the ``queries`` generator on all ``.edgeql`` files in your project.
 
 .. tabs::
 
@@ -56,16 +56,25 @@ The following command will run the ``queries`` generator.
     :caption: Node.js
 
     $ npx @edgedb/generate queries
+    
+    # Or process specific files with patterns:
+    $ npx @edgedb/generate queries "queries/*.edgeql"
 
   .. code-tab:: bash
     :caption: Deno
 
     $ deno run --allow-all --unstable https://deno.land/x/edgedb/generate.ts queries
+    
+    # Or with patterns:
+    $ deno run --allow-all --unstable https://deno.land/x/edgedb/generate.ts queries "queries/*.edgeql"
 
   .. code-tab:: bash
     :caption: Bun
 
     $ bunx @edgedb/generate queries
+    
+    # Or with patterns:
+    $ bunx @edgedb/generate queries "queries/*.edgeql"
 
 .. note:: Deno users
 
@@ -182,6 +191,45 @@ We can now use this function in our code.
    Generators work by connecting to the database to get information about the current state of the schema. Make sure you run the generators again any time the schema changes so that the generated code is in-sync with the current state of the schema.
 
 
+File Pattern Selection
+----------------------
+
+By default, the generator scans your entire project for ``*.edgeql`` files. You can specify which files to process using glob patterns as positional arguments.
+
+.. code-block:: bash
+
+  # Process specific files
+  $ npx @edgedb/generate queries "getUser.edgeql" "admin/permissions.edgeql"
+  
+  # Use glob patterns
+  $ npx @edgedb/generate queries "src/**/*user*.edgeql"
+  
+  # Process entire directories
+  $ npx @edgedb/generate queries "queries/" "admin/"
+
+**Pattern Features:**
+
+- **Glob support**: Use ``*``, ``**``, and ``?`` wildcards for flexible matching
+- **Directory expansion**: Bare directory names automatically expand to ``directory/**/*.edgeql``
+- **Schema protection**: Migration and fixup files in ``dbschema/`` are automatically excluded
+- **Multiple patterns**: Specify multiple patterns to process files from different locations
+
+**Examples:**
+
+.. code-block:: bash
+
+  # Process only user-related queries
+  $ npx @edgedb/generate queries "**/*user*.edgeql"
+  
+  # Process queries from specific modules
+  $ npx @edgedb/generate queries "src/queries/" "admin/queries/"
+  
+  # Process a single file
+  $ npx @edgedb/generate queries "scripts/migration-helper.edgeql"
+
+Patterns are resolved relative to your current working directory and will automatically exclude schema management files to prevent accidentally processing migrations.
+
+
 Single-file mode
 ----------------
 
@@ -205,6 +253,9 @@ The following command will run the generator in ``--file`` mode.
 .. code-block:: bash
 
   $ npx @edgedb/generate queries --file
+  
+  # Or generate single file from specific patterns:
+  $ npx @edgedb/generate queries --file "src/queries/*.edgeql" "admin/*.edgeql"
 
 A single file will be generated that exports two functions, ``getUser`` and ``getMovies``. By default this file is generated into the ``dbschema`` directory.
 
