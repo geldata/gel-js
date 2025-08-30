@@ -105,6 +105,17 @@ const run = async () => {
     currentDir = path.join(currentDir, "..");
   }
 
+  // Collect positional arguments (patterns) for queries generator
+  const positionalArgs: string[] = [];
+  if (generator === Generator.Queries) {
+    while (args.length && !args[0]!.startsWith("-")) {
+      positionalArgs.push(args.shift()!);
+    }
+    if (positionalArgs.length > 0) {
+      options.patterns = positionalArgs;
+    }
+  }
+
   while (args.length) {
     let flag = args.shift()!;
     let val: string | null = null;

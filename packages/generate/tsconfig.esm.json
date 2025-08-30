@@ -1,7 +1,7 @@
 {
   "extends": "@repo/tsconfig/base.json",
   "compilerOptions": {
-    "module": "es2015",
+    "module": "es2020",
     "moduleResolution": "node",
     "outDir": "./dist/__esm",
     "downlevelIteration": true
