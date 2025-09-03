@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import path from "path";
 import { systemUtils } from "gel";
 import { execSync } from "child_process";
+import fs from "fs";
+import os from 'os'
 
 const QBDIR = path.resolve(__dirname, "..");
 
@@ -15,8 +17,6 @@ describe("cli", () => {
   }, 60000);
 
   test("queries with positional pattern", () => {
-    const fs = require("fs");
-
     // Create two test .edgeql files
     const includedFile = path.resolve(QBDIR, "test-included.edgeql");
     const excludedFile = path.resolve(QBDIR, "test-excluded.edgeql");
@@ -65,8 +65,6 @@ describe("cli", () => {
   });
 
   test("patterns relative to current working directory", () => {
-    const fs = require("fs");
-    const path = require("path");
 
     // Create subdirectory structure
     const subDir = path.resolve(QBDIR, "subdir");
@@ -106,14 +104,12 @@ describe("cli", () => {
   });
 
   test("pattern dot from project root excludes schema directories", () => {
-    const fs = require("fs");
-    const path = require("path");
 
     // Helper function for cleanup
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     // Create fake schema files that should be ignored
@@ -158,25 +154,23 @@ describe("cli", () => {
       [fixupsDir, migrationsDir].forEach((dir) => {
         try {
           fs.rmSync(dir, { recursive: true, force: true });
-        } catch (e) {}
+        } catch (e) { }
       });
     }
   });
 
   test("pattern traversal up excludes schema directories", () => {
-    const fs = require("fs");
-    const path = require("path");
 
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     const cleanupDir = (dir: string) => {
       try {
         fs.rmSync(dir, { recursive: true, force: true });
-      } catch (e) {}
+      } catch (e) { }
     };
 
     // Create subdirectory structure
@@ -215,9 +209,6 @@ describe("cli", () => {
   });
 
   test("absolute pattern paths work correctly", () => {
-    const fs = require("fs");
-    const path = require("path");
-    const os = require("os");
 
     // Create temp directory with test files
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gel-test-"));
@@ -238,24 +229,21 @@ describe("cli", () => {
       // Cleanup temp directory
       try {
         fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 
   test("explicit glob patterns respect schema exclusions", () => {
-    const fs = require("fs");
-    const path = require("path");
-
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     const cleanupDir = (dir: string) => {
       try {
         fs.rmSync(dir, { recursive: true, force: true });
-      } catch (e) {}
+      } catch (e) { }
     };
 
     // Create nested structure with schema files
@@ -292,13 +280,10 @@ describe("cli", () => {
   });
 
   test("schema directory outside cwd is not excluded when pattern searches locally", () => {
-    const fs = require("fs");
-    const path = require("path");
-
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) {}
+      } catch (e) { }
     };
 
     // Create deep subdirectory structure
@@ -328,13 +313,11 @@ describe("cli", () => {
           recursive: true,
           force: true,
         });
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 
   test("queries with multiple positional patterns", () => {
-    const fs = require("fs");
-
     // Create test files in different directories
     const files = {
       // Files that should be INCLUDED by patterns
