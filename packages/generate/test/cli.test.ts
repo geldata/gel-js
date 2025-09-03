@@ -3,7 +3,7 @@ import path from "path";
 import { systemUtils } from "gel";
 import { execSync } from "child_process";
 import fs from "fs";
-import os from 'os'
+import os from "os";
 
 const QBDIR = path.resolve(__dirname, "..");
 
@@ -65,7 +65,6 @@ describe("cli", () => {
   });
 
   test("patterns relative to current working directory", () => {
-
     // Create subdirectory structure
     const subDir = path.resolve(QBDIR, "subdir");
     const testFile = path.resolve(subDir, "query.edgeql");
@@ -104,12 +103,11 @@ describe("cli", () => {
   });
 
   test("pattern dot from project root excludes schema directories", () => {
-
     // Helper function for cleanup
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) { }
+      } catch (e) {}
     };
 
     // Create fake schema files that should be ignored
@@ -154,23 +152,22 @@ describe("cli", () => {
       [fixupsDir, migrationsDir].forEach((dir) => {
         try {
           fs.rmSync(dir, { recursive: true, force: true });
-        } catch (e) { }
+        } catch (e) {}
       });
     }
   });
 
   test("pattern traversal up excludes schema directories", () => {
-
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) { }
+      } catch (e) {}
     };
 
     const cleanupDir = (dir: string) => {
       try {
         fs.rmSync(dir, { recursive: true, force: true });
-      } catch (e) { }
+      } catch (e) {}
     };
 
     // Create subdirectory structure
@@ -209,7 +206,6 @@ describe("cli", () => {
   });
 
   test("absolute pattern paths work correctly", () => {
-
     // Create temp directory with test files
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gel-test-"));
     const testFile = path.resolve(tempDir, "absolute.edgeql");
@@ -229,7 +225,7 @@ describe("cli", () => {
       // Cleanup temp directory
       try {
         fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (e) { }
+      } catch (e) {}
     }
   });
 
@@ -237,13 +233,13 @@ describe("cli", () => {
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) { }
+      } catch (e) {}
     };
 
     const cleanupDir = (dir: string) => {
       try {
         fs.rmSync(dir, { recursive: true, force: true });
-      } catch (e) { }
+      } catch (e) {}
     };
 
     // Create nested structure with schema files
@@ -283,7 +279,7 @@ describe("cli", () => {
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
-      } catch (e) { }
+      } catch (e) {}
     };
 
     // Create deep subdirectory structure
@@ -313,7 +309,7 @@ describe("cli", () => {
           recursive: true,
           force: true,
         });
-      } catch (e) { }
+      } catch (e) {}
     }
   });
 
