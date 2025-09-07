@@ -174,49 +174,21 @@ async function getMatches(
     // Use globby to match files with the provided patterns
     const { globby } = await import("globby");
 
-    // Normalize patterns to ensure they match .edgeql files
-    const normalizedPatterns = patterns.map((pattern) => {
-      // If pattern doesn't end with .edgeql, expand it appropriately
-      if (!pattern.endsWith(".edgeql")) {
-        // Special case for current directory
-        if (pattern === ".") {
-          return "./**/*.edgeql";
-        }
-        // If pattern ends with a wildcard, replace with .edgeql wildcard
-        if (pattern.endsWith("*")) {
-          return pattern.slice(0, -1) + "*.edgeql";
-        }
-        // For directory-like patterns, add recursive search
-        if (pattern.endsWith("/")) {
-          return pattern + "**/*.edgeql";
-        }
-        // For other patterns, assume it's a directory and add recursive search
-        return pattern + "/**/*.edgeql";
-      }
-      return pattern;
-    });
-
-    const allFiles = await globby(normalizedPatterns, {
+    const allFiles = await globby(patterns, {
       cwd: process.cwd(),
       absolute: true,
       onlyFiles: true,
-      ignore: ["node_modules/**"],
+      expandDirectories: {
+        extensions: ["edgeql"],
+      },
+      ignore: [
+        "node_modules/**",
+        `${schemaDir}/migrations/**`,
+        `${schemaDir}/fixups/**`,
+      ],
     });
 
-    // Filter out schema directory files post-globby
-    const schemaPath = path.resolve(root, schemaDir);
-    const migrationsPath = path.resolve(schemaPath, "migrations");
-    const fixupsPath = path.resolve(schemaPath, "fixups");
-
-    const filteredFiles = allFiles.filter((file) => {
-      const normalizedFile = path.normalize(file);
-      return (
-        !normalizedFile.startsWith(migrationsPath) &&
-        !normalizedFile.startsWith(fixupsPath)
-      );
-    });
-
-    return filteredFiles;
+    return allFiles;
   }
 
   // Default behavior - walk all files
