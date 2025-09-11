@@ -17,6 +17,7 @@ export interface CommandOptions {
   updateIgnoreFile?: boolean;
   useHttpClient?: boolean;
   future?: Partial<Record<keyof typeof defaultFutureFlags, boolean>>;
+  patterns?: string[];
 }
 
 const { input } = systemUtils;

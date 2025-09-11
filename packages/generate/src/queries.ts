@@ -5,7 +5,7 @@ import { type CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
 import type { Target } from "./genutil";
 
-const { walk, readFileUtf8 } = systemUtils;
+const { readFileUtf8 } = systemUtils;
 
 // generate per-file queries
 // generate queries in a single file
@@ -40,9 +40,12 @@ currently supported.`);
   // generate one query per file
 
   console.log(`Detected schema directory: ${params.schemaDir}`);
-  const matches = await getMatches(root, params.schemaDir);
+  const matches = await getMatches(root, params.options.patterns);
   if (matches.length === 0) {
-    console.log(`No .edgeql files found outside of ${params.schemaDir}`);
+    const patternMsg = params.options.patterns?.length
+      ? ` matching patterns: ${params.options.patterns.join(", ")}`
+      : ` outside of ${params.schemaDir}`;
+    console.log(`No .edgeql files found${patternMsg}`);
     return;
   }
 
@@ -158,15 +161,23 @@ export function stringifyImports(imports: ImportMap) {
     .join("\n");
 }
 
-async function getMatches(root: string, schemaDir: string) {
-  return walk(root, {
-    match: [/[^/]\.edgeql$/],
-    skip: [
-      /node_modules/,
-      RegExp(`${schemaDir}\\${path.sep}migrations`),
-      RegExp(`${schemaDir}\\${path.sep}fixups`),
-    ],
+async function getMatches(root: string, patterns?: string[]) {
+  // Single code path using globby for both cases
+  const { globby } = await import("globby");
+
+  const searchPatterns = patterns && patterns.length > 0 ? patterns : ["."];
+
+  const allFiles = await globby(searchPatterns, {
+    cwd: root,
+    absolute: true,
+    onlyFiles: true,
+    expandDirectories: {
+      extensions: ["edgeql"],
+    },
+    ignore: ["node_modules/**", `**/migrations/**`, `**/fixups/**`],
   });
+
+  return allFiles;
 }
 
 // const targetToExtension: {[k in Target]: string} = {
