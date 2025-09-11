@@ -5,7 +5,7 @@ import { type CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
 import type { Target } from "./genutil";
 
-const { walk, readFileUtf8 } = systemUtils;
+const { readFileUtf8 } = systemUtils;
 
 // generate per-file queries
 // generate queries in a single file
@@ -42,7 +42,6 @@ currently supported.`);
   console.log(`Detected schema directory: ${params.schemaDir}`);
   const matches = await getMatches(
     root,
-    params.schemaDir,
     params.options.patterns,
   );
   if (matches.length === 0) {
@@ -97,8 +96,7 @@ currently supported.`);
     );
     if (!wasError) {
       console.log(
-        `Generating query file${
-          Object.keys(filesByExtension).length > 1 ? "s" : ""
+        `Generating query file${Object.keys(filesByExtension).length > 1 ? "s" : ""
         }...`,
       );
       for (const [extension, file] of Object.entries(filesByExtension)) {
@@ -113,7 +111,7 @@ currently supported.`);
         await fs.writeFile(
           filePath,
           headerComment +
-            `${stringifyImports(file.imports)}\n\n${file.contents}`,
+          `${stringifyImports(file.imports)}\n\n${file.contents}`,
         );
       }
     }
@@ -167,39 +165,28 @@ export function stringifyImports(imports: ImportMap) {
 
 async function getMatches(
   root: string,
-  schemaDir: string,
   patterns?: string[],
 ) {
-  if (patterns && patterns.length > 0) {
-    // Use globby to match files with the provided patterns
-    const { globby } = await import("globby");
+  // Single code path using globby for both cases
+  const { globby } = await import("globby");
 
-    const allFiles = await globby(patterns, {
-      cwd: process.cwd(),
-      absolute: true,
-      onlyFiles: true,
-      expandDirectories: {
-        extensions: ["edgeql"],
-      },
-      ignore: [
-        "node_modules/**",
-        `${schemaDir}/migrations/**`,
-        `${schemaDir}/fixups/**`,
-      ],
-    });
+  const searchPatterns = patterns && patterns.length > 0 ? patterns : ["."];
 
-    return allFiles;
-  }
-
-  // Default behavior - walk all files
-  return walk(root, {
-    match: [/[^/]\.edgeql$/],
-    skip: [
-      /node_modules/,
-      RegExp(`${schemaDir}\\${path.sep}migrations`),
-      RegExp(`${schemaDir}\\${path.sep}fixups`),
+  const allFiles = await globby(searchPatterns, {
+    cwd: root,
+    absolute: true,
+    onlyFiles: true,
+    expandDirectories: {
+      extensions: ["edgeql"],
+    },
+    ignore: [
+      "node_modules/**",
+      `**/migrations/**`,
+      `**/fixups/**`,
     ],
   });
+
+  return allFiles;
 }
 
 // const targetToExtension: {[k in Target]: string} = {

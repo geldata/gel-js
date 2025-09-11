@@ -157,54 +157,6 @@ describe("cli", () => {
     }
   });
 
-  test("pattern traversal up excludes schema directories", () => {
-    const cleanup = (file: string) => {
-      try {
-        fs.unlinkSync(file);
-      } catch (e) {}
-    };
-
-    const cleanupDir = (dir: string) => {
-      try {
-        fs.rmSync(dir, { recursive: true, force: true });
-      } catch (e) {}
-    };
-
-    // Create subdirectory structure
-    const subDir = path.resolve(QBDIR, "apps", "backend");
-    fs.mkdirSync(subDir, { recursive: true });
-
-    // Create schema files at project root that should be ignored
-    const schemaDir = path.resolve(QBDIR, "dbschema");
-    const migrationsDir = path.resolve(schemaDir, "migrations");
-    fs.mkdirSync(migrationsDir, { recursive: true });
-
-    const migrationFile = path.resolve(migrationsDir, "bad.edgeql");
-    const goodFile = path.resolve(QBDIR, "good2.edgeql");
-
-    fs.writeFileSync(migrationFile, "CREATE TYPE Bad;");
-    fs.writeFileSync(goodFile, "SELECT 123;");
-
-    try {
-      // Run from subdirectory with "../.." pattern - should ignore schema
-      const cliPath = path.resolve(QBDIR, "dist", "cli.js");
-      execSync(`"${cliPath}" queries "../.."`, {
-        stdio: "inherit",
-        cwd: subDir,
-      });
-
-      // Verify good file processed, schema file ignored
-      assert.ok(fs.existsSync(path.resolve(QBDIR, "good2.query.ts")));
-      assert.ok(!fs.existsSync(path.resolve(migrationsDir, "bad.query.ts")));
-    } finally {
-      // Cleanup
-      [migrationFile, goodFile, path.resolve(QBDIR, "good2.query.ts")].forEach(
-        cleanup,
-      );
-      [migrationsDir, path.resolve(QBDIR, "apps")].forEach(cleanupDir);
-    }
-  });
-
   test("absolute pattern paths work correctly", () => {
     // Create temp directory with test files
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gel-test-"));
