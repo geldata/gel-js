@@ -40,10 +40,7 @@ currently supported.`);
   // generate one query per file
 
   console.log(`Detected schema directory: ${params.schemaDir}`);
-  const matches = await getMatches(
-    root,
-    params.options.patterns,
-  );
+  const matches = await getMatches(root, params.options.patterns);
   if (matches.length === 0) {
     const patternMsg = params.options.patterns?.length
       ? ` matching patterns: ${params.options.patterns.join(", ")}`
@@ -96,7 +93,8 @@ currently supported.`);
     );
     if (!wasError) {
       console.log(
-        `Generating query file${Object.keys(filesByExtension).length > 1 ? "s" : ""
+        `Generating query file${
+          Object.keys(filesByExtension).length > 1 ? "s" : ""
         }...`,
       );
       for (const [extension, file] of Object.entries(filesByExtension)) {
@@ -111,7 +109,7 @@ currently supported.`);
         await fs.writeFile(
           filePath,
           headerComment +
-          `${stringifyImports(file.imports)}\n\n${file.contents}`,
+            `${stringifyImports(file.imports)}\n\n${file.contents}`,
         );
       }
     }
@@ -163,10 +161,7 @@ export function stringifyImports(imports: ImportMap) {
     .join("\n");
 }
 
-async function getMatches(
-  root: string,
-  patterns?: string[],
-) {
+async function getMatches(root: string, patterns?: string[]) {
   // Single code path using globby for both cases
   const { globby } = await import("globby");
 
@@ -179,11 +174,7 @@ async function getMatches(
     expandDirectories: {
       extensions: ["edgeql"],
     },
-    ignore: [
-      "node_modules/**",
-      `**/migrations/**`,
-      `**/fixups/**`,
-    ],
+    ignore: ["node_modules/**", `**/migrations/**`, `**/fixups/**`],
   });
 
   return allFiles;
