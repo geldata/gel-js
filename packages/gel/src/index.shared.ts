@@ -53,6 +53,8 @@ export * from "./errors";
 
 export type { Codecs } from "./codecs/codecs";
 
+export type { OverrideCodecType, ResolvedCodecType } from "./codecTypeRegistry";
+
 /* Private APIs */
 import type * as codecs from "./codecs/ifaces";
 import * as reg from "./codecs/registry";

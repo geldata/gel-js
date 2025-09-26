@@ -169,6 +169,13 @@ export const defaultCodecGenerators: CodecGeneratorMap = new Map([
     if (codec.tsModule) {
       ctx.imports.add(codec.tsModule, codec.tsType);
     }
+    const isCustomScalar = !codec.typeName.startsWith("std::");
+
+    if (isCustomScalar) {
+      ctx.imports.add("gel", "ResolvedCodecType");
+      return `ResolvedCodecType<"${codec.typeName}", ${codec.tsType}>`;
+    }
+
     return codec.tsType;
   }),
   genDef(ObjectCodec, (codec, ctx) => {
