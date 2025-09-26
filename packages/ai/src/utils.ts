@@ -29,5 +29,5 @@ export async function handleResponseError(response: Response): Promise<void> {
     const bodyText = await response.text();
     errorMessage = bodyText || "An unknown error occurred";
   }
-  throw new Error(errorMessage);
+  throw new Error(`Status: ${response.status}. Message: ${errorMessage}`);
 }
