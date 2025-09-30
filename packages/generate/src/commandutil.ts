@@ -16,6 +16,7 @@ export interface CommandOptions {
   forceOverwrite?: boolean;
   updateIgnoreFile?: boolean;
   useHttpClient?: boolean;
+  useResolvedCodecType?: boolean;
   future?: Partial<Record<keyof typeof defaultFutureFlags, boolean>>;
   patterns?: string[];
 }
