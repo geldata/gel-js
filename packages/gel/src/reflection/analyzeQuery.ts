@@ -23,9 +23,14 @@ type QueryType = {
   imports: Set<string>;
 };
 
+export type AnalyzeQueryOptions = {
+  useResolvedCodecType?: boolean;
+};
+
 export async function analyzeQuery(
   client: Client,
   query: string,
+  { useResolvedCodecType = false }: AnalyzeQueryOptions = {},
 ): Promise<QueryType> {
   const {
     cardinality,
@@ -34,11 +39,18 @@ export async function analyzeQuery(
     out: outCodec,
   } = await client.describe(query);
 
+  const generators: CodecGeneratorMap = useResolvedCodecType
+    ? new Map([...defaultCodecGenerators, resolvedCodecTypeScalarTypeGenerator])
+    : defaultCodecGenerators;
+
   const args = generateTSTypeFromCodec(inCodec, Cardinality.One, {
     optionalNulls: true,
     readonly: true,
+    generators,
   });
-  const result = generateTSTypeFromCodec(outCodec, cardinality);
+  const result = generateTSTypeFromCodec(outCodec, cardinality, {
+    generators,
+  });
 
   const imports = args.imports.merge(result.imports);
   return {
@@ -159,6 +171,21 @@ const getSortPriority = (field: FieldDef) => {
   }
   return 8;
 };
+
+const resolvedCodecTypeScalarTypeGenerator = genDef(
+  ScalarCodec,
+  (codec, ctx) => {
+    if (codec.tsModule) {
+      ctx.imports.add(codec.tsModule, codec.tsType);
+    }
+    const isCustomScalar = !codec.typeName.startsWith("std::");
+    if (isCustomScalar) {
+      ctx.imports.add("gel", "ResolvedCodecType");
+      return `ResolvedCodecType<"${codec.typeName}", ${codec.tsType}>`;
+    }
+    return codec.tsType;
+  },
+);
 
 export const defaultCodecGenerators: CodecGeneratorMap = new Map([
   genDef(NullCodec, () => "null"),

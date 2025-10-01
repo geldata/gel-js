@@ -1,13 +1,6 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import {
-  $,
-  _CodecsRegistry,
-  _ScalarCodec,
-  systemUtils,
-  type Client,
-  type Executor,
-} from "gel";
+import { $, systemUtils, type Client, type Executor } from "gel";
 import { type CommandOptions } from "./commandutil";
 import { headerComment } from "./genutil";
 import type { Target } from "./genutil";
@@ -73,7 +66,7 @@ currently supported.`);
 
         try {
           const query = await readFileUtf8(p);
-          const types = await analyzeQuery(client, query, {
+          const types = await $.analyzeQuery(client, query, {
             useResolvedCodecType: params.options.useResolvedCodecType,
           });
           console.log(`   ${prettyPath}`);
@@ -129,7 +122,7 @@ currently supported.`);
     try {
       const query = await readFileUtf8(p);
       if (!query) return;
-      const types = await analyzeQuery(client, query, {
+      const types = await $.analyzeQuery(client, query, {
         useResolvedCodecType: params.options.useResolvedCodecType,
       });
       const files = generateFiles({
@@ -363,57 +356,4 @@ export class ImportMap extends Map<string, Set<string>> {
     }
     return out;
   }
-}
-
-const resolvedCodecTypeScalarTypeGenerator = $.defineCodecGeneratorTuple(
-  _ScalarCodec,
-  (codec, ctx) => {
-    if (codec.tsModule) {
-      ctx.imports.add(codec.tsModule, codec.tsType);
-    }
-    const isCustomScalar = !codec.typeName.startsWith("std::");
-    if (isCustomScalar) {
-      ctx.imports.add("gel", "ResolvedCodecType");
-      return `ResolvedCodecType<"${codec.typeName}", ${codec.tsType}>`;
-    }
-    return codec.tsType;
-  },
-);
-
-async function analyzeQuery(
-  client: Client,
-  query: string,
-  { useResolvedCodecType }: { useResolvedCodecType?: boolean } = {},
-): ReturnType<typeof $.analyzeQuery> {
-  const {
-    cardinality,
-    capabilities,
-    in: inCodec,
-    out: outCodec,
-  } = await client.describe(query);
-
-  const generators = new Map([
-    ...$.defaultCodecGenerators.entries(),
-    ...(useResolvedCodecType ? [resolvedCodecTypeScalarTypeGenerator] : []),
-  ]);
-
-  const args = $.generateTSTypeFromCodec(inCodec, $.Cardinality.One, {
-    optionalNulls: true,
-    readonly: true,
-    generators: generators,
-  });
-  const result = $.generateTSTypeFromCodec(outCodec, cardinality, {
-    generators: generators,
-  });
-
-  const imports = args.imports.merge(result.imports);
-  return {
-    result: result.type,
-    args: args.type,
-    cardinality,
-    capabilities,
-    query,
-    importMap: imports,
-    imports: imports.get("gel") ?? new Set(),
-  };
 }
