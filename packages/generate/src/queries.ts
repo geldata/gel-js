@@ -66,7 +66,9 @@ currently supported.`);
 
         try {
           const query = await readFileUtf8(p);
-          const types = await $.analyzeQuery(client, query);
+          const types = await $.analyzeQuery(client, query, {
+            useResolvedCodecType: params.options.useResolvedCodecType,
+          });
           console.log(`   ${prettyPath}`);
           const files = generateFiles({
             target: params.options.target!,
@@ -120,7 +122,9 @@ currently supported.`);
     try {
       const query = await readFileUtf8(p);
       if (!query) return;
-      const types = await $.analyzeQuery(client, query);
+      const types = await $.analyzeQuery(client, query, {
+        useResolvedCodecType: params.options.useResolvedCodecType,
+      });
       const files = generateFiles({
         target: params.options.target!,
         path: p,

@@ -206,6 +206,9 @@ const run = async () => {
       case "--use-http-client":
         options.useHttpClient = true;
         break;
+      case "--use-resolved-codec-type":
+        options.useResolvedCodecType = true;
+        break;
       case "--target": {
         if (
           generator === Generator.Interfaces ||

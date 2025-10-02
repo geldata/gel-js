@@ -53,10 +53,14 @@ export * from "./errors";
 
 export type { Codecs } from "./codecs/codecs";
 
+export type { OverrideCodecType, ResolvedCodecType } from "./codecTypeRegistry";
+
 /* Private APIs */
 import type * as codecs from "./codecs/ifaces";
+import { ScalarCodec } from "./codecs/ifaces";
 import * as reg from "./codecs/registry";
 import * as buf from "./primitives/buffer";
 export const _CodecsRegistry = reg.CodecsRegistry;
 export const _ReadBuffer = buf.ReadBuffer;
 export type _ICodec = codecs.ICodec;
+export const _ScalarCodec = ScalarCodec;
