@@ -45,6 +45,34 @@ export type QueryableWithParamsExpression<
   runJSON(cxn: Executor, args: paramsToParamArgs<Params>): Promise<string>;
 };
 
+type paramOrTsType<Type extends ParamType, Optional extends boolean> =
+  | $expr_Param<string, Type, Optional>
+  | Readonly<BaseTypeToTsType<Type, true>>;
+
+type paramsToInputArgs<Params extends ParamsRecord> = {
+  [key in keyof Params as Params[key] extends ParamType
+    ? key
+    : never]: Params[key] extends ParamType
+    ? paramOrTsType<Params[key], false>
+    : never;
+} & {
+  [key in keyof Params as Params[key] extends $expr_OptionalParam
+    ? key
+    : never]?: Params[key] extends $expr_OptionalParam
+    ? paramOrTsType<Params[key]["__type__"], true>
+    : never;
+};
+
+type CallableWithParamsExpr<
+  Params extends ParamsRecord = Record<string, never>,
+  Expr extends TypeSet = TypeSet,
+> = {
+  (args: paramsToInputArgs<Params>): Expression<{
+    __element__: Expr["__element__"];
+    __cardinality__: Expr["__cardinality__"];
+  }>;
+};
+
 export type $expr_WithParams<
   Params extends ParamsRecord = Record<string, never>,
   Expr extends TypeSet = TypeSet,
@@ -57,7 +85,8 @@ export type $expr_WithParams<
     __params__: $expr_Param[];
   },
   Params
->;
+> &
+  CallableWithParamsExpr<Params, Expr>;
 
 type paramsToParamArgs<Params extends ParamsRecord> = {
   [key in keyof Params as Params[key] extends ParamType
@@ -128,11 +157,26 @@ export function params<
     returnExpr = select(returnExpr) as any;
   }
 
-  return $expressionify({
+  const withParamsExpr = $expressionify({
     __kind__: ExpressionKind.WithParams,
     __element__: returnExpr.__element__,
     __cardinality__: returnExpr.__cardinality__,
     __expr__: returnExpr,
     __params__: Object.values(paramExprs),
   }) as any;
+
+  const callableExpr = function (args: paramsToInputArgs<Params>) {
+    return $expressionify({
+      __kind__: ExpressionKind.WithParams,
+      __element__: returnExpr.__element__,
+      __cardinality__: returnExpr.__cardinality__,
+      __expr__: returnExpr,
+      __params__: Object.values(paramExprs),
+      __args__: args,
+    }) as any;
+  };
+
+  Object.assign(callableExpr, withParamsExpr);
+
+  return callableExpr as any;
 }
