@@ -397,7 +397,10 @@ function walkExprTree(
 
   const expr = _expr as SomeExpression;
 
-  if ((expr as any).__scopedFrom__ != null) {
+  if (
+    (expr as any).__scopedFrom__ != null &&
+    expr.__kind__ !== ExpressionKind.PathLeaf
+  ) {
     // If expr is marked as being a scoped copy of another expr, treat it as
     // an opaque reference and don't walk it. The enclosing select/update that
     // owns the scope will walk the actual unscoped expr.
