@@ -754,6 +754,9 @@ describe("select", () => {
   test("link properties", async () => {
     const query = e.select(e.Movie, () => ({
       id: true,
+      profile: (p) => ({
+        d: true,
+      }),
       characters: () => ({
         name: true,
         "@character_name": true,
@@ -773,6 +776,9 @@ describe("select", () => {
             "@character_name": string | null;
             "@meta": unknown;
           }[];
+          profile: {
+            d: unknown;
+          } | null;
         }[]
       >
     >(true);
