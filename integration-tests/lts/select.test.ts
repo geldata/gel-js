@@ -754,9 +754,13 @@ describe("select", () => {
   test("link properties", async () => {
     const query = e.select(e.Movie, () => ({
       id: true,
+      profile: (p) => ({
+        d: true,
+      }),
       characters: () => ({
         name: true,
         "@character_name": true,
+        "@meta": true,
       }),
     }));
 
@@ -770,7 +774,11 @@ describe("select", () => {
           characters: {
             name: string;
             "@character_name": string | null;
+            "@meta": unknown;
           }[];
+          profile: {
+            d: unknown;
+          } | null;
         }[]
       >
     >(true);
@@ -1578,6 +1586,7 @@ SELECT __scope_0_defaultPerson {
   test("filter_single composite truple", async () => {
     const query = e.select(e.Profile, () => ({
       slug: true,
+      d: true,
       filter_single: {
         a: "adsf",
         b: "adsf",

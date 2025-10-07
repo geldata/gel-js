@@ -303,7 +303,10 @@ describe("update", () => {
   test("exclude readonly props", () => {
     type updateProfileShape = UpdateShape<(typeof e)["Profile"]>;
     tc.assert<
-      tc.IsExact<keyof updateProfileShape, "plot_summary" | "a" | "b" | "c">
+      tc.IsExact<
+        keyof updateProfileShape,
+        "plot_summary" | "a" | "b" | "c" | "d"
+      >
     >(true);
   });
 

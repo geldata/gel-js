@@ -24,6 +24,7 @@ module default {
 
   abstract link movie_character {
     property character_name -> str;
+    property meta -> json;
   }
 
   abstract type LivingThing {
@@ -85,6 +86,7 @@ module default {
     property a -> str;
     property b -> str;
     property c -> str;
+    property d -> json;
 
     constraint exclusive on ((  .plot_summary,    .slug  ));
     constraint exclusive on (((.a,.b,.c)));

@@ -45,6 +45,7 @@ export interface test_Profile extends BaseObject {
   a?: string | null;
   b?: string | null;
   c?: string | null;
+  d?: unknown | null;
 }
 interface test_Z extends BaseObject {
   xy?: W | X | Y | null;
