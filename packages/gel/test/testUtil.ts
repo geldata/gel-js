@@ -128,7 +128,7 @@ export const getServerCommand = (
     "--port=auto",
     "--emit-server-status=" + statusFile,
     `--security=${strictSecurity ? "strict" : "insecure_dev_mode"}`,
-    "--bootstrap-command=ALTER ROLE edgedb { SET password := 'edgedbtest' }",
+    "--bootstrap-command=create superuser role geltestuser { set password := 'geltest' }",
   ];
   return { args, availableFeatures };
 };
@@ -206,8 +206,8 @@ export const startServer = async (
     const config: ConnectConfig = {
       host: "localhost",
       port: runtimeData.port,
-      user: "edgedb",
-      password: "edgedbtest",
+      user: "geltestuser",
+      password: "geltest",
       tlsSecurity: "no_host_verification",
     };
 
@@ -297,12 +297,12 @@ export async function applyMigrations(
   if (process.platform === "win32") {
     await runCommand("wsl", [
       "-u",
-      "edgedb",
+      "gel",
       "env",
       ...Object.entries(configToEnv(config)).map(
         ([key, val]) => `${key}=${val}`,
       ),
-      "edgedb",
+      "gel",
       "migrate",
       ...(params?.flags || []),
       "--schema-dir",
@@ -310,7 +310,7 @@ export async function applyMigrations(
     ]);
   } else {
     await runCommand(
-      "edgedb",
+      "gel",
       ["migrate", ...(params?.flags || [])],
       configToEnv(config),
     );
