@@ -34,7 +34,7 @@ const recipe: Recipe = {
         gel: "^2",
         react: "^19.1.0",
         "react-dom": "^19.1.0",
-        next: "^15",
+        next: "^16",
       },
       devDependencies: {
         typescript: "^5",
