@@ -665,11 +665,12 @@ function walkExprTree(
       break;
     }
     case ExpressionKind.WithParams: {
-      if (parentScope !== null) {
-        throw new Error(
-          `'withParams' does not support being used as a nested expression`,
-        );
-      }
+      // Does this need to be here?, seems to work fine without it.
+      // if (parentScope !== null) {
+      //   throw new Error(
+      //     `'withParams' does not support being used as a nested expression`,
+      //   );
+      // }
       childExprs.push(...walkExprTree(expr.__expr__, parentScope, ctx));
       break;
     }
@@ -872,6 +873,25 @@ function renderEdgeQL(
   if (expr.__kind__ === ExpressionKind.With) {
     return renderEdgeQL(expr.__expr__, ctx);
   } else if (expr.__kind__ === ExpressionKind.WithParams) {
+    if ((expr as any).__args__) {
+      const argList = Object.entries((expr as any).__args__)
+        .map(([key, value]) => {
+          if (
+            value &&
+            typeof value === "object" &&
+            (value as any).__kind__ === ExpressionKind.Param
+          ) {
+            return `  __param__${key} := ${renderEdgeQL(value as any, ctx)}`;
+          }
+          const param = expr.__params__.find(
+            (p: any) => p.__name__ === key,
+          ) as any;
+          return `  __param__${key} := ${literalToEdgeQL(param.__element__, value)}`;
+        })
+        .join(",\n");
+
+      return `(WITH\n${argList}\nSELECT ${renderEdgeQL(expr.__expr__, ctx)})`;
+    }
     return `(WITH\n${expr.__params__
       .map((param) => {
         const optional =
