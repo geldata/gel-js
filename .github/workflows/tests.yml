@@ -113,7 +113,10 @@ jobs:
 
   test-cli-wrapper:
     name: "Test CLI Wrapper"
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       DEBUG: "*"
     steps:
@@ -135,12 +138,18 @@ jobs:
           yarn workspace gel run build
           yarn workspace gel pack --filename=${{ github.workspace }}/edgedb-cli.tar.gz
 
-      - name: Test CLI wrapper with npm
+      - name: Update Linux kernel for WSL2 (Windows only)
+        if: runner.os == 'Windows'
         run: |
-          mkdir ${{ runner.temp }}/temp-npm
-          cd ${{ runner.temp }}/temp-npm
+          wsl --update
+
+      - name: Test CLI wrapper with npm
+        shell: bash
+        run: |
+          mkdir "${{ runner.temp }}/temp-npm"
+          cd "${{ runner.temp }}/temp-npm"
           npm init -y
-          npm install ${{ github.workspace }}/edgedb-cli.tar.gz
+          npm install "${{ github.workspace }}/edgedb-cli.tar.gz"
           npm exec gel -- project init --non-interactive
           npm exec gel -- --version
           npm exec gel -- query 'select sys::get_version_as_str()'
@@ -152,11 +161,12 @@ jobs:
           fi
 
       - name: Test CLI wrapper with yarn
+        shell: bash
         run: |
-          mkdir ${{ runner.temp }}/temp-yarn
-          cd ${{ runner.temp }}/temp-yarn
+          mkdir "${{ runner.temp }}/temp-yarn"
+          cd "${{ runner.temp }}/temp-yarn"
           yarn init -y
-          yarn add ${{ github.workspace}}/edgedb-cli.tar.gz
+          yarn add "${{ github.workspace}}/edgedb-cli.tar.gz"
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
@@ -172,13 +182,14 @@ jobs:
           version: latest
           cache: false
       - name: Test CLI wrapper with yarn-berry
+        shell: bash
         run: |
-          mkdir ${{ runner.temp }}/temp-yarn-berry
-          cd ${{ runner.temp }}/temp-yarn-berry
+          mkdir "${{ runner.temp }}/temp-yarn-berry"
+          cd "${{ runner.temp }}/temp-yarn-berry"
           yarn set version berry
           yarn init -y
           touch yarn.lock
-          yarn add ${{ github.workspace }}/edgedb-cli.tar.gz
+          yarn add "${{ github.workspace }}/edgedb-cli.tar.gz"
           yarn gel project init --non-interactive
           yarn gel --version
           yarn gel query 'select sys::get_version_as_str()'
@@ -194,11 +205,12 @@ jobs:
           version: latest
           run_install: false
       - name: Test CLI wrapper with pnpm
+        shell: bash
         run: |
-          mkdir ${{ runner.temp }}/temp-pnpm
-          cd ${{ runner.temp}}/temp-pnpm
+          mkdir "${{ runner.temp }}/temp-pnpm"
+          cd "${{ runner.temp}}/temp-pnpm"
           pnpm init
-          pnpm add ${{ github.workspace }}/edgedb-cli.tar.gz
+          pnpm add "${{ github.workspace }}/edgedb-cli.tar.gz"
           pnpm exec gel project init --non-interactive
           pnpm exec gel --version
           pnpm exec gel query 'select sys::get_version_as_str()'
@@ -211,11 +223,12 @@ jobs:
 
       - uses: oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135
       - name: Test CLI wrapper with bun
+        shell: bash
         run: |
-          mkdir temp-bun
-          cd temp-bun
+          mkdir "${{ runner.temp }}/temp-bun"
+          cd "${{ runner.temp }}/temp-bun"
           bun init
-          bun add ${{ github.workspace }}/edgedb-cli.tar.gz
+          bun add "${{ github.workspace }}/edgedb-cli.tar.gz"
           bun gel project init --non-interactive
           bun gel --version
           bun gel query 'select sys::get_version_as_str()'
