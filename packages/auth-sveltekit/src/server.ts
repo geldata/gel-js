@@ -63,7 +63,7 @@ export interface AuthRouteHandlers {
   ) => Promise<never>;
   onEmailVerify?: (
     params: ParamsOrError<
-      { tokenData: TokenData },
+      { tokenData: TokenData | null },
       { verificationToken?: string }
     >,
   ) => Promise<never>;
@@ -614,8 +614,15 @@ async function handleAuthRoutes(
       const verifier = getVerifierCookie();
 
       if (!verifier) {
+        // End user verified email from a different user agent than sign-up.
+        // This is fine, but the application will need to detect this and inform
+        // the end user that they will need to initiate a new sign up attempt to
+        // complete the flow.
         return onBuiltinUICallback({
-          error: new PKCEError("no pkce verifier cookie found"),
+          error: null,
+          tokenData: null,
+          provider: null,
+          isSignUp: false,
         });
       }
       const isSignUp = searchParams.get("isSignUp") === "true";
@@ -670,9 +677,13 @@ async function handleAuthRoutes(
         });
       }
       if (!verifier) {
+        // End user verified email from a different user agent than sign-up.
+        // This is fine, but the application will need to detect this and inform
+        // the end user that they will need to initiate a new sign up attempt to
+        // complete the flow.
         return onEmailVerify({
-          error: new PKCEError("no pkce verifier cookie found"),
-          verificationToken,
+          error: null,
+          tokenData: null,
         });
       }
       let tokenData: TokenData;
