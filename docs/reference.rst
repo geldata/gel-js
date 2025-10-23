@@ -523,6 +523,116 @@ Client
               });
             }
 
+    .. js:method:: withCodecs(spec: {[typeName: string]: {toDatabase, fromDatabase}}): Client
+
+        Returns a new ``Client`` instance with customized mapping of EdgeDB
+        to JavaScript types.
+
+        For example, supposed we define a custom scalar type in our schema:
+
+        .. code-block:: sdl
+
+            module default {
+              scalar type Money extending std::bigint;
+            }
+
+        Then in JavaScript we can customize how values of this type will
+        be be represented:
+
+        .. code-block:: js
+
+            import {createClient} from 'edgedb';
+
+            class Money {
+              constructor(public cents: bigint) {}
+
+              toString() {
+                return `\$${this.cents / 100n}.${this.cents % 100n}`
+              };
+            }
+
+            function main() {
+              const client = createClient().withCodecs({
+                'default::Money': {
+                  // This function will be called every time `Money` is
+                  // passed to a query as an argument.
+                  toDatabase(value: Money): bigint {
+                    return value.cents;
+                  },
+
+                  // This function will be called every time a value of
+                  // `default::Money` type is returned from an EdgeQL query.
+                  fromDatabase(value: bigint): Money {
+                    return new Money(value);
+                  }
+                }
+              });
+
+              console.log(await client.querySingle('select <Money>1000n'));
+              // Output: $10.0
+            }
+
+        Each successive call to ``.withCodecs()`` creates a new version of the
+        client with additional codecs specified on top of what was configured
+        for the parent client.
+
+        The ``spec`` argument is a mapping of fully qualified schema names
+        to objects with a pair of functions: ``toDatabase()`` and
+        ``fromDatabase()``.  EdgeDB allows users to specify custom scalar
+        types, but they always extend one of the base scalar types. Every
+        base scalar type has a specific low-level type that will be passed
+        to your ``fromDatabase()`` functions and will be expected to
+        be returned from your ``toDatabase`` functions. Let's go over them:
+
+        * ``std::bool`` maps to JavaScript ``boolean``.
+        * ``std::int16`` maps to ``number``.
+        * ``std::int32`` maps to ``number``.
+        * ``std::int64`` maps to ``bigint``. JavaScript can only represent
+          integers up to 2^53 via its ``number`` type.
+
+          By default ``edgedb-js`` opts for convenience using ``number``
+          type for ``int64``, erroring out if an integer greater than
+          2^53 is coming from the database. However, user-defined codecs
+          will recieve a ``bigint``, so that users can choose to reflect
+          ``int64`` values into ``bigint`` or some other appropriate type
+          if they choose to.
+        * ``std::float32`` maps to ``number``.
+        * ``std::float64`` maps to ``number``.
+        * ``std::bigint`` maps to ``bigint``.
+        * ``std::decimal`` maps to ``string``. JavaScript does not have a
+          standard type for precise decimal calculations. ``string`` values
+          can be used to easily map ``std::decimal`` to one of the third-party
+          JavaScript libraries.
+        * ``std::bytes`` maps to ``Uint8Array``.
+        * ``std::uuid`` maps to ``Uint8Array``, 16 elements long.
+        * ``std::json`` maps to ``string``. By default EdgeDB uses
+          ``JSON.parse`` and ``JSON.stringify`` to automatically pack and
+          unpack JSON values. Users might want to override that behavior and
+          use strings, or use another approach to packing/unpacking JSON.
+        * ``std::datetime`` maps to ``bigint`` -- milliseconds in UTC epoch.
+          This type represents **time-zone aware** time.
+        * ``std::duration`` maps to ``bigint`` -- milliseconds.
+        * ``cal::local_date`` maps to
+          ``[years: number, months: number, days: number]`` tuples.
+        * ``cal::local_time`` maps to ``bigint`` -- milliseconds. Values of
+          this type are designed to be in the range of `00:00:00` to '24:00:00'
+          with a millisecond precision.
+        * ``cal::local_datetime`` maps to ``bigint`` -- milliseconds in
+          Unix epoch. This type is designed to represent **not time-zone aware**
+          time.
+        * ``cal::relative_duration`` maps to
+          ``[months: number, days: number, us: bigint]`` tuple. An imprecise
+          duration: when months and days are used, the same relative duration
+          could have a different absolute duration meaning depending on the
+          date measured from.
+        * ``cal::date_duration`` maps to ``[months: number, days: number]``
+          tuple. Similar to ``cal::relative_duration``.
+        * ``cfg::memory`` maps to ``bigint`` -- number of bytes.
+        * ``ext::pgvector::vector`` maps to ``Float32Array``.
+        * ``ext::pgvector::sparsevec`` maps to
+          ``[dimensions: number, indexes: Uint32Array, values: Float32Array]``
+          tuple.
+
     .. js:method:: close(): Promise<void>
 
         Close the client's open connections gracefully. When a client is
