@@ -158,7 +158,7 @@ module default {
     property c -> bool;
   }
   type Z {
-    link xy -> W | X | Y;
+    multi link xy -> W | X | Y;
   }
 
   # Unicode handling

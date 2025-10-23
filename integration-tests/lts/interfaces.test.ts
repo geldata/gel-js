@@ -48,7 +48,7 @@ export interface test_Profile extends BaseObject {
   d?: unknown | null;
 }
 interface test_Z extends BaseObject {
-  xy?: W | X | Y | null;
+  xy?: (W | X | Y)[];
 }
 interface test_User extends BaseObject {
   username: string;
