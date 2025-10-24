@@ -21,6 +21,7 @@
     "gel": "^2.0.1"
   },
   "devDependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
     "@repo/tsconfig": "*",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.13",
@@ -34,6 +35,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
+    "commander": "^14.0.1",
     "debug": "^4.3.4",
     "globby": "^14.0.1"
   },

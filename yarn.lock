@@ -823,6 +823,11 @@
     picocolors "^1.0.0"
     sisteransi "^1.0.5"
 
+"@commander-js/extra-typings@^14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@commander-js/extra-typings/-/extra-typings-14.0.0.tgz#a48b73e8e9c80d5c7538d361f9c1fb9b231643d7"
+  integrity sha512-hIn0ncNaJRLkZrxBIp5AsW/eXEHNKYQBh0aPdoUqNgD+Io3NIykQqpKFyKcuasZhicGaEZJX/JBSIkZ4e5x8Dg==
+
 "@emnapi/runtime@^1.2.0":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@emnapi/runtime/-/runtime-1.3.1.tgz#0fcaa575afc31f455fd33534c19381cfce6c6f60"
@@ -1211,6 +1216,26 @@
   version "9.3.0"
   resolved "https://registry.npmjs.org/@eslint/js/-/js-9.3.0.tgz"
   integrity sha512-niBqk8iwv96+yuTwjM6bWg8ovzAPF9qkICsGtcoa5/dmqcEMfdwNAX7+/OHcJHc7wj7XqPxH98oAHytFYlw6Sw==
+
+"@gel/create@^0.3.0-rc":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@gel/create/-/create-0.3.2.tgz#72b8f60b33ae5d9568e88fc3f36b6027988fe7f8"
+  integrity sha512-FNBhGMlK+hdvS0mIUt8GUD9nGJyg5zFe4/sEcGEdWW58ldAU6FBjo7AFxGoQiBB9wQUQwXq13YdPyY99sA7trw==
+  dependencies:
+    "@clack/prompts" "^0.7.0"
+    debug "^4.3.4"
+    picocolors "^1.0.1"
+    read-pkg "^9.0.1"
+    shell-quote "^1.8.2"
+    write-package "^7.0.1"
+
+"@gel/generate@^0.6.0-rc":
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/@gel/generate/-/generate-0.6.4.tgz#8c0a6cec03102060eb312fa58ffaf07f49eb828d"
+  integrity sha512-/grKSQTurYNVs0Q1+lIza5HbuG4MuH60LEzxSNodWMWybYUD+7lAl6sJBInfx/Nm7kVqPXnaU9jPKMisp5Vz+Q==
+  dependencies:
+    "@iarna/toml" "^2.2.5"
+    debug "^4.3.4"
 
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
@@ -2892,6 +2917,11 @@ combined-stream@^1.0.8:
   integrity sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==
   dependencies:
     delayed-stream "~1.0.0"
+
+commander@^14.0.1:
+  version "14.0.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-14.0.1.tgz#2f9225c19e6ebd0dc4404dd45821b2caa17ea09b"
+  integrity sha512-2JkV3gUZUVrbNA+1sjBOYLsMZ5cEEl8GTFP2a4AVz5hvasAMCQ1D2l2le/cX+pV4N6ZU17zjUahLpIXRrnWL8A==
 
 commander@^4.0.0:
   version "4.1.1"
