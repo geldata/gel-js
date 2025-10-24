@@ -42,7 +42,7 @@
   "scripts": {
     "typecheck": "tsc --project tsconfig.build.json --noEmit",
     "play": "tsx playground.ts",
-    "build": "rm -rf dist && yarn build:cjs && yarn build:esm && chmod +x dist/cli.js && yarn syntax:make && yarn syntax:clean && tsx embedVersion.ts dist/genutil.js",
+    "build": "rm -rf dist && yarn build:cjs && yarn build:esm && chmod +x dist/cli.js && yarn syntax:make && yarn syntax:clean && tsx embedVersion.ts dist/genutil.js dist/cli.js",
     "build:cjs": "tsc --project tsconfig.build.json",
     "build:esm": "tsc --project tsconfig.esm.json",
     "syntax:make": "tsx makeSyntax.ts",

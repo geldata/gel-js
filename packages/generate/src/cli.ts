@@ -2,7 +2,10 @@
 
 import path from "node:path";
 import process from "node:process";
-import { Command, Option, type OptionValues } from "@commander-js/extra-typings";
+import {
+  Command,
+  Option,
+} from "@commander-js/extra-typings";
 import { systemUtils, type Client, createClient, createHttpClient } from "gel";
 import * as TOML from "@iarna/toml";
 
@@ -48,7 +51,6 @@ interface BaseCliOptions {
   future?: boolean;
   futureStrictTypeNames?: boolean;
   futurePolymorphismAsDiscriminatedUnions?: boolean;
-  watch?: boolean;
 }
 
 interface EdgeqlJsOptions extends BaseCliOptions {
@@ -68,24 +70,6 @@ interface InterfacesOptions extends BaseCliOptions {
 
 interface PrismaOptions extends BaseCliOptions {
   file?: string;
-}
-
-function addConnectionOptions<A extends any[], O extends OptionValues, P extends OptionValues>(
-  cmd: Command<A, O, P>,
-) {
-  return cmd
-    .option("-I, --instance <instance>")
-    .option("--dsn <dsn>")
-    .option("--credentials-file <path>")
-    .option("-H, --host <host>")
-    .addOption(new Option("-P, --port <port>").argParser((val: string) => parseInt(val, 10)))
-    .option("-d, --database <database>")
-    .option("-u, --user <user>")
-    .addOption(new Option("--password").conflicts("passwordFromStdin"))
-    .addOption(new Option("--password-from-stdin").conflicts("password"))
-    .option("--tls-ca-file <path>")
-    .addOption(new Option("--tls-security <level>").choices([...TLS_CHOICES]))
-    .option("--use-http-client");
 }
 
 async function findProjectRootAndSchemaDir() {
@@ -144,18 +128,19 @@ function normalizeConnection(options: BaseCliOptions): ConnectConfig {
   return config;
 }
 
-function normalizeCommandOptions(base: BaseCliOptions & {
-  target?: Target;
-  out?: string;
-  outputDir?: string;
-  file?: string | true;
-}): CommandOptions {
+function normalizeCommandOptions(
+  base: BaseCliOptions & {
+    target?: Target;
+    out?: string;
+    outputDir?: string;
+    file?: string | true;
+  },
+): CommandOptions {
   const out = base.out ?? base.outputDir;
   const cmd: CommandOptions = {
     target: base.target,
     out,
     file: typeof base.file === "string" ? base.file : undefined,
-    watch: base.watch,
     promptPassword: base.password,
     passwordFromStdin: base.passwordFromStdin,
     forceOverwrite: base.forceOverwrite,
@@ -187,7 +172,10 @@ function normalizeCommandOptions(base: BaseCliOptions & {
   return cmd;
 }
 
-async function ensureTarget(options: CommandOptions, projectRoot: string | null) {
+async function ensureTarget(
+  options: CommandOptions,
+  projectRoot: string | null,
+) {
   if (options.target) return;
   // prisma generator does its own thing; callers skip ensureTarget for it
   if (!projectRoot) {
@@ -251,7 +239,10 @@ Run this command inside an Gel project directory or specify the desired target l
   console.log(overrideTargetMessage);
 }
 
-async function connectClient(connectionConfig: ConnectConfig, options: CommandOptions) {
+async function connectClient(
+  connectionConfig: ConnectConfig,
+  options: CommandOptions,
+) {
   if (options.promptPassword) {
     const username = (
       await parseConnectArguments({
@@ -266,7 +257,9 @@ async function connectClient(connectionConfig: ConnectConfig, options: CommandOp
   }
 
   try {
-    const cxnCreatorFn = options.useHttpClient ? createHttpClient : createClient;
+    const cxnCreatorFn = options.useHttpClient
+      ? createHttpClient
+      : createClient;
     return cxnCreatorFn({
       ...connectionConfig,
       concurrency: 5,
@@ -276,63 +269,103 @@ async function connectClient(connectionConfig: ConnectConfig, options: CommandOp
   }
 }
 
+async function withClient<T>(
+  connection: ConnectConfig,
+  options: CommandOptions,
+  action: (client: Client) => Promise<T>,
+): Promise<T> {
+  const client = (await connectClient(connection, options)) as Client;
+  try {
+    return await action(client);
+  } catch (e) {
+    exitWithError((e as Error).message);
+  } finally {
+    await client.close();
+  }
+}
+
 const program = new Command()
   .name("@gel/generate")
-  .description("Official Gel code generators for TypeScript/JavaScript");
+  .version("__@gel/generate__VERSION_PLACEHOLDER__")
+  .description("Official Gel code generators for TypeScript/JavaScript")
+  .configureHelp({
+    showGlobalOptions: true,
+  })
+  // Global connection options
+  .option("-I, --instance <instance>")
+  .option("--dsn <dsn>")
+  .option("--credentials-file <path>")
+  .option("-H, --host <host>")
+  .addOption(
+    new Option("-P, --port <port>").argParser((val: string) =>
+      parseInt(val, 10),
+    ),
+  )
+  .option("-d, --database <database>")
+  .option("-u, --user <user>")
+  .addOption(new Option("--password").conflicts("passwordFromStdin"))
+  .addOption(new Option("--password-from-stdin").conflicts("password"))
+  .option("--tls-ca-file <path>")
+  .addOption(new Option("--tls-security <level>").choices([...TLS_CHOICES]))
+  .option("--use-http-client")
+  // Shortcut for "all future flags"
+  .option("--future", "Enable all future-flagged features");
 
-// edgeql-js
-const edgeqlJs = program
+program
   .command("edgeql-js")
-  .description("Generate query builder");
-addConnectionOptions(edgeqlJs)
-  .addOption(new Option("--target <target>").choices(["ts", "mts", "esm", "cjs", "deno"]))
+  .description("Generate query builder")
+  .addOption(
+    new Option("--target <target>").choices([
+      "ts",
+      "mts",
+      "esm",
+      "cjs",
+      "deno",
+    ]),
+  )
   .option("--out <path>")
   .option("--output-dir <path>")
   .option("--force-overwrite")
   .option("--no-update-ignore-file")
-  .option("--watch")
+  .option("--future-strict-type-names", "Enable strict type names")
+  .option(
+    "--future-polymorphism-as-discriminated-unions",
+    "Enable polymorphism as discriminated unions",
+  )
   .action(async (opts: EdgeqlJsOptions, _cmd) => {
     const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
     const connection = normalizeConnection(opts);
     const options = normalizeCommandOptions(opts);
 
-    if (opts.watch) {
-      exitWithError(`Watch mode is not supported for generator "edgeql-js"`);
-    }
-
     await ensureTarget(options, projectRoot);
 
-    const client = (await connectClient(connection, options)) as Client;
-    try {
-      await generateQueryBuilder({ options, client, root: projectRoot, schemaDir });
-    } catch (e) {
-      exitWithError((e as Error).message);
-    } finally {
-      await client.close();
-    }
+    await withClient(connection, options, (client) =>
+      generateQueryBuilder({ options, client, root: projectRoot, schemaDir }),
+    );
   });
 
-// queries
-const queries = program
+program
   .command("queries")
   .description("Generate typed functions from .edgeql files")
-  .argument("[patterns...]", "File patterns to match");
-addConnectionOptions(queries)
-  .addOption(new Option("--target <target>").choices(["ts", "mts", "esm", "cjs", "deno"]))
+  .argument("[patterns...]", "File patterns to match")
+  .addOption(
+    new Option("--target <target>").choices([
+      "ts",
+      "mts",
+      "esm",
+      "cjs",
+      "deno",
+    ]),
+  )
   .option("--file [path]")
   .option("--use-resolved-codec-type")
   .option("--force-overwrite")
   .option("--no-update-ignore-file")
-  .option("--watch")
   .action(async (patterns: string[], opts: QueriesOptions, _cmd) => {
     const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
     const connection = normalizeConnection(opts);
     const options = normalizeCommandOptions(opts);
     options.patterns = patterns;
-
-    if (opts.watch) {
-      exitWithError(`Watch mode is not supported for generator "queries"`);
-    }
 
     await ensureTarget(options, projectRoot);
 
@@ -342,69 +375,41 @@ addConnectionOptions(queries)
       options.file = path.join(schemaDir, "queries");
     }
 
-    const client = (await connectClient(connection, options)) as Client;
-    try {
-      await generateQueryFiles({ options, client, root: projectRoot, schemaDir });
-    } catch (e) {
-      exitWithError((e as Error).message);
-    } finally {
-      await client.close();
-    }
+    await withClient(connection, options, (client) =>
+      generateQueryFiles({ options, client, root: projectRoot, schemaDir }),
+    );
   });
 
-// interfaces
-const interfaces = program
+program
   .command("interfaces")
-  .description("Generate TS interfaces for schema types");
-addConnectionOptions(interfaces)
+  .description("Generate TS interfaces for schema types")
   .option("--file <path>")
   .option("--force-overwrite")
   .option("--no-update-ignore-file")
-  .option("--watch")
   .action(async (opts: InterfacesOptions, _cmd) => {
     const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
     const connection = normalizeConnection(opts);
     const options = normalizeCommandOptions({ ...opts, target: "ts" });
 
-    if (opts.watch) {
-      exitWithError(`Watch mode is not supported for generator "interfaces"`);
-    }
-
-    const client = (await connectClient(connection, options)) as Client;
-    try {
-      await runInterfacesGenerator({ options, client, root: projectRoot, schemaDir });
-    } catch (e) {
-      exitWithError((e as Error).message);
-    } finally {
-      await client.close();
-    }
+    await withClient(connection, options, (client) =>
+      runInterfacesGenerator({ options, client, root: projectRoot, schemaDir }),
+    );
   });
 
 // prisma
-const prisma = program
+program
   .command("prisma")
-  .description("Generate a Prisma schema for an existing database instance");
-addConnectionOptions(prisma)
+  .description("Generate a Prisma schema for an existing database instance")
   .option("--file <path>")
   .option("--force-overwrite")
-  .option("--watch")
   .action(async (opts: PrismaOptions, _cmd) => {
     const connection = normalizeConnection(opts);
     const options = normalizeCommandOptions(opts);
 
-    if (opts.watch) {
-      exitWithError(`Watch mode is not supported for generator "prisma"`);
-    }
-
     // prisma does not require target auto-detection
-    const client = (await connectClient(connection, options)) as Client;
-    try {
-      await runGelPrismaGenerator({ options, client });
-    } catch (e) {
-      exitWithError((e as Error).message);
-    } finally {
-      await client.close();
-    }
+    await withClient(connection, options, (client) =>
+      runGelPrismaGenerator({ options, client }),
+    );
   });
 
 program.parseAsync(process.argv);
