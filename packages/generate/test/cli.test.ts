@@ -531,4 +531,109 @@ describe("cli", () => {
       }
     }
   });
+
+  test("version flag works", () => {
+    const output = execSync("./dist/cli.js --version", {
+      cwd: QBDIR,
+      encoding: "utf-8",
+    });
+    assert.match(
+      output.trim(),
+      /^\d+\.\d+\.\d+$/,
+      "Version should be a valid semver",
+    );
+  });
+
+  test("edgeql-js accepts --future flags", () => {
+    try {
+      execSync(
+        "./dist/cli.js edgeql-js --future --future-strict-type-names --future-polymorphism-as-discriminated-unions -H localhost -P 9999",
+        {
+          cwd: QBDIR,
+          stdio: "pipe",
+          encoding: "utf-8",
+          timeout: 5000,
+        },
+      );
+    } catch (e: any) {
+      const output = e.stderr || e.stdout || "";
+      // Should fail on connection, not on unknown option
+      assert.ok(
+        !output.includes("Unknown option") &&
+          !output.includes("unknown option"),
+        `Future flags should be recognized but got: ${output}`,
+      );
+    }
+  });
+
+  test("queries accepts --future flags", () => {
+    try {
+      execSync("./dist/cli.js queries --future -H localhost -P 9999", {
+        cwd: QBDIR,
+        stdio: "pipe",
+        encoding: "utf-8",
+        timeout: 5000,
+      });
+    } catch (e: any) {
+      const output = e.stderr || e.stdout || "";
+      assert.ok(
+        !output.includes("Unknown option") &&
+          !output.includes("unknown option"),
+        `Future flags should be recognized but got: ${output}`,
+      );
+    }
+  });
+
+  test("interfaces accepts --future flags", () => {
+    try {
+      execSync("./dist/cli.js interfaces --future -H localhost -P 9999", {
+        cwd: QBDIR,
+        stdio: "pipe",
+        encoding: "utf-8",
+        timeout: 5000,
+      });
+    } catch (e: any) {
+      const output = e.stderr || e.stdout || "";
+      assert.ok(
+        !output.includes("Unknown option") &&
+          !output.includes("unknown option"),
+        `Future flags should be recognized but got: ${output}`,
+      );
+    }
+  });
+
+  test("help shows all available commands", () => {
+    const output = execSync("./dist/cli.js --help", {
+      cwd: QBDIR,
+      encoding: "utf-8",
+    });
+
+    // Should show all 4 commands
+    assert.ok(
+      output.includes("edgeql-js"),
+      "Help should list edgeql-js command",
+    );
+    assert.ok(output.includes("queries"), "Help should list queries command");
+    assert.ok(
+      output.includes("interfaces"),
+      "Help should list interfaces command",
+    );
+    assert.ok(output.includes("prisma"), "Help should list prisma command");
+  });
+
+  test("command help shows connection options", () => {
+    const output = execSync("./dist/cli.js queries --help", {
+      cwd: QBDIR,
+      encoding: "utf-8",
+    });
+
+    // Should show connection options
+    assert.ok(output.includes("-H, --host"), "Should show host option");
+    assert.ok(output.includes("-P, --port"), "Should show port option");
+    assert.ok(output.includes("-d, --database"), "Should show database option");
+    assert.ok(output.includes("--dsn"), "Should show dsn option");
+
+    // Should show future options
+    assert.ok(output.includes("--future"), "Should show future option");
+  });
 });
