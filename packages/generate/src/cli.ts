@@ -2,10 +2,7 @@
 
 import path from "node:path";
 import process from "node:process";
-import {
-  Command,
-  Option,
-} from "@commander-js/extra-typings";
+import { Command, Option } from "@commander-js/extra-typings";
 import { systemUtils, type Client, createClient, createHttpClient } from "gel";
 import * as TOML from "@iarna/toml";
 
