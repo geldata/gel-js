@@ -2,14 +2,11 @@
 
 import path from "node:path";
 import process from "node:process";
+import { Command, Option, type OptionValues } from "@commander-js/extra-typings";
 import { systemUtils, type Client, createClient, createHttpClient } from "gel";
 import * as TOML from "@iarna/toml";
 
-import {
-  type ConnectConfig,
-  validTlsSecurityValues,
-  isValidTlsSecurityValue,
-} from "gel/dist/conUtils";
+import { type ConnectConfig, isValidTlsSecurityValue } from "gel/dist/conUtils";
 import { parseConnectArguments } from "gel/dist/conUtils.server";
 import {
   type CommandOptions,
@@ -24,55 +21,74 @@ import { runGelPrismaGenerator } from "./gel-prisma";
 
 const { readFileUtf8, exists } = systemUtils;
 
-enum Generator {
-  QueryBuilder = "edgeql-js",
-  Queries = "queries",
-  Interfaces = "interfaces",
-  GelPrisma = "prisma",
+const TLS_CHOICES = [
+  "insecure",
+  "no_host_verification",
+  "strict",
+  "default",
+] as const;
+type TlsSecurity = (typeof TLS_CHOICES)[number];
+
+interface BaseCliOptions {
+  instance?: string;
+  dsn?: string;
+  credentialsFile?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  user?: string;
+  password?: boolean;
+  passwordFromStdin?: boolean;
+  tlsCaFile?: string;
+  tlsSecurity?: TlsSecurity;
+  useHttpClient?: boolean;
+  useResolvedCodecType?: boolean;
+  forceOverwrite?: boolean;
+  updateIgnoreFile?: boolean; // set via --no-update-ignore-file
+  future?: boolean;
+  futureStrictTypeNames?: boolean;
+  futurePolymorphismAsDiscriminatedUnions?: boolean;
+  watch?: boolean;
 }
 
-const availableGeneratorsHelp = `
-Available generators:
- - edgeql-js (query builder)
- - queries (query files)
- - interfaces`;
+interface EdgeqlJsOptions extends BaseCliOptions {
+  target?: Target;
+  out?: string;
+  outputDir?: string; // alias for out
+}
 
-const run = async () => {
-  const args = process.argv.slice(2);
-  const generator: Generator = args.shift() as any;
+interface QueriesOptions extends BaseCliOptions {
+  target?: Target;
+  file?: string | true; // optional value; true means flag present without value
+}
 
-  const connectionConfig: ConnectConfig = {};
-  const options: CommandOptions = {};
+interface InterfacesOptions extends BaseCliOptions {
+  file?: string;
+}
 
-  if ((generator as any) === "-h" || (generator as any) === "--help") {
-    printHelp();
-    process.exit();
-  }
-  if (!generator || generator[0] === "-") {
-    console.error(
-      `Error: No generator specified.\n  \`npx @gel/generate <generator>\`${availableGeneratorsHelp}`,
-    );
-    process.exit();
-  }
-  if (!Object.values(Generator).includes(generator)) {
-    console.error(
-      `Error: Invalid generator "${generator}".${availableGeneratorsHelp}`,
-    );
-    process.exit();
-  }
+interface PrismaOptions extends BaseCliOptions {
+  file?: string;
+}
 
-  switch (generator) {
-    case Generator.QueryBuilder:
-      break;
-    case Generator.Queries:
-      break;
-    case Generator.Interfaces:
-      options.target = "ts";
-      break;
-    case Generator.GelPrisma:
-      break;
-  }
+function addConnectionOptions<A extends any[], O extends OptionValues, P extends OptionValues>(
+  cmd: Command<A, O, P>,
+) {
+  return cmd
+    .option("-I, --instance <instance>")
+    .option("--dsn <dsn>")
+    .option("--credentials-file <path>")
+    .option("-H, --host <host>")
+    .addOption(new Option("-P, --port <port>").argParser((val: string) => parseInt(val, 10)))
+    .option("-d, --database <database>")
+    .option("-u, --user <user>")
+    .addOption(new Option("--password").conflicts("passwordFromStdin"))
+    .addOption(new Option("--password-from-stdin").conflicts("password"))
+    .option("--tls-ca-file <path>")
+    .addOption(new Option("--tls-security <level>").choices([...TLS_CHOICES]))
+    .option("--use-http-client");
+}
 
+async function findProjectRootAndSchemaDir() {
   let projectRoot: string | null = null;
   let currentDir = process.cwd();
   let schemaDir = "dbschema";
@@ -104,291 +120,138 @@ const run = async () => {
     }
     currentDir = path.join(currentDir, "..");
   }
+  return { projectRoot, schemaDir } as const;
+}
 
-  // Collect positional arguments (patterns) for queries generator
-  const positionalArgs: string[] = [];
-  if (generator === Generator.Queries) {
-    while (args.length && !args[0]!.startsWith("-")) {
-      positionalArgs.push(args.shift()!);
+function normalizeConnection(options: BaseCliOptions): ConnectConfig {
+  const config: ConnectConfig = {};
+  if (options.instance) config.dsn = options.instance;
+  if (options.dsn) config.dsn = options.dsn;
+  if (options.credentialsFile) config.credentialsFile = options.credentialsFile;
+  if (options.host) config.host = options.host;
+  if (typeof options.port === "number") config.port = options.port;
+  if (options.database) config.database = options.database;
+  if (options.user) config.user = options.user;
+  if (options.tlsCaFile) config.tlsCAFile = options.tlsCaFile;
+  if (options.tlsSecurity) {
+    if (!isValidTlsSecurityValue(options.tlsSecurity)) {
+      exitWithError(
+        `Invalid value for --tls-security. Must be one of: ${TLS_CHOICES.map((x: TlsSecurity) => `"${x}"`).join(" | ")}`,
+      );
     }
-    if (positionalArgs.length > 0) {
-      options.patterns = positionalArgs;
-    }
+    config.tlsSecurity = options.tlsSecurity;
   }
+  return config;
+}
 
-  while (args.length) {
-    let flag = args.shift()!;
-    let val: string | null = null;
-    if (flag.startsWith("--")) {
-      if (flag.includes("=")) {
-        const [f, ...v] = flag.split("=");
-        flag = f!;
-        val = v.join("=");
-      }
-    } else if (flag.startsWith("-")) {
-      val = flag.slice(2) || null;
-      flag = flag.slice(0, 2);
-    }
+function normalizeCommandOptions(base: BaseCliOptions & {
+  target?: Target;
+  out?: string;
+  outputDir?: string;
+  file?: string | true;
+}): CommandOptions {
+  const out = base.out ?? base.outputDir;
+  const cmd: CommandOptions = {
+    target: base.target,
+    out,
+    file: typeof base.file === "string" ? base.file : undefined,
+    watch: base.watch,
+    promptPassword: base.password,
+    passwordFromStdin: base.passwordFromStdin,
+    forceOverwrite: base.forceOverwrite,
+    useHttpClient: base.useHttpClient,
+    useResolvedCodecType: base.useResolvedCodecType,
+  };
 
-    const getVal = () => {
-      if (val !== null) {
-        const v = val;
-        val = null;
-        return v;
-      }
-      if (args.length === 0) {
-        console.error(`Error: No value provided for ${flag} option`);
-        process.exit();
-      }
-      return args.shift();
-    };
-
-    switch (flag) {
-      case "-h":
-      case "--help":
-        options.showHelp = true;
-        break;
-      case "-I":
-      case "--instance":
-      case "--dsn":
-        connectionConfig.dsn = getVal();
-        break;
-      case "--credentials-file":
-        connectionConfig.credentialsFile = getVal();
-        break;
-      case "-H":
-      case "--host":
-        connectionConfig.host = getVal();
-        break;
-      case "-P":
-      case "--port":
-        connectionConfig.port = Number(getVal());
-        break;
-      case "-d":
-      case "--database":
-        connectionConfig.database = getVal();
-        break;
-      case "-u":
-      case "--user":
-        connectionConfig.user = getVal();
-        break;
-      case "--password":
-        if (options.passwordFromStdin === true) {
-          exitWithError(
-            `Cannot use both --password and --password-from-stdin options`,
-          );
-        }
-        options.promptPassword = true;
-        break;
-      case "--password-from-stdin":
-        if (options.promptPassword === true) {
-          exitWithError(
-            `Cannot use both --password and --password-from-stdin options`,
-          );
-        }
-        options.passwordFromStdin = true;
-        break;
-      case "--tls-ca-file":
-        connectionConfig.tlsCAFile = getVal();
-        break;
-      case "--tls-security": {
-        const tlsSec = getVal();
-        if (!isValidTlsSecurityValue(tlsSec)) {
-          exitWithError(
-            `Invalid value for --tls-security. Must be one of: ${validTlsSecurityValues
-              .map((x) => `"${x}"`)
-              .join(" | ")}`,
-          );
-        }
-        connectionConfig.tlsSecurity = tlsSec;
-        break;
-      }
-      case "--use-http-client":
-        options.useHttpClient = true;
-        break;
-      case "--use-resolved-codec-type":
-        options.useResolvedCodecType = true;
-        break;
-      case "--target": {
-        if (
-          generator === Generator.Interfaces ||
-          generator === Generator.GelPrisma
-        ) {
-          exitWithError(
-            `--target is not supported for generator "${generator}"`,
-          );
-        }
-        const target = getVal();
-        if (!target || !["ts", "esm", "cjs", "mts", "deno"].includes(target)) {
-          exitWithError(
-            `Invalid target "${
-              target ?? ""
-            }", expected "deno", "mts", "ts", "esm" or "cjs"`,
-          );
-        }
-        options.target = target as Target;
-        break;
-      }
-      case "--out":
-      case "--output-dir":
-        if (
-          generator === Generator.Interfaces ||
-          generator === Generator.Queries
-        ) {
-          exitWithError(
-            `--output-dir is not supported for generator "${generator}"` +
-              `, consider using the --file option instead`,
-          );
-        }
-        options.out = getVal();
-        break;
-      case "--file":
-        if (
-          generator === Generator.Interfaces ||
-          generator === Generator.GelPrisma
-        ) {
-          options.file = getVal();
-        } else if (generator === Generator.Queries) {
-          if (args.length > 0 && args[0]![0] !== "-") {
-            options.file = getVal();
-          } else {
-            options.file = path.join(schemaDir, "queries");
-          }
-        } else {
-          exitWithError(
-            `Flag --file not supported for generator "${generator}"` +
-              `, consider using the --output-dir option instead`,
-          );
-        }
-
-        break;
-      case "--watch":
-        options.watch = true;
-        exitWithError(
-          `Watch mode is not supported for generator "${generator}"`,
-        );
-        break;
-      case "--force-overwrite":
-        options.forceOverwrite = true;
-        break;
-      case "--no-update-ignore-file":
-        options.updateIgnoreFile = false;
-        break;
-      case "--future":
-        options.future = {
-          strictTypeNames: true,
-          polymorphismAsDiscriminatedUnions: true,
-        };
-        break;
-      case "--future-strict-type-names":
-        options.future = {
-          ...options.future,
-          strictTypeNames: true,
-        };
-        break;
-      case "--future-polymorphism-as-discriminated-unions":
-        options.future = {
-          ...options.future,
-          polymorphismAsDiscriminatedUnions: true,
-        };
-        break;
-      default:
-        exitWithError(`Unknown option: ${flag}`);
-    }
-
-    if (val !== null) {
-      exitWithError(`Option ${flag} does not take a value`);
-    }
+  if (base.future) {
+    cmd.future = {
+      strictTypeNames: true,
+      polymorphismAsDiscriminatedUnions: true,
+    } as CommandOptions["future"];
   }
-
-  if (options.showHelp) {
-    printHelp();
-    process.exit();
+  if (base.futureStrictTypeNames) {
+    cmd.future = {
+      ...cmd.future,
+      strictTypeNames: true,
+    } as CommandOptions["future"];
   }
-
-  switch (generator) {
-    case Generator.QueryBuilder:
-      console.log(`Generating query builder...`);
-      break;
-    case Generator.Queries:
-      console.log(`Generating functions from .edgeql files...`);
-      break;
-    case Generator.Interfaces:
-      console.log(`Generating TS interfaces from schema...`);
-      break;
-    case Generator.GelPrisma:
-      console.log(`Generating Prisma schema from database...`);
-      break;
+  if (base.futurePolymorphismAsDiscriminatedUnions) {
+    cmd.future = {
+      ...cmd.future,
+      polymorphismAsDiscriminatedUnions: true,
+    } as CommandOptions["future"];
   }
+  if (typeof base.updateIgnoreFile === "boolean") {
+    cmd.updateIgnoreFile = base.updateIgnoreFile;
+  }
+  return cmd;
+}
 
-  // don't need to do any of that for the prisma schema generator
-  if (!options.target && generator !== Generator.GelPrisma) {
-    if (!projectRoot) {
-      throw new Error(
-        `Failed to detect project root.
+async function ensureTarget(options: CommandOptions, projectRoot: string | null) {
+  if (options.target) return;
+  // prisma generator does its own thing; callers skip ensureTarget for it
+  if (!projectRoot) {
+    throw new Error(
+      `Failed to detect project root.
 Run this command inside an Gel project directory or specify the desired target language with \`--target\``,
-      );
-    }
-
-    const tsConfigPath = path.join(projectRoot, "tsconfig.json");
-    const tsConfigExists = await exists(tsConfigPath);
-    const denoConfigPath = path.join(projectRoot, "deno.json");
-    const denoJsonExists = await exists(denoConfigPath);
-
-    let packageJson: { type: string } | null = null;
-    const pkgJsonPath = path.join(projectRoot, "package.json");
-    if (await exists(pkgJsonPath)) {
-      packageJson = JSON.parse(await readFileUtf8(pkgJsonPath));
-    }
-
-    // doesn't work with `extends`
-    // switch to more robust solution after splitting
-    // @gel/generate into separate package
-    // @ts-ignore
-    const isDenoRuntime = typeof Deno !== "undefined";
-
-    if (isDenoRuntime || denoJsonExists) {
-      options.target = "deno";
-      console.log(
-        `Detected ${
-          isDenoRuntime ? "Deno runtime" : "deno.json"
-        }, generating TypeScript files with Deno-style imports.`,
-      );
-    } else if (tsConfigExists) {
-      const tsConfig = tsConfigExists
-        ? (await readFileUtf8(tsConfigPath)).toLowerCase()
-        : "{}";
-
-      const supportsESM: boolean =
-        tsConfig.includes(`"module": "nodenext"`) ||
-        tsConfig.includes(`"module": "node12"`);
-      if (supportsESM && packageJson?.type === "module") {
-        options.target = "mts";
-        console.log(
-          `Detected tsconfig.json with ES module support, generating .mts files with ESM imports.`,
-        );
-      } else {
-        options.target = "ts";
-        console.log(`Detected tsconfig.json, generating TypeScript files.`);
-      }
-    } else {
-      if (packageJson?.type === "module") {
-        options.target = "esm";
-        console.log(
-          `Detected "type": "module" in package.json, generating .js files with ES module syntax.`,
-        );
-      } else {
-        console.log(
-          `Detected package.json. Generating .js files with CommonJS module syntax.`,
-        );
-        options.target = "cjs";
-      }
-    }
-    const overrideTargetMessage = `   To override this, use the --target flag.
-   Run \`npx @gel/generate --help\` for full options.`;
-    console.log(overrideTargetMessage);
+    );
   }
 
+  const tsConfigPath = path.join(projectRoot, "tsconfig.json");
+  const tsConfigExists = await exists(tsConfigPath);
+  const denoConfigPath = path.join(projectRoot, "deno.json");
+  const denoJsonExists = await exists(denoConfigPath);
+
+  let packageJson: { type?: string } | null = null;
+  const pkgJsonPath = path.join(projectRoot, "package.json");
+  if (await exists(pkgJsonPath)) {
+    packageJson = JSON.parse(await readFileUtf8(pkgJsonPath));
+  }
+
+  // @ts-ignore - Deno global check
+  const isDenoRuntime = typeof Deno !== "undefined";
+
+  if (isDenoRuntime || denoJsonExists) {
+    options.target = "deno";
+    console.log(
+      `Detected ${isDenoRuntime ? "Deno runtime" : "deno.json"}, generating TypeScript files with Deno-style imports.`,
+    );
+  } else if (tsConfigExists) {
+    const tsConfig = tsConfigExists
+      ? (await readFileUtf8(tsConfigPath)).toLowerCase()
+      : "{}";
+
+    const supportsESM: boolean =
+      tsConfig.includes(`"module": "nodenext"`) ||
+      tsConfig.includes(`"module": "node12"`);
+    if (supportsESM && packageJson?.type === "module") {
+      options.target = "mts";
+      console.log(
+        `Detected tsconfig.json with ES module support, generating .mts files with ESM imports.`,
+      );
+    } else {
+      options.target = "ts";
+      console.log(`Detected tsconfig.json, generating TypeScript files.`);
+    }
+  } else {
+    if (packageJson?.type === "module") {
+      options.target = "esm";
+      console.log(
+        `Detected "type": "module" in package.json, generating .js files with ES module syntax.`,
+      );
+    } else {
+      console.log(
+        `Detected package.json. Generating .js files with CommonJS module syntax.`,
+      );
+      options.target = "cjs";
+    }
+  }
+  const overrideTargetMessage = `   To override this, use the --target flag.
+   Run \`npx @gel/generate --help\` for full options.`;
+  console.log(overrideTargetMessage);
+}
+
+async function connectClient(connectionConfig: ConnectConfig, options: CommandOptions) {
   if (options.promptPassword) {
     const username = (
       await parseConnectArguments({
@@ -402,113 +265,146 @@ Run this command inside an Gel project directory or specify the desired target l
     connectionConfig.password = await readPasswordFromStdin();
   }
 
-  let client: Client;
   try {
-    const cxnCreatorFn = options.useHttpClient
-      ? createHttpClient
-      : createClient;
-    client = cxnCreatorFn({
+    const cxnCreatorFn = options.useHttpClient ? createHttpClient : createClient;
+    return cxnCreatorFn({
       ...connectionConfig,
       concurrency: 5,
     });
   } catch (e) {
     exitWithError(`Failed to connect: ${(e as Error).message}`);
   }
-
-  try {
-    switch (generator) {
-      case Generator.QueryBuilder:
-        await generateQueryBuilder({
-          options,
-          client,
-          root: projectRoot,
-          schemaDir,
-        });
-        break;
-      case Generator.Queries:
-        await generateQueryFiles({
-          options,
-          client,
-          root: projectRoot,
-          schemaDir,
-        });
-        break;
-      case Generator.Interfaces:
-        await runInterfacesGenerator({
-          options,
-          client,
-          root: projectRoot,
-          schemaDir,
-        });
-        break;
-      case Generator.GelPrisma:
-        await runGelPrismaGenerator({
-          options,
-          client,
-        });
-        break;
-    }
-  } catch (e) {
-    exitWithError((e as Error).message);
-  } finally {
-    await client.close();
-  }
-  process.exit();
-};
-
-function printHelp() {
-  console.log(`@gel/generate
-
-Official Gel code generators for TypeScript/JavaScript
-
-USAGE
-    npx @gel/generate [COMMAND] [OPTIONS]
-
-COMMANDS:
-    queries         Generate typed functions from .edgeql files
-    edgeql-js       Generate query builder
-    interfaces      Generate TS interfaces for schema types
-    prisma          Generate a Prisma schema for an existing database instance
-
-
-CONNECTION OPTIONS:
-    -I, --instance <instance>
-    --dsn <dsn>
-    --credentials-file <path/to/credentials.json>
-    -H, --host <host>
-    -P, --port <port>
-    -d, --database <database>
-    -u, --user <user>
-    --password
-    --password-from-stdin
-    --tls-ca-file <path/to/certificate>
-    --tls-security <insecure | no_host_verification | strict | default>
-
-OPTIONS:
-    --target [ts,mts,esm,cjs,deno]
-
-        ts     Generate TypeScript files (.ts)
-        mts    Generate TypeScript files (.mts) with ESM imports
-        esm    Generate JavaScript with ESM syntax
-        cjs    Generate JavaScript with CommonJS syntax
-        deno   Generate TypeScript files (.ts) with Deno-style (*.ts) imports
-
-    --out, --output-dir <path>
-        Change the output directory the querybuilder files are generated into
-        (Only valid for 'edgeql-js' generator)
-    --file <path>
-        Change the output filepath of the 'queries', 'interfaces', and 'prisma' generators
-        When used with the 'queries' generator, also changes output to single-file mode
-    --force-overwrite
-        Overwrite <path> contents without confirmation
-    --no-update-ignore-file
-        Do not prompt to update gitignore with generated code
-    --future
-        Include future features
-    --future-strict-type-names
-        Return the exact string literal for .__type__.name instead of a general string type
-    --future-polymorphism-as-discriminated-unions
-        Use a discriminated union as the return type for polymorphic queries, where each member includes __typename
-`);
 }
-run();
+
+const program = new Command()
+  .name("@gel/generate")
+  .description("Official Gel code generators for TypeScript/JavaScript");
+
+// edgeql-js
+const edgeqlJs = program
+  .command("edgeql-js")
+  .description("Generate query builder");
+addConnectionOptions(edgeqlJs)
+  .addOption(new Option("--target <target>").choices(["ts", "mts", "esm", "cjs", "deno"]))
+  .option("--out <path>")
+  .option("--output-dir <path>")
+  .option("--force-overwrite")
+  .option("--no-update-ignore-file")
+  .option("--watch")
+  .action(async (opts: EdgeqlJsOptions, _cmd) => {
+    const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
+    const connection = normalizeConnection(opts);
+    const options = normalizeCommandOptions(opts);
+
+    if (opts.watch) {
+      exitWithError(`Watch mode is not supported for generator "edgeql-js"`);
+    }
+
+    await ensureTarget(options, projectRoot);
+
+    const client = (await connectClient(connection, options)) as Client;
+    try {
+      await generateQueryBuilder({ options, client, root: projectRoot, schemaDir });
+    } catch (e) {
+      exitWithError((e as Error).message);
+    } finally {
+      await client.close();
+    }
+  });
+
+// queries
+const queries = program
+  .command("queries")
+  .description("Generate typed functions from .edgeql files")
+  .argument("[patterns...]", "File patterns to match");
+addConnectionOptions(queries)
+  .addOption(new Option("--target <target>").choices(["ts", "mts", "esm", "cjs", "deno"]))
+  .option("--file [path]")
+  .option("--use-resolved-codec-type")
+  .option("--force-overwrite")
+  .option("--no-update-ignore-file")
+  .option("--watch")
+  .action(async (patterns: string[], opts: QueriesOptions, _cmd) => {
+    const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
+    const connection = normalizeConnection(opts);
+    const options = normalizeCommandOptions(opts);
+    options.patterns = patterns;
+
+    if (opts.watch) {
+      exitWithError(`Watch mode is not supported for generator "queries"`);
+    }
+
+    await ensureTarget(options, projectRoot);
+
+    // special handling: --file present but no value => default to <schemaDir>/queries
+    const fileWasPresentWithoutValue = (opts as any).file === true;
+    if (fileWasPresentWithoutValue) {
+      options.file = path.join(schemaDir, "queries");
+    }
+
+    const client = (await connectClient(connection, options)) as Client;
+    try {
+      await generateQueryFiles({ options, client, root: projectRoot, schemaDir });
+    } catch (e) {
+      exitWithError((e as Error).message);
+    } finally {
+      await client.close();
+    }
+  });
+
+// interfaces
+const interfaces = program
+  .command("interfaces")
+  .description("Generate TS interfaces for schema types");
+addConnectionOptions(interfaces)
+  .option("--file <path>")
+  .option("--force-overwrite")
+  .option("--no-update-ignore-file")
+  .option("--watch")
+  .action(async (opts: InterfacesOptions, _cmd) => {
+    const { projectRoot, schemaDir } = await findProjectRootAndSchemaDir();
+    const connection = normalizeConnection(opts);
+    const options = normalizeCommandOptions({ ...opts, target: "ts" });
+
+    if (opts.watch) {
+      exitWithError(`Watch mode is not supported for generator "interfaces"`);
+    }
+
+    const client = (await connectClient(connection, options)) as Client;
+    try {
+      await runInterfacesGenerator({ options, client, root: projectRoot, schemaDir });
+    } catch (e) {
+      exitWithError((e as Error).message);
+    } finally {
+      await client.close();
+    }
+  });
+
+// prisma
+const prisma = program
+  .command("prisma")
+  .description("Generate a Prisma schema for an existing database instance");
+addConnectionOptions(prisma)
+  .option("--file <path>")
+  .option("--force-overwrite")
+  .option("--watch")
+  .action(async (opts: PrismaOptions, _cmd) => {
+    const connection = normalizeConnection(opts);
+    const options = normalizeCommandOptions(opts);
+
+    if (opts.watch) {
+      exitWithError(`Watch mode is not supported for generator "prisma"`);
+    }
+
+    // prisma does not require target auto-detection
+    const client = (await connectClient(connection, options)) as Client;
+    try {
+      await runGelPrismaGenerator({ options, client });
+    } catch (e) {
+      exitWithError((e as Error).message);
+    } finally {
+      await client.close();
+    }
+  });
+
+program.parseAsync(process.argv);
