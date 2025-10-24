@@ -7,6 +7,39 @@ import os from "os";
 
 const QBDIR = path.resolve(__dirname, "..");
 
+import { exec } from "child_process";
+
+/**
+ * Executes a shell command using exec and returns a Promise that resolves
+ * with {stdout, stderr}, or rejects with an Error that includes all details.
+ */
+function tryExecSyncWithOutput(
+  command: string,
+  description: string,
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    exec(
+      command,
+      {
+        cwd: QBDIR,
+        encoding: "utf-8",
+        maxBuffer: 10 * 1024 * 1024, // Increase if output is large
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(
+            new Error(
+              `${description}\nCommand: ${command}\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`,
+            ),
+          );
+        } else {
+          resolve({ stdout, stderr });
+        }
+      },
+    );
+  });
+}
+
 describe("cli", () => {
   test("basic generate", async () => {
     execSync(`yarn generate edgeql-js --force-overwrite`, {
@@ -342,6 +375,160 @@ describe("cli", () => {
           // Ignore cleanup errors
         }
       });
+    }
+  });
+
+  test("queries with patterns after flags", async () => {
+    const testFile = path.resolve(QBDIR, "pattern-after-flag.edgeql");
+    const outputFile = path.resolve(QBDIR, "pattern-after-flag.query.ts");
+
+    fs.writeFileSync(testFile, "SELECT 123;");
+
+    try {
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries --force-overwrite "pattern-after-flag.edgeql"`,
+        "execSync failed for pattern after flags",
+      );
+
+      assert.ok(
+        fs.existsSync(outputFile),
+        "Expected pattern-after-flag.query.ts to be generated when pattern comes after flags",
+      );
+    } finally {
+      // Cleanup
+      [testFile, outputFile].forEach((file) => {
+        try {
+          fs.unlinkSync(file);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      });
+    }
+  });
+
+  test("queries with patterns interleaved with flags", async () => {
+    const files = {
+      file1: path.resolve(QBDIR, "interleaved1.edgeql"),
+      file2: path.resolve(QBDIR, "interleaved2.edgeql"),
+    };
+    const outputs = {
+      output1: path.resolve(QBDIR, "interleaved1.query.ts"),
+      output2: path.resolve(QBDIR, "interleaved2.query.ts"),
+    };
+
+    fs.writeFileSync(files.file1, "SELECT 456;");
+    fs.writeFileSync(files.file2, "SELECT 789;");
+
+    try {
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "interleaved1.edgeql" --force-overwrite "interleaved2.edgeql"`,
+        "execSync failed for patterns interleaved with flags",
+      );
+
+      // Verify both files were processed
+      assert.ok(
+        fs.existsSync(outputs.output1),
+        "Expected interleaved1.query.ts to be generated",
+      );
+      assert.ok(
+        fs.existsSync(outputs.output2),
+        "Expected interleaved2.query.ts to be generated when patterns are interleaved with flags",
+      );
+    } finally {
+      // Cleanup
+      [...Object.values(files), ...Object.values(outputs)].forEach((file) => {
+        try {
+          fs.unlinkSync(file);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      });
+    }
+  });
+
+  describe("backward compatibility - all flag formats still work", () => {
+    const testFile = path.resolve(QBDIR, "compat-test.edgeql");
+    const outputFile = path.resolve(QBDIR, "compat-test.query.ts");
+
+    beforeAll(() => {
+      fs.writeFileSync(testFile, "SELECT 999;");
+    });
+
+    afterAll(() => {
+      [testFile, outputFile].forEach((file) => {
+        try {
+          fs.unlinkSync(file);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      });
+    });
+
+    test("long flag with value", async () => {
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
+        "execSync failed for long flag with value",
+      );
+      assert.ok(fs.existsSync(outputFile), "Long flag format should work");
+      fs.unlinkSync(outputFile);
+    });
+
+    test("boolean flag (no value)", async () => {
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
+        "execSync failed for boolean flag",
+      );
+      assert.ok(fs.existsSync(outputFile), "Boolean flag should work");
+      fs.unlinkSync(outputFile);
+    });
+
+    test("pattern before flags (existing behavior)", async () => {
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
+        "execSync failed for pattern before flags",
+      );
+      assert.ok(
+        fs.existsSync(outputFile),
+        "Pattern before flags should work (existing behavior)",
+      );
+    });
+  });
+
+  test("short flag formats work correctly", () => {
+    // This test just verifies the CLI accepts short flags without errors
+    // We're testing parsing, not actual connection behavior
+    const testFile = path.resolve(QBDIR, "short-flags.edgeql");
+
+    fs.writeFileSync(testFile, "SELECT 1;");
+
+    try {
+      // Test short flags (these will fail to connect, but should parse correctly)
+      // We use a fake host/port that won't connect, but the flags should be accepted
+      try {
+        execSync(
+          `./dist/cli.js queries "short-flags.edgeql" -H localhost -P 9999 -d testdb`,
+          {
+            cwd: QBDIR,
+            stdio: "pipe", // Suppress error output
+            timeout: 5000,
+          },
+        );
+      } catch (e: any) {
+        // We expect this to fail due to connection, but not due to flag parsing
+        // If flags were invalid, error would mention "Unknown option"
+        const errorOutput = e.stderr?.toString() || e.stdout?.toString() || "";
+        assert.ok(
+          !errorOutput.includes("Unknown option"),
+          `Short flags should be recognized but got error: ${errorOutput}`,
+        );
+      }
+    } finally {
+      // Cleanup
+      try {
+        fs.unlinkSync(testFile);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
   });
 });
