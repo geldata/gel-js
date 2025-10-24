@@ -1,19 +1,18 @@
 import assert from "node:assert/strict";
-import path from "path";
+import path from "node:path";
+import { exec, type ExecOptions } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+
 import { systemUtils } from "gel";
-import { execSync, type ExecOptions } from "child_process";
-import fs from "fs";
-import os from "os";
 
 const QBDIR = path.resolve(__dirname, "..");
-
-import { exec } from "child_process";
 
 /**
  * Executes a shell command using exec and returns a Promise that resolves
  * with {stdout, stderr}, or rejects with an Error that includes all details.
  */
-function tryExecSyncWithOutput(
+function tryExec(
   command: string,
   description: string,
   options: ExecOptions = {},
@@ -49,7 +48,7 @@ function tryExecSyncWithOutput(
 
 describe("cli", () => {
   test("basic generate", async () => {
-    await tryExecSyncWithOutput(
+    await tryExec(
       `yarn generate edgeql-js --force-overwrite`,
       "basic generate",
     );
@@ -73,7 +72,7 @@ describe("cli", () => {
     fs.writeFileSync(excludedFile, testQuery);
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "test-included.edgeql"`,
         "queries with positional pattern",
       );
@@ -114,7 +113,7 @@ describe("cli", () => {
 
     try {
       // Run from subdirectory with pattern relative to that directory
-      await tryExecSyncWithOutput(
+      await tryExec(
         `../dist/cli.js queries "."`,
         "patterns relative to current working directory",
         { cwd: subDir },
@@ -163,7 +162,7 @@ describe("cli", () => {
     fs.writeFileSync(goodFile, "SELECT 42;");
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "."`,
         "pattern dot from project root excludes schema directories",
       );
@@ -204,7 +203,7 @@ describe("cli", () => {
     fs.writeFileSync(testFile, "SELECT 999;");
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "${tempDir}"`,
         "absolute pattern paths work correctly",
       );
@@ -247,7 +246,7 @@ describe("cli", () => {
     fs.writeFileSync(appFile, "SELECT 456;");
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "**/*.edgeql"`,
         "explicit glob patterns respect schema exclusions",
       );
@@ -283,7 +282,7 @@ describe("cli", () => {
 
     try {
       const cliPath = path.resolve(QBDIR, "dist", "cli.js");
-      await tryExecSyncWithOutput(
+      await tryExec(
         `"${cliPath}" queries "."`,
         "schema directory outside cwd is not excluded when pattern searches locally",
         {
@@ -329,7 +328,7 @@ describe("cli", () => {
     Object.values(files).forEach((file) => fs.writeFileSync(file, testQuery));
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "user.edgeql" "admin/*.edgeql"`,
         "queries with multiple positional patterns",
       );
@@ -382,7 +381,7 @@ describe("cli", () => {
     fs.writeFileSync(testFile, "SELECT 123;");
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries --force-overwrite "pattern-after-flag.edgeql"`,
         "execSync failed for pattern after flags",
       );
@@ -416,7 +415,7 @@ describe("cli", () => {
     fs.writeFileSync(files.file2, "SELECT 789;");
 
     try {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "interleaved1.edgeql" --force-overwrite "interleaved2.edgeql"`,
         "execSync failed for patterns interleaved with flags",
       );
@@ -459,7 +458,7 @@ describe("cli", () => {
     });
 
     test("long flag with value", async () => {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
         "execSync failed for long flag with value",
       );
@@ -471,7 +470,7 @@ describe("cli", () => {
     });
 
     test("boolean flag (no value)", async () => {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
         "execSync failed for boolean flag",
       );
@@ -483,7 +482,7 @@ describe("cli", () => {
     });
 
     test("pattern before flags (existing behavior)", async () => {
-      await tryExecSyncWithOutput(
+      await tryExec(
         `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
         "execSync failed for pattern before flags",
       );
@@ -501,7 +500,7 @@ describe("cli", () => {
 
     try {
       try {
-        await tryExecSyncWithOutput(
+        await tryExec(
           `./dist/cli.js queries "short-flags.edgeql" -H localhost -P 9999 -d testdb`,
           "short flag formats work correctly",
           {
@@ -524,11 +523,11 @@ describe("cli", () => {
     }
   });
 
-  test("version flag works", () => {
-    const output = execSync("./dist/cli.js --version", {
-      cwd: QBDIR,
-      encoding: "utf-8",
-    });
+  test("version flag works", async () => {
+    const { stdout: output } = await tryExec(
+      "./dist/cli.js --version",
+      "version flag test",
+    );
     assert.match(
       output.trim(),
       /^\d+\.\d+\.\d+$/,
@@ -536,16 +535,12 @@ describe("cli", () => {
     );
   });
 
-  test("edgeql-js accepts --future flags", () => {
+  test("edgeql-js accepts --future flags", async () => {
     try {
-      execSync(
+      await tryExec(
         "./dist/cli.js edgeql-js --future --future-strict-type-names --future-polymorphism-as-discriminated-unions -H localhost -P 9999",
-        {
-          cwd: QBDIR,
-          stdio: "pipe",
-          encoding: "utf-8",
-          timeout: 5000,
-        },
+        "edgeql-js accepts --future flags",
+        { timeout: 5000 },
       );
     } catch (e: any) {
       const output = e.stderr || e.stdout || "";
@@ -557,14 +552,13 @@ describe("cli", () => {
     }
   });
 
-  test("queries accepts --future flags", () => {
+  test("queries accepts --future flags", async () => {
     try {
-      execSync("./dist/cli.js queries --future -H localhost -P 9999", {
-        cwd: QBDIR,
-        stdio: "pipe",
-        encoding: "utf-8",
-        timeout: 5000,
-      });
+      await tryExec(
+        "./dist/cli.js queries --future -H localhost -P 9999",
+        "queries accepts --future flags",
+        { timeout: 5000 },
+      );
     } catch (e: any) {
       const output = e.stderr || e.stdout || "";
       assert.ok(
@@ -575,14 +569,13 @@ describe("cli", () => {
     }
   });
 
-  test("interfaces accepts --future flags", () => {
+  test("interfaces accepts --future flags", async () => {
     try {
-      execSync("./dist/cli.js interfaces --future -H localhost -P 9999", {
-        cwd: QBDIR,
-        stdio: "pipe",
-        encoding: "utf-8",
-        timeout: 5000,
-      });
+      await tryExec(
+        "./dist/cli.js interfaces --future -H localhost -P 9999",
+        "interfaces accepts --future flags",
+        { timeout: 5000 },
+      );
     } catch (e: any) {
       const output = e.stderr || e.stdout || "";
       assert.ok(
@@ -593,11 +586,11 @@ describe("cli", () => {
     }
   });
 
-  test("help shows all available commands", () => {
-    const output = execSync("./dist/cli.js --help", {
-      cwd: QBDIR,
-      encoding: "utf-8",
-    });
+  test("help shows all available commands", async () => {
+    const { stdout: output } = await tryExec(
+      "./dist/cli.js --help",
+      "help shows all available commands",
+    );
 
     assert.ok(
       output.includes("edgeql-js"),
@@ -617,11 +610,11 @@ describe("cli", () => {
     );
   });
 
-  test("command help shows connection options", () => {
-    const output = execSync("./dist/cli.js queries --help", {
-      cwd: QBDIR,
-      encoding: "utf-8",
-    });
+  test("command help shows connection options", async () => {
+    const { stdout: output } = await tryExec(
+      "./dist/cli.js queries --help",
+      "command help shows connection options",
+    );
 
     assert.ok(
       output.includes("-H, --host"),
