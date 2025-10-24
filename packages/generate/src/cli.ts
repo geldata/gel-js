@@ -367,7 +367,7 @@ program
     await ensureTarget(options, projectRoot);
 
     // special handling: --file present but no value => default to <schemaDir>/queries
-    const fileWasPresentWithoutValue = (opts as any).file === true;
+    const fileWasPresentWithoutValue = opts.file === true;
     if (fileWasPresentWithoutValue) {
       options.file = path.join(schemaDir, "queries");
     }
