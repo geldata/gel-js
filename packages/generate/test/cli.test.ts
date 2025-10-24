@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import path from "path";
 import { systemUtils } from "gel";
-import { execSync } from "child_process";
+import { execSync, type ExecOptions } from "child_process";
 import fs from "fs";
 import os from "os";
 
@@ -16,7 +16,11 @@ import { exec } from "child_process";
 function tryExecSyncWithOutput(
   command: string,
   description: string,
+  options: ExecOptions = {},
 ): Promise<{ stdout: string; stderr: string }> {
+  // Capture stack trace at the call site
+  const callSiteError = new Error();
+
   return new Promise((resolve, reject) => {
     exec(
       command,
@@ -24,14 +28,17 @@ function tryExecSyncWithOutput(
         cwd: QBDIR,
         encoding: "utf-8",
         maxBuffer: 10 * 1024 * 1024, // Increase if output is large
+        ...options,
       },
       (error, stdout, stderr) => {
         if (error) {
-          reject(
-            new Error(
-              `${description}\nCommand: ${command}\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`,
-            ),
-          );
+          error.message = `${description}\nCommand: ${command}\nSTDOUT:\n${stdout}\nSTDERR:\n${stderr}`;
+          // Preserve both the exec error stack and the call site stack
+          if (callSiteError.stack) {
+            error.stack =
+              error.stack + "\n--- Called from ---\n" + callSiteError.stack;
+          }
+          reject(error);
         } else {
           resolve({ stdout, stderr });
         }
@@ -42,15 +49,19 @@ function tryExecSyncWithOutput(
 
 describe("cli", () => {
   test("basic generate", async () => {
-    execSync(`yarn generate edgeql-js --force-overwrite`, {
-      stdio: "inherit",
-    });
+    await tryExecSyncWithOutput(
+      `yarn generate edgeql-js --force-overwrite`,
+      "basic generate",
+    );
     const qbIndex = path.resolve(QBDIR, "dbschema", "edgeql-js", "index.ts");
-    assert.equal(await systemUtils.exists(qbIndex), true);
+    assert.equal(
+      await systemUtils.exists(qbIndex),
+      true,
+      "Expected edgeql-js index.ts to be generated at dbschema/edgeql-js/index.ts",
+    );
   }, 60000);
 
-  test("queries with positional pattern", () => {
-    // Create two test .edgeql files
+  test("queries with positional pattern", async () => {
     const includedFile = path.resolve(QBDIR, "test-included.edgeql");
     const excludedFile = path.resolve(QBDIR, "test-excluded.edgeql");
     const includedQueryFile = path.resolve(QBDIR, "test-included.query.ts");
@@ -58,30 +69,25 @@ describe("cli", () => {
 
     const testQuery = "SELECT 42;";
 
-    // Write both test files
     fs.writeFileSync(includedFile, testQuery);
     fs.writeFileSync(excludedFile, testQuery);
 
     try {
-      // Run with pattern that should match only the included file
-      execSync(`./dist/cli.js queries "test-included.edgeql"`, {
-        stdio: "inherit",
-        cwd: QBDIR,
-      });
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "test-included.edgeql"`,
+        "queries with positional pattern",
+      );
 
-      // Verify the included file generated a .query.ts file
       assert.ok(
         fs.existsSync(includedQueryFile),
         `Expected ${includedQueryFile} to be generated`,
       );
 
-      // Verify the excluded file did NOT generate a .query.ts file
       assert.ok(
         !fs.existsSync(excludedQueryFile),
         `Expected ${excludedQueryFile} to NOT be generated`,
       );
     } finally {
-      // Clean up all test files
       [
         includedFile,
         excludedFile,
@@ -97,7 +103,7 @@ describe("cli", () => {
     }
   });
 
-  test("patterns relative to current working directory", () => {
+  test("patterns relative to current working directory", async () => {
     // Create subdirectory structure
     const subDir = path.resolve(QBDIR, "subdir");
     const testFile = path.resolve(subDir, "query.edgeql");
@@ -108,18 +114,17 @@ describe("cli", () => {
 
     try {
       // Run from subdirectory with pattern relative to that directory
-      execSync(`../dist/cli.js queries "."`, {
-        stdio: "inherit",
-        cwd: subDir,
-      });
+      await tryExecSyncWithOutput(
+        `../dist/cli.js queries "."`,
+        "patterns relative to current working directory",
+        { cwd: subDir },
+      );
 
-      // Verify the file was generated in subdirectory
       assert.ok(
         fs.existsSync(expectedOutput),
         `Expected ${expectedOutput} to be generated from subdirectory pattern`,
       );
     } finally {
-      // Clean up
       [testFile, expectedOutput].forEach((file) => {
         try {
           fs.unlinkSync(file);
@@ -135,15 +140,13 @@ describe("cli", () => {
     }
   });
 
-  test("pattern dot from project root excludes schema directories", () => {
-    // Helper function for cleanup
+  test("pattern dot from project root excludes schema directories", async () => {
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
       } catch (e) {}
     };
 
-    // Create fake schema files that should be ignored
     const schemaDir = path.resolve(QBDIR, "dbschema");
     const migrationsDir = path.resolve(schemaDir, "migrations");
     const fixupsDir = path.resolve(schemaDir, "fixups");
@@ -160,22 +163,25 @@ describe("cli", () => {
     fs.writeFileSync(goodFile, "SELECT 42;");
 
     try {
-      // Run from project root with "." - should NOT process schema files
-      execSync(`./dist/cli.js queries "."`, {
-        stdio: "inherit",
-        cwd: QBDIR,
-      });
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "."`,
+        "pattern dot from project root excludes schema directories",
+      );
 
-      // Verify good file was processed
-      assert.ok(fs.existsSync(path.resolve(QBDIR, "good.query.ts")));
+      assert.ok(
+        fs.existsSync(path.resolve(QBDIR, "good.query.ts")),
+        "Expected good.query.ts to be generated from non-schema directory",
+      );
 
-      // Verify schema files were NOT processed
       assert.ok(
         !fs.existsSync(path.resolve(migrationsDir, "001_init.query.ts")),
+        "Expected migration files in dbschema/migrations to be excluded from processing",
       );
-      assert.ok(!fs.existsSync(path.resolve(fixupsDir, "fix.query.ts")));
+      assert.ok(
+        !fs.existsSync(path.resolve(fixupsDir, "fix.query.ts")),
+        "Expected fixup files in dbschema/fixups to be excluded from processing",
+      );
     } finally {
-      // Cleanup
       [
         migrationFile,
         fixupFile,
@@ -190,7 +196,7 @@ describe("cli", () => {
     }
   });
 
-  test("absolute pattern paths work correctly", () => {
+  test("absolute pattern paths work correctly", async () => {
     // Create temp directory with test files
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gel-test-"));
     const testFile = path.resolve(tempDir, "absolute.edgeql");
@@ -198,23 +204,23 @@ describe("cli", () => {
     fs.writeFileSync(testFile, "SELECT 999;");
 
     try {
-      // Run with absolute pattern from project root
-      execSync(`./dist/cli.js queries "${tempDir}"`, {
-        stdio: "inherit",
-        cwd: QBDIR,
-      });
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "${tempDir}"`,
+        "absolute pattern paths work correctly",
+      );
 
-      // Verify file was processed
-      assert.ok(fs.existsSync(path.resolve(tempDir, "absolute.query.ts")));
+      assert.ok(
+        fs.existsSync(path.resolve(tempDir, "absolute.query.ts")),
+        "Expected query file to be generated when using absolute path pattern",
+      );
     } finally {
-      // Cleanup temp directory
       try {
         fs.rmSync(tempDir, { recursive: true, force: true });
       } catch (e) {}
     }
   });
 
-  test("explicit glob patterns respect schema exclusions", () => {
+  test("explicit glob patterns respect schema exclusions", async () => {
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
@@ -227,7 +233,6 @@ describe("cli", () => {
       } catch (e) {}
     };
 
-    // Create nested structure with schema files
     const schemaDir = path.resolve(QBDIR, "dbschema");
     const migrationsDir = path.resolve(schemaDir, "migrations");
     const appDir = path.resolve(QBDIR, "app");
@@ -242,17 +247,20 @@ describe("cli", () => {
     fs.writeFileSync(appFile, "SELECT 456;");
 
     try {
-      // Run with explicit glob pattern from project root
-      execSync(`./dist/cli.js queries "**/*.edgeql"`, {
-        stdio: "inherit",
-        cwd: QBDIR,
-      });
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "**/*.edgeql"`,
+        "explicit glob patterns respect schema exclusions",
+      );
 
-      // Verify app file processed, schema file ignored
-      assert.ok(fs.existsSync(path.resolve(appDir, "query.query.ts")));
-      assert.ok(!fs.existsSync(path.resolve(migrationsDir, "schema.query.ts")));
+      assert.ok(
+        fs.existsSync(path.resolve(appDir, "query.query.ts")),
+        "Expected app/query.query.ts to be generated when using glob pattern **/*.edgeql",
+      );
+      assert.ok(
+        !fs.existsSync(path.resolve(migrationsDir, "schema.query.ts")),
+        "Expected migration files to be excluded even with glob pattern **/*.edgeql",
+      );
     } finally {
-      // Cleanup
       [migrationFile, appFile, path.resolve(appDir, "query.query.ts")].forEach(
         cleanup,
       );
@@ -260,34 +268,34 @@ describe("cli", () => {
     }
   });
 
-  test("schema directory outside cwd is not excluded when pattern searches locally", () => {
+  test("schema directory outside cwd is not excluded when pattern searches locally", async () => {
     const cleanup = (file: string) => {
       try {
         fs.unlinkSync(file);
       } catch (e) {}
     };
 
-    // Create deep subdirectory structure
     const subDir = path.resolve(QBDIR, "deep", "subdir");
     fs.mkdirSync(subDir, { recursive: true });
 
-    // Schema is at project root, we're in deep subdirectory
     const testFile = path.resolve(subDir, "test.edgeql");
     fs.writeFileSync(testFile, "SELECT 789;");
 
     try {
-      // From deep subdirectory, schema dir is outside our search scope
-      // Pattern "." only searches current directory tree, so no schema exclusion needed
       const cliPath = path.resolve(QBDIR, "dist", "cli.js");
-      execSync(`"${cliPath}" queries "."`, {
-        stdio: "inherit",
-        cwd: subDir,
-      });
+      await tryExecSyncWithOutput(
+        `"${cliPath}" queries "."`,
+        "schema directory outside cwd is not excluded when pattern searches locally",
+        {
+          cwd: subDir,
+        },
+      );
 
-      // Verify file was processed normally (no schema to exclude in this context)
-      assert.ok(fs.existsSync(path.resolve(subDir, "test.query.ts")));
+      assert.ok(
+        fs.existsSync(path.resolve(subDir, "test.query.ts")),
+        "Expected test.query.ts to be generated when running from deep subdirectory with pattern '.' (schema dir is outside search scope)",
+      );
     } finally {
-      // Cleanup
       [testFile, path.resolve(subDir, "test.query.ts")].forEach(cleanup);
       try {
         fs.rmSync(path.resolve(QBDIR, "deep"), {
@@ -298,19 +306,15 @@ describe("cli", () => {
     }
   });
 
-  test("queries with multiple positional patterns", () => {
+  test("queries with multiple positional patterns", async () => {
     // Create test files in different directories
     const files = {
-      // Files that should be INCLUDED by patterns
       userFile: path.resolve(QBDIR, "user.edgeql"),
       adminFile: path.resolve(QBDIR, "admin", "permissions.edgeql"),
-
-      // Files that should be EXCLUDED (not matching any pattern)
       excludedFile: path.resolve(QBDIR, "excluded.edgeql"),
       otherFile: path.resolve(QBDIR, "other", "stuff.edgeql"),
     };
 
-    // Expected output files
     const outputs = {
       userOutput: path.resolve(QBDIR, "user.query.ts"),
       adminOutput: path.resolve(QBDIR, "admin", "permissions.query.ts"),
@@ -318,22 +322,18 @@ describe("cli", () => {
       otherOutput: path.resolve(QBDIR, "other", "stuff.query.ts"),
     };
 
-    // Create directories
     fs.mkdirSync(path.resolve(QBDIR, "admin"), { recursive: true });
     fs.mkdirSync(path.resolve(QBDIR, "other"), { recursive: true });
 
-    // Write test files
     const testQuery = "SELECT 42;";
     Object.values(files).forEach((file) => fs.writeFileSync(file, testQuery));
 
     try {
-      // Run with multiple patterns: should match user.edgeql AND admin/*.edgeql
-      execSync(`./dist/cli.js queries "user.edgeql" "admin/*.edgeql"`, {
-        stdio: "inherit",
-        cwd: QBDIR,
-      });
+      await tryExecSyncWithOutput(
+        `./dist/cli.js queries "user.edgeql" "admin/*.edgeql"`,
+        "queries with multiple positional patterns",
+      );
 
-      // Verify INCLUDED files generated output
       assert.ok(
         fs.existsSync(outputs.userOutput),
         "Expected user.query.ts to be generated from user.edgeql pattern",
@@ -344,7 +344,6 @@ describe("cli", () => {
         "Expected admin/permissions.query.ts to be generated from admin/*.edgeql pattern",
       );
 
-      // Verify EXCLUDED files did NOT generate output
       assert.ok(
         !fs.existsSync(outputs.excludedOutput),
         "Expected excluded.query.ts to NOT be generated (no matching pattern)",
@@ -355,7 +354,6 @@ describe("cli", () => {
         "Expected other/stuff.query.ts to NOT be generated (no matching pattern)",
       );
     } finally {
-      // Cleanup all test files and outputs
       [...Object.values(files), ...Object.values(outputs)].forEach((file) => {
         try {
           fs.unlinkSync(file);
@@ -364,7 +362,6 @@ describe("cli", () => {
         }
       });
 
-      // Cleanup directories
       ["admin", "other"].forEach((dir) => {
         try {
           fs.rmSync(path.resolve(QBDIR, dir), {
@@ -395,7 +392,6 @@ describe("cli", () => {
         "Expected pattern-after-flag.query.ts to be generated when pattern comes after flags",
       );
     } finally {
-      // Cleanup
       [testFile, outputFile].forEach((file) => {
         try {
           fs.unlinkSync(file);
@@ -425,17 +421,15 @@ describe("cli", () => {
         "execSync failed for patterns interleaved with flags",
       );
 
-      // Verify both files were processed
       assert.ok(
         fs.existsSync(outputs.output1),
-        "Expected interleaved1.query.ts to be generated",
+        "Expected interleaved1.query.ts to be generated when patterns are interleaved with flags",
       );
       assert.ok(
         fs.existsSync(outputs.output2),
         "Expected interleaved2.query.ts to be generated when patterns are interleaved with flags",
       );
     } finally {
-      // Cleanup
       [...Object.values(files), ...Object.values(outputs)].forEach((file) => {
         try {
           fs.unlinkSync(file);
@@ -469,7 +463,10 @@ describe("cli", () => {
         `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
         "execSync failed for long flag with value",
       );
-      assert.ok(fs.existsSync(outputFile), "Long flag format should work");
+      assert.ok(
+        fs.existsSync(outputFile),
+        "Expected query file to be generated when using long flag format (--force-overwrite)",
+      );
       fs.unlinkSync(outputFile);
     });
 
@@ -478,7 +475,10 @@ describe("cli", () => {
         `./dist/cli.js queries "compat-test.edgeql" --force-overwrite`,
         "execSync failed for boolean flag",
       );
-      assert.ok(fs.existsSync(outputFile), "Boolean flag should work");
+      assert.ok(
+        fs.existsSync(outputFile),
+        "Expected query file to be generated when using boolean flag format",
+      );
       fs.unlinkSync(outputFile);
     });
 
@@ -489,41 +489,33 @@ describe("cli", () => {
       );
       assert.ok(
         fs.existsSync(outputFile),
-        "Pattern before flags should work (existing behavior)",
+        "Expected query file to be generated when pattern comes before flags (backward compatibility)",
       );
     });
   });
 
-  test("short flag formats work correctly", () => {
-    // This test just verifies the CLI accepts short flags without errors
-    // We're testing parsing, not actual connection behavior
+  test("short flag formats work correctly", async () => {
     const testFile = path.resolve(QBDIR, "short-flags.edgeql");
 
     fs.writeFileSync(testFile, "SELECT 1;");
 
     try {
-      // Test short flags (these will fail to connect, but should parse correctly)
-      // We use a fake host/port that won't connect, but the flags should be accepted
       try {
-        execSync(
+        await tryExecSyncWithOutput(
           `./dist/cli.js queries "short-flags.edgeql" -H localhost -P 9999 -d testdb`,
+          "short flag formats work correctly",
           {
-            cwd: QBDIR,
-            stdio: "pipe", // Suppress error output
             timeout: 5000,
           },
         );
       } catch (e: any) {
-        // We expect this to fail due to connection, but not due to flag parsing
-        // If flags were invalid, error would mention "Unknown option"
         const errorOutput = e.stderr?.toString() || e.stdout?.toString() || "";
         assert.ok(
           !errorOutput.includes("Unknown option"),
-          `Short flags should be recognized but got error: ${errorOutput}`,
+          `Expected short flags (-H, -P, -d) to be parsed correctly without 'Unknown option' error, but got: ${errorOutput}`,
         );
       }
     } finally {
-      // Cleanup
       try {
         fs.unlinkSync(testFile);
       } catch (e) {
@@ -540,7 +532,7 @@ describe("cli", () => {
     assert.match(
       output.trim(),
       /^\d+\.\d+\.\d+$/,
-      "Version should be a valid semver",
+      "Expected --version flag to output a valid semver version number (e.g., 1.2.3)",
     );
   });
 
@@ -557,11 +549,10 @@ describe("cli", () => {
       );
     } catch (e: any) {
       const output = e.stderr || e.stdout || "";
-      // Should fail on connection, not on unknown option
       assert.ok(
         !output.includes("Unknown option") &&
           !output.includes("unknown option"),
-        `Future flags should be recognized but got: ${output}`,
+        `Expected edgeql-js to accept --future flags without 'Unknown option' error, but got: ${output}`,
       );
     }
   });
@@ -579,7 +570,7 @@ describe("cli", () => {
       assert.ok(
         !output.includes("Unknown option") &&
           !output.includes("unknown option"),
-        `Future flags should be recognized but got: ${output}`,
+        `Expected queries command to accept --future flag without 'Unknown option' error, but got: ${output}`,
       );
     }
   });
@@ -597,7 +588,7 @@ describe("cli", () => {
       assert.ok(
         !output.includes("Unknown option") &&
           !output.includes("unknown option"),
-        `Future flags should be recognized but got: ${output}`,
+        `Expected interfaces command to accept --future flag without 'Unknown option' error, but got: ${output}`,
       );
     }
   });
@@ -608,17 +599,22 @@ describe("cli", () => {
       encoding: "utf-8",
     });
 
-    // Should show all 4 commands
     assert.ok(
       output.includes("edgeql-js"),
-      "Help should list edgeql-js command",
+      "Expected --help output to include 'edgeql-js' command",
     );
-    assert.ok(output.includes("queries"), "Help should list queries command");
+    assert.ok(
+      output.includes("queries"),
+      "Expected --help output to include 'queries' command",
+    );
     assert.ok(
       output.includes("interfaces"),
-      "Help should list interfaces command",
+      "Expected --help output to include 'interfaces' command",
     );
-    assert.ok(output.includes("prisma"), "Help should list prisma command");
+    assert.ok(
+      output.includes("prisma"),
+      "Expected --help output to include 'prisma' command",
+    );
   });
 
   test("command help shows connection options", () => {
@@ -627,13 +623,26 @@ describe("cli", () => {
       encoding: "utf-8",
     });
 
-    // Should show connection options
-    assert.ok(output.includes("-H, --host"), "Should show host option");
-    assert.ok(output.includes("-P, --port"), "Should show port option");
-    assert.ok(output.includes("-d, --database"), "Should show database option");
-    assert.ok(output.includes("--dsn"), "Should show dsn option");
+    assert.ok(
+      output.includes("-H, --host"),
+      "Expected queries --help to show '-H, --host' option",
+    );
+    assert.ok(
+      output.includes("-P, --port"),
+      "Expected queries --help to show '-P, --port' option",
+    );
+    assert.ok(
+      output.includes("-d, --database"),
+      "Expected queries --help to show '-d, --database' option",
+    );
+    assert.ok(
+      output.includes("--dsn"),
+      "Expected queries --help to show '--dsn' option",
+    );
 
-    // Should show future options
-    assert.ok(output.includes("--future"), "Should show future option");
+    assert.ok(
+      output.includes("--future"),
+      "Expected queries --help to show '--future' option",
+    );
   });
 });
