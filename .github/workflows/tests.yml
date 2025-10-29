@@ -16,20 +16,24 @@ jobs:
     continue-on-error: ${{ matrix.gel-version == 'nightly' }}
     strategy:
       matrix:
-        node-version: ["20", "22", "23"]
+        node-version: ["20", "22", "24"]
         os: [ubuntu-latest]
         gel-version: ["stable"]
         include:
           # Nightly server
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "nightly"
+          # Release Candidate server
+          - os: ubuntu-latest
+            node-version: "24"
+            gel-version: "7.0-rc3"
           # LTS server
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "4"
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "5"
           # macOS
           # - os: macos-latest
@@ -63,7 +67,7 @@ jobs:
           yarn format
 
       - name: Install Gel
-        uses: geldata/setup-gel@6763b6de72782d9c2e5ecc1095986a1c707da68f
+        uses: geldata/setup-gel@8ca21fb6c0eed48ef86af8baa54ba4cd842cfb7e
         with:
           instance-name: test
           server-version: ${{ matrix.gel-version }}
