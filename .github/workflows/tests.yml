@@ -67,7 +67,7 @@ jobs:
           yarn format
 
       - name: Install Gel
-        uses: geldata/setup-gel@6763b6de72782d9c2e5ecc1095986a1c707da68f
+        uses: geldata/setup-gel@8ca21fb6c0eed48ef86af8baa54ba4cd842cfb7e
         with:
           instance-name: test
           server-version: ${{ matrix.gel-version }}
