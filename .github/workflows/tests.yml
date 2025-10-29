@@ -22,18 +22,18 @@ jobs:
         include:
           # Nightly server
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "nightly"
           # Release Candidate server
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "7.0-rc3"
           # LTS server
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "4"
           - os: ubuntu-latest
-            node-version: "22"
+            node-version: "24"
             gel-version: "5"
           # macOS
           # - os: macos-latest
