@@ -98,7 +98,8 @@ export async function getAuthenticatedFetch(
 
   const protocol = tlsSecurity === "insecure" ? "http" : "https";
   const baseUrl = `${protocol}://${address[0]}:${address[1]}`;
-  const databaseUrl = `${baseUrl}/db/${database}/${basePath ?? ""}`;
+  const encodedDatabase = encodeURIComponent(database);
+  const databaseUrl = `${baseUrl}/db/${encodedDatabase}/${basePath ?? ""}`;
 
   if (!token && config.password != null) {
     token = await httpSCRAMAuth(baseUrl, config.user, config.password);
