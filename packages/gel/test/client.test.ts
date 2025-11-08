@@ -2344,6 +2344,46 @@ if (getAvailableFeatures().has("binary-over-http")) {
       fetchConn.rawParse(Language.EDGEQL, `select 1`, Options.defaults()),
     ).rejects.toThrow(AuthenticationError);
   });
+
+  test("getAuthenticatedFetch encodes database path segment", async () => {
+    const originalFetch = globalThis.fetch;
+
+    const fetchMock = jest.fn(async () =>
+      ({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        headers: new Headers(),
+        arrayBuffer: async () => new ArrayBuffer(0),
+      }) as any,
+    );
+
+    (globalThis as any).fetch = fetchMock;
+
+    const config = {
+      address: ["localhost", 5656],
+      tlsSecurity: "insecure",
+      database: "preview/pr-662",
+      secretKey: "test-secret",
+      user: "test-user",
+    } as any;
+
+    const authenticatedFetch = await getAuthenticatedFetch(
+      config,
+      async () => "token",
+    );
+
+    await authenticatedFetch("", {});
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const [urlArg] = fetchMock.mock.calls[0];
+    const url = typeof urlArg === "string" ? new URL(urlArg) : urlArg;
+
+    expect(url.pathname).toBe("/db/preview%2Fpr-662/");
+
+    (globalThis as any).fetch = originalFetch;
+  });
 }
 
 if (getGelVersion().major >= 5) {
