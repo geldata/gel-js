@@ -114,6 +114,101 @@ Client
         main();
 
 
+.. js:function:: createHttpClient(options?: string | ConnectOptions | null): Client
+
+    Creates an HTTP client for interacting with an EdgeDB instance from a browser or edge runtime environment. This function returns an instance of :js:class:`Client` configured to communicate over HTTP using the Fetch API.
+
+    :param options:
+        This is an optional parameter. When it is not specified the client
+        will connect to the current EdgeDB Project instance.
+
+        If this parameter is a string it can represent either a
+        DSN or an instance name:
+
+        * when the string does not start with ``edgedb://`` it is a
+          :ref:`name of an instance <ref_reference_connection_instance_name>`;
+
+        * otherwise it specifies a single string in the connection URI format:
+          ``edgedb://user:password@host:port/database?option=value``.
+
+          See the :ref:`Connection Parameters <ref_reference_connection>`
+          docs for full details.
+
+        Alternatively the parameter can be a ``ConnectOptions`` config;
+        see the documentation of valid options below.
+
+    :param string options.dsn:
+        Specifies the DSN of the instance.
+
+    :param string options.credentialsFile:
+        Path to a file containing credentials.
+
+    :param string options.host:
+        Database host address as either an IP address or a domain name.
+
+    :param number options.port:
+        Port number to connect to at the server host.
+
+    :param string options.user:
+        The name of the database role used for authentication.
+
+    :param string options.database:
+        The name of the database to connect to.
+
+    :param string options.password:
+        Password to be used for authentication, if the server requires one.
+
+    :param string options.tlsCAFile:
+        Path to a file containing the root certificate of the server.
+
+    :param boolean options.tlsSecurity:
+        Determines whether certificate and hostname verification is enabled.
+        Valid values are ``'strict'`` (certificate will be fully validated),
+        ``'no_host_verification'`` (certificate will be validated, but
+        hostname may not match), ``'insecure'`` (certificate not validated,
+        self-signed certificates will be trusted), or ``'default'`` (acts as
+        ``strict`` by default, or ``no_host_verification`` if ``tlsCAFile``
+        is set).
+
+    The above connection options can also be specified by their corresponding
+    environment variable. If none of ``dsn``, ``credentialsFile``, ``host`` or
+    ``port`` are explicitly specified, the client will connect to your
+    linked project instance, if it exists. For full details, see the
+    :ref:`Connection Parameters <ref_reference_connection>` docs.
+
+
+    :param number options.timeout:
+        Connection timeout in milliseconds.
+
+    :param number options.waitUntilAvailable:
+        If first connection fails, the number of milliseconds to keep retrying
+        to connect (Defaults to 30 seconds). Useful if your development
+        instance and app are started together, to allow the server time to
+        be ready.
+
+    :param number options.concurrency:
+        The maximum number of connection the ``Client`` will create in it's
+        connection pool. If not specified the concurrency will be controlled
+        by the server. This is recommended as it allows the server to better
+        manage the number of client connections based on it's own available
+        resources.
+
+    :returns:
+        Returns an instance of :js:class:`Client`.
+
+    Example:
+
+    .. code-block:: js
+
+        const client = edgedb.createHttpClient();
+
+        async function main() {
+          const data = await client.querySingle("select 1 + 1");
+          console.log(data); // Outputs: 2
+        }
+
+        main();
+
 .. js:class:: Client
 
     A ``Client`` allows you to run queries on an EdgeDB instance.
