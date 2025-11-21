@@ -3,6 +3,9 @@ export const JS_EXT_TO_TREAT_AS_ESM = [".jsx"];
 export const ESM_TS_JS_TRANSFORM_PATTERN = "^.+\\.m?[tj]sx?$";
 
 export default {
+  maxWorkers: 1,
+  maxConcurrency: 1,
+  testTimeout: 30_000,
   testEnvironment: "node",
   testPathIgnorePatterns: ["./dist"],
   globalSetup: "./test/globalSetup.ts",
