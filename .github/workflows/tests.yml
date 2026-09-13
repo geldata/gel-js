@@ -163,7 +163,7 @@ jobs:
             echo "gel command is not available outside of yarn, as expected"
           fi
 
-      - uses: threeal/setup-yarn-action@3b9103d98662381636e525b801d33d2b78497430
+      - uses: threeal/setup-yarn-action@ec8c075e62bc497968de40011c2b766f5e8f1ac5
         with:
           version: latest
           cache: false
