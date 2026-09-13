@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/geldata/gel-js.git",
+    "url": "git+https://github.com/geldata/gel-js.git",
     "directory": "packages/gel"
   },
   "main": "./dist/index.node.js",
@@ -22,7 +22,9 @@
   "browser": {
     "./dist/index.node.js": "./dist/index.browser.js"
   },
-  "bin": "./dist/cli.mjs",
+  "bin": {
+    "gel": "./dist/cli.mjs"
+  },
   "devDependencies": {
     "@js-temporal/polyfill": "0.4.3",
     "@repo/tsconfig": "*",
