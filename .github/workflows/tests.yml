@@ -19,18 +19,10 @@ jobs:
     continue-on-error: ${{ matrix.gel-version == 'nightly' }}
     strategy:
       matrix:
-        node-version: ["20", "22", "24"]
+        node-version: ["22", "24", "26"]
         os: [ubuntu-latest]
         gel-version: ["stable"]
         include:
-          # Nightly server
-          - os: ubuntu-latest
-            node-version: "24"
-            gel-version: "nightly"
-          # Release Candidate server
-          - os: ubuntu-latest
-            node-version: "24"
-            gel-version: "7.0-rc3"
           # LTS server
           - os: ubuntu-latest
             node-version: "24"
@@ -38,6 +30,9 @@ jobs:
           - os: ubuntu-latest
             node-version: "24"
             gel-version: "5"
+          - os: ubuntu-latest
+            node-version: "24"
+            gel-version: "6"
           # macOS
           # - os: macos-latest
           #   node-version: "22"
@@ -90,7 +85,7 @@ jobs:
           yarn ci:test
 
       - name: Run query builder integration tests lts
-        if: ${{ matrix.gel-version == '4' || matrix.gel-version == '5' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
+        if: ${{ matrix.gel-version == '4' || matrix.gel-version == '5' || matrix.gel-version == '6' || matrix.gel-version == 'stable' || matrix.gel-version == 'nightly' }}
         run: |
           turbo run ci:integration-test --filter=@gel/integration-lts
           yarn workspace @gel/integration-lts run bench:types || echo "Benchmark types script failed, proceeding anyway."
