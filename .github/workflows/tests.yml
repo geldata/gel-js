@@ -16,14 +16,12 @@ jobs:
     # when the release PR gets merged by the bot.
     if: needs.prep.outputs.version == 0
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.gel-version == 'nightly' }}
     strategy:
       matrix:
         node-version: ["lts/-1", "lts/*", "current"]
         os: [ubuntu-latest]
         gel-version: ["stable"]
         include:
-          # LTS server
           - os: ubuntu-latest
             node-version: "lts/*"
             gel-version: "4"
@@ -33,10 +31,6 @@ jobs:
           - os: ubuntu-latest
             node-version: "lts/*"
             gel-version: "6"
-          # macOS
-          # - os: macos-latest
-          #   node-version: "22"
-          #   gel-version: "stable"
     steps:
       - uses: actions/checkout@v7
         with:
