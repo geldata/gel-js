@@ -7,6 +7,9 @@ on:
       - ci
   pull_request:
 
+env:
+  GEL_PKG_ROOT: ${{ vars.GEL_PKG_ROOT || 'https://packages.geldata.com' }}
+
 jobs:
   test:
     # Skip tests when doing a release to avoid the workflow race

@@ -20,6 +20,8 @@ const EDGEDB_PKG_ROOT =
   process.env.GEL_PKG_ROOT ??
   process.env.EDGEDB_PKG_ROOT ??
   "https://packages.geldata.com";
+process.env.GEL_PKG_ROOT ??= EDGEDB_PKG_ROOT;
+process.env.EDGEDB_PKG_ROOT ??= EDGEDB_PKG_ROOT;
 const CACHE_DIR = envPaths("gel", { suffix: "" }).cache;
 const CACHED_CLI_PATH = path.join(CACHE_DIR, "/bin/gel");
 
