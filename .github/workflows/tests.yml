@@ -7,6 +7,9 @@ on:
       - ci
   pull_request:
 
+env:
+  GEL_PKG_ROOT: ${{ vars.GEL_PKG_ROOT || 'https://packages.geldata.com' }}
+
 jobs:
   test:
     # Skip tests when doing a release to avoid the workflow race
@@ -67,7 +70,7 @@ jobs:
           yarn format
 
       - name: Install Gel
-        uses: geldata/setup-gel@8ca21fb6c0eed48ef86af8baa54ba4cd842cfb7e
+        uses: geldata/setup-gel@d55a567c00df5e48b000e5e7986d0dffae6b57fe
         with:
           instance-name: test
           server-version: ${{ matrix.gel-version }}

@@ -15,7 +15,13 @@ const debug = Debug("gel:cli");
 
 const IS_TTY = process.stdout.isTTY;
 const SCRIPT_LOCATION = await fs.realpath(fileURLToPath(import.meta.url));
-const EDGEDB_PKG_ROOT = "https://packages.edgedb.com";
+// gel-init.sh defaults here; packages.edgedb.com no longer completes TLS.
+const EDGEDB_PKG_ROOT =
+  process.env.GEL_PKG_ROOT ??
+  process.env.EDGEDB_PKG_ROOT ??
+  "https://packages.geldata.com";
+process.env.GEL_PKG_ROOT ??= EDGEDB_PKG_ROOT;
+process.env.EDGEDB_PKG_ROOT ??= EDGEDB_PKG_ROOT;
 const CACHE_DIR = envPaths("gel", { suffix: "" }).cache;
 const CACHED_CLI_PATH = path.join(CACHE_DIR, "/bin/gel");
 
