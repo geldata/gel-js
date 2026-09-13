@@ -9,7 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edgedb/edgedb-js.git"
+    "url": "git+https://github.com/geldata/gel-js.git",
+    "directory": "packages/codemod"
   },
   "license": "Apache-2.0",
   "sideEffects": false,
